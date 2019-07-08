@@ -1,0 +1,5 @@
+/build
+/nbproject
+/help
+*.log
+*.bak
