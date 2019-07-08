@@ -60,7 +60,7 @@ class global_lock
     typedef global_locker<Interface> locker_type;
 public:
     global_lock();
-    global_lock(const size_t timeout);
+    explicit global_lock(const size_t timeout);
     ~global_lock();
 
     static const bool lock(); ///< set the global lock
@@ -78,7 +78,7 @@ class global_lazy_lock
     typedef global_locker<Interface> locker_type;
 public:
     global_lazy_lock();
-    global_lazy_lock(const size_t timeout);
+    explicit global_lazy_lock(const size_t timeout);
     ~global_lazy_lock();
 
     static const bool lock(); ///< set the global lazy lock
@@ -134,7 +134,7 @@ class dataset_transaction : public locked_transaction<typename Dataset::lock_typ
     typedef locked_transaction<typename Dataset::lock_type> base_class;
 public:
     typedef Dataset dataset_type; ///< the dataset
-    dataset_transaction(dataset_type& dataset);
+    explicit dataset_transaction(dataset_type& dataset);
     virtual ~dataset_transaction();
 
     virtual void start(); ///< start the transaction
@@ -159,7 +159,7 @@ public:
     typedef Dataset dataset_type; ///< the dataset
     typedef typename dataset_type::session_write session_write; ///< the session for write to a table
 
-    lazy_transaction(dataset_type& dataset);
+    explicit lazy_transaction(dataset_type& dataset);
     virtual ~lazy_transaction();
 
     void push(session_write& session); ///< push a session to context of the transaction

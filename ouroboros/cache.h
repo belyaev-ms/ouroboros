@@ -142,7 +142,7 @@ public:
     typedef page_status<page_type *> page_status_type;
 
     inline cache();
-    inline cache(saver_type& saver);
+    explicit inline cache(saver_type& saver);
 
     inline page_status_type page_exists(const pos_type index) const; ///< check the page exists
     inline void* get_page(const pos_type index); ///< get data of the page

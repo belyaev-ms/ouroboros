@@ -23,7 +23,7 @@ public:
     typedef Key key_type;
     typedef Value mapped_type;
     typedef std::pair<const key_type, mapped_type> value_type;
-    inline hash_item(const value_type& val);
+    explicit inline hash_item(const value_type& val);
     value_type value;
     hash_item *prev;
     hash_item *next;
@@ -49,7 +49,7 @@ public:
     typedef typename map_type::mapped_type mapped_type;
     typedef typename map_type::value_type value_type;
     hash_iterator();
-    hash_iterator(const map_type *map);
+    explicit hash_iterator(const map_type *map);
     hash_iterator(const map_type *map, item_type *item);
     hash_iterator(const self_type& iter);
     self_type operator++ ();

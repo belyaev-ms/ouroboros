@@ -136,7 +136,7 @@ managed_shared_memory& shared_memory::mem()
 class attach_assistant
 {
 public:
-    attach_assistant(managed_shared_memory& mem) : m_mem(mem) {}
+    explicit attach_assistant(managed_shared_memory& mem) : m_mem(mem) {}
     void operator ()()
     {
         count_type& count = *m_mem.find_or_construct<count_type>(SHMEM_COUNTER_NAME)(0);
@@ -162,7 +162,7 @@ void shared_memory::attach()
 class detach_assistant
 {
 public:
-    detach_assistant(managed_shared_memory& mem) : m_mem(mem) {}
+    explicit detach_assistant(managed_shared_memory& mem) : m_mem(mem) {}
     void operator ()()
     {
         count_type& count = *(m_mem.find<count_type>(SHMEM_COUNTER_NAME).first);

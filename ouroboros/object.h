@@ -72,7 +72,7 @@ public:
     typedef T object_type;
     typedef typename interface_type::pointer pointer;
 
-    inline object(const std::string& name);
+    explicit inline object(const std::string& name);
     inline object(const std::string& name, const object_type& obj);
     ~object();
     inline object_type& operator() ();
@@ -96,7 +96,7 @@ public:
     typedef T object_type;
     typedef T* pointer;
 
-    inline object(const std::string& name);
+    explicit inline object(const std::string& name);
     inline object(const std::string& name, const object_type& obj);
     inline object_type& operator() ();
     inline const object_type& operator() () const;
