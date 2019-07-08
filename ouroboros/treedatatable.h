@@ -190,7 +190,7 @@ tree_data_table<Table, IndexedRecord, Key, Interface>::tree_data_table(source_ty
 
 /**
  * Read a record (without any locking)
- * @param data data of the record
+ * @param record data of the record
  * @param pos the position of the record
  * @return the position of the next record
  */
@@ -205,7 +205,7 @@ inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::uns
 
 /**
  * Reverser read a record (without any locking)
- * @param data data of the record
+ * @param record data of the record
  * @param pos the position of the record
  * @return the position of the previous record
  */
@@ -348,7 +348,7 @@ inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::uns
 
 /**
  * Read the first record (without any locking)
- * @param data data of the first record
+ * @param record data of the first record
  * @return the position of the first record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
@@ -362,7 +362,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::rawReadFir
 
 /**
  * Read the last record (without any locking)
- * @param data data of the last record
+ * @param record data of the last record
  * @return the position of the last record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
@@ -441,7 +441,6 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::add(const 
 /**
  * Add records
  * @param records data of the records
- * @param count the count of the records
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
@@ -517,7 +516,7 @@ const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_b
 
 /**
  * Read the first record
- * @param data data of the first record
+ * @param record data of the first record
  * @return the position of the first record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
@@ -529,7 +528,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_front
 
 /**
  * Read the last record
- * @param data data of the last record
+ * @param record data of the last record
  * @return the position of the last record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
@@ -953,7 +952,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
 
 /**
  * Reverse find a record in the range [end - count, end)
- * @param data data of the record
+ * @param finder the finder of records
  * @param end the end position of the records
  * @param count the count of the find records
  * @return the position of the found record

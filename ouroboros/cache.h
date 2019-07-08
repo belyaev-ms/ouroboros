@@ -659,7 +659,7 @@ inline typename cache<Saver, pageSize, pageCount>::page_status_type
 
 /**
  * Get the page
- * @param the index of the page
+ * @param index the index of the page
  * @return the pointer to the page
  */
 template <typename Saver, int pageSize, int pageCount>
@@ -696,7 +696,7 @@ inline typename cache<Saver, pageSize, pageCount>::page_type*
 
 /**
  * Get data of the page
- * @param the index of the page
+ * @param index the index of the page
  * @return data of the page
  */
 template <typename Saver, int pageSize, int pageCount>
@@ -722,7 +722,7 @@ inline void* cache<Saver, pageSize, pageCount>::get_page(const page_status_type&
 
 /**
  * Get data of the page
- * @param the index of the page
+ * @param index the index of the page
  * @return data of the page
  */
 template <typename Saver, int pageSize, int pageCount>

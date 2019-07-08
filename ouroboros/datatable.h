@@ -394,7 +394,6 @@ const pos_type data_table<Table, Record, Key, Interface>::add(const record_type&
 /**
  * Add records
  * @param records data of the records
- * @param count the count of the records
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
@@ -494,7 +493,7 @@ const pos_type data_table<Table, Record, Key, Interface>::find(Finder& finder, c
 
 /**
  * Reverse find a record in the range [end - count, end)
- * @param data data of the record
+ * @param finder the finder of records
  * @param end the end position of the records
  * @param count the count of the find records
  * @return the position of the found record
@@ -523,7 +522,7 @@ const pos_type data_table<Table, Record, Key, Interface>::rfind(Finder& finder, 
 
 /**
  * Read a record
- * @param data data of the record
+ * @param record data of the record
  * @param pos the position of the record
  * @return the position of the next record
  */
@@ -538,7 +537,7 @@ inline const pos_type data_table<Table, Record, Key, Interface>::do_read(record_
 
 /**
  * Reverse read a record
- * @param data data of the record
+ * @param record data of the record
  * @param pos the position of the record
  * @return the position of the previous record
  */
@@ -655,7 +654,7 @@ inline const pos_type data_table<Table, Record, Key, Interface>::do_add(const re
 
 /**
  * Read a record (without any locking)
- * @param data data of the record
+ * @param record data of the record
  * @param pos the position of the record
  * @return the position of the next record
  */
@@ -667,7 +666,7 @@ const pos_type data_table<Table, Record, Key, Interface>::unsafe_read(record_typ
 
 /**
  * Reverse read a record (without any locking)
- * @param data data of the record
+ * @param record data of the record
  * @param pos the position of the record
  * @return the position of the previous record
  */

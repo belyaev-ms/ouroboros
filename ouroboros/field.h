@@ -238,7 +238,7 @@ inline void *string_field<SIZE>::pack(void *out) const
 
 /**
  * Unpack the field from the buffer
- * @param out the pointer to data of the field
+ * @param in the pointer to data of the field
  * @return the pointer to data of the next field
  */
 template <unsigned int SIZE>

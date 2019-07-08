@@ -161,7 +161,6 @@ inline const std::string make_dbname(const std::string& name)
 /**
  * Get the size of object which is aligned by the cache page
  * @param size the size of object
- * @param pageSize the size of cache page
  * @return the size of object which is aligned by the cache page
  */
 template <typename File>

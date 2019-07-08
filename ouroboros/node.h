@@ -465,7 +465,7 @@ inline const bool data_node<Key, Body, Converter>::right(const pos_type pos)
 
 /**
  * Set the color of the node
- * @param color the color of the node
+ * @param in_color the color of the node
  * @return there was a change
  */
 template <typename Key, typename Body, typename Converter>

@@ -291,7 +291,6 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::add(const re
 /**
  * Add records
  * @param records data of the records
- * @param count the count of the records
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Record,
