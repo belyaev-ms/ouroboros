@@ -1,0 +1,13 @@
+language: cpp
+os: linux
+compiler: clang
+
+addons:
+    apt:
+        packages: libboost-all-dev
+
+script:
+    - ./configure
+    - cd ./build
+    - cmake --build .
+    - ctest --output-on-failure
