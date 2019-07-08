@@ -40,3 +40,19 @@ ouroboros_add_test(rbtree_test)
 if (OUROBOROS_COVERAGE_ENABLED)
     ouroboros_add_coverage(coverage ctest coverage)
 endif (OUROBOROS_COVERAGE_ENABLED)
+
+################################################################################
+# Static code analysis
+################################################################################
+add_custom_target(
+    cppcheck
+    COMMAND cppcheck
+    --enable=all
+    --template=gcc
+    --project=${CMAKE_BINARY_DIR}/compile_commands.json
+)
+
+add_custom_target(
+    clang-tidy
+    COMMAND run-clang-tidy-3.8.py
+)
