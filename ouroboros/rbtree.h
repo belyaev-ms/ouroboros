@@ -138,7 +138,7 @@ private:
     void right_rotate(pnode_type x); ///< rotate the node to the right
     void insert_fixup(pnode_type x); ///< fix up the balance of the tree after inserting the node
     void remove_fixup(pnode_type x); ///< fix up the balance of the tree after removing the node
-    inline const node_color node_color(pnode_type pnode) const;
+    inline const node_color get_node_color(pnode_type pnode) const;
 #if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
     void verify() const;
     void verify_colors_for_each_node(pnode_type pnode, count_type& count) const;
@@ -823,7 +823,7 @@ void rbtree<PNode>::remove_fixup(pnode_type x)
  * @return color of the node
  */
 template <typename PNode>
-inline const node_color rbtree<PNode>::node_color(pnode_type pnode) const
+inline const node_color rbtree<PNode>::get_node_color(pnode_type pnode) const
 {
     return pnode.pos() == NIL ? BLACK : pnode.color();
 }
@@ -923,7 +923,7 @@ void rbtree<PNode>::test() const
 template <typename PNode>
 void rbtree<PNode>::verify() const
 {
-    OUROBOROS_ASSERT(node_color(m_root) == BLACK);
+    OUROBOROS_ASSERT(get_node_color(m_root) == BLACK);
     count_type count = 0;
     verify_colors_for_each_node(m_root, count);
     verify_colors_for_relationship(m_root);
@@ -938,7 +938,7 @@ void rbtree<PNode>::verify() const
 template <typename PNode>
 void rbtree<PNode>::verify_colors_for_each_node(pnode_type pnode, count_type& count) const
 {
-    OUROBOROS_ASSERT(node_color(pnode) == RED || node_color(pnode) == BLACK);
+    OUROBOROS_ASSERT(get_node_color(pnode) == RED || get_node_color(pnode) == BLACK);
     if (pnode.pos() != NIL)
     {
         ++count;
@@ -956,11 +956,11 @@ void rbtree<PNode>::verify_colors_for_each_node(pnode_type pnode, count_type& co
 template <typename PNode>
 void rbtree<PNode>::verify_colors_for_relationship(pnode_type pnode) const
 {
-    if (node_color(pnode) == RED)
+    if (get_node_color(pnode) == RED)
     {
-        OUROBOROS_ASSERT(node_color(pnode.left()) == BLACK);
-        OUROBOROS_ASSERT(node_color(pnode.right()) == BLACK);
-        OUROBOROS_ASSERT(node_color(pnode.parent()) == BLACK);
+        OUROBOROS_ASSERT(get_node_color(pnode.left()) == BLACK);
+        OUROBOROS_ASSERT(get_node_color(pnode.right()) == BLACK);
+        OUROBOROS_ASSERT(get_node_color(pnode.parent()) == BLACK);
     }
     if (pnode.pos() != NIL)
     {
@@ -978,7 +978,7 @@ void rbtree<PNode>::verify_colors_for_relationship(pnode_type pnode) const
 template <typename PNode>
 void rbtree<PNode>::verify_path(pnode_type pnode, count_type black_count, count_type& path_black_count) const
 {
-    if (node_color(pnode) == BLACK)
+    if (get_node_color(pnode) == BLACK)
     {
         ++black_count;
     }

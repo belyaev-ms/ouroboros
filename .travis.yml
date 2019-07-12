@@ -1,13 +1,23 @@
 language: cpp
 os: linux
-compiler: clang
+compiler: gcc
 
 addons:
     apt:
-        packages: libboost-all-dev
+        packages: 
+            - libboost-all-dev
+            - lcov
 
+before_install:
+    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - sudo apt-get update -qq
+    - sudo pip install codecov
+  
 script:
     - ./configure
     - cd ./build
     - cmake --build .
     - ctest --output-on-failure
+    
+after_success:
+    - codecov

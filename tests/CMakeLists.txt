@@ -1,13 +1,17 @@
 ################################################################################
-# Unit-tests
+# Coverage
 ################################################################################
-add_definitions(-DOUROBOROS_TEST_ENABLED)
-#set(OUROBOROS_COVERAGE_ENABLED yes)
+set(OUROBOROS_COVERAGE_ENABLED yes)
 if (OUROBOROS_COVERAGE_ENABLED)
     include(../cmake/coverage.cmake)
 else (OUROBOROS_COVERAGE_ENABLED)
     set(CMAKE_CXX_FLAGS "-g3")
 endif (OUROBOROS_COVERAGE_ENABLED)
+
+################################################################################
+# Unit-tests
+################################################################################
+add_definitions(-DOUROBOROS_TEST_ENABLED)
 #macros for add an unit-test
 macro(ouroboros_add_test test)
     add_executable(${test} ${test}.cpp)
@@ -22,7 +26,6 @@ ouroboros_add_test(cachefile_test)
 ouroboros_add_test(backupfile_test)
 ouroboros_add_test(journalfile_test)
 ouroboros_add_test(hashmap_test)
-#ouroboros_add_test(sharedlocker_test)
 ouroboros_add_test(key_test)
 ouroboros_add_test(field_test)
 ouroboros_add_test(table_test)
@@ -38,7 +41,7 @@ ouroboros_add_test(transaction_test)
 ouroboros_add_test(indexedtransaction_test)
 ouroboros_add_test(rbtree_test)
 if (OUROBOROS_COVERAGE_ENABLED)
-    ouroboros_add_coverage(coverage ctest coverage)
+    ouroboros_coverage(coverage)
 endif (OUROBOROS_COVERAGE_ENABLED)
 
 ################################################################################

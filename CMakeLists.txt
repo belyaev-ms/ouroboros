@@ -4,7 +4,7 @@ set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 project(ouroboros)
 
 option(CMAKE_EXPORT_COMPILE_COMMANDS                            ON)
-option(OUROBOROS_USE_CLANG "use clang"                          ON)
+option(OUROBOROS_USE_CLANG "use clang"                          OFF)
 option(OUROBOROS_EXAMPLES_ENABLED "the examples are enabled"    ON)
 option(OUROBOROS_TOOLS_ENABLED "the tools are enabled"          ON)
 option(OUROBOROS_TEST_ENABLED "the tests are enabled"           ON)

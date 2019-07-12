@@ -116,7 +116,7 @@ protected:
     typedef typename key_table_type::unsafe_table unsafe_table_key;
     typedef typename info_table_type::unsafe_table unsafe_table_info;
     typedef typename table_type::raw_record_type raw_record_type;
-    typedef lazy_transaction<data_set> lazy_transaction_type;
+    typedef ouroboros::lazy_transaction<data_set> lazy_transaction_type;
 
     void init(const info_type& info); ///< initialize the dataset
     inline table_type* table(const key_type key); ///< get the table by the key
