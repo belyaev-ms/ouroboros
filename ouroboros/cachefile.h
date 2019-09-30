@@ -286,8 +286,10 @@ void cache_file<pageSize, pageCount, File, Cache>::stop()
     {
         OUROBOROS_THROW_BUG("there isn't any transaction");
     }
-    m_trans = TR_STOPPED;
+    /*@attention if the line will be executed after the next line then 
+     * your data may be lost! */
     m_cache.clean();
+    m_trans = TR_STOPPED;
 }
 
 /**
