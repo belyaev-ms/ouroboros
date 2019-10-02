@@ -10,6 +10,7 @@
 
 #include "ouroboros/filelock.h"
 #include "ouroboros/cache.h"
+#include "ouroboros/page.h"
 
 namespace ouroboros
 {
@@ -35,6 +36,7 @@ public:
 
     typedef Cache<cache_file, pageSize, pageCount> cache_type;
     typedef typename cache_type::page_status_type page_status_type;
+    typedef file_page<pageSize> file_page_type;
 
     explicit cache_file(const std::string& name);
 #ifdef OUROBOROS_TEST_ENABLED
@@ -101,36 +103,22 @@ inline void cache_file<pageSize, pageCount, File, Cache>::read(void *buffer, siz
 template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
 void cache_file<pageSize, pageCount, File, Cache>::do_read(void *buffer, size_type size, pos_type pos) const
 {
-    const pos_type beg = pos;  // the first byte for read
-    const pos_type end = beg + size - 1; // the last byte for read
-    const pos_type index0 = beg / CACHE_PAGE_SIZE; // the index that has the first byte
-    const pos_type index1 = end / CACHE_PAGE_SIZE; // the index that has the last byte
-
-    pos_type offset = pos % CACHE_PAGE_SIZE; // the position in the cache page for read the first byte
-    // check the cache page has full data for read
-    if (index0 == index1)
+    file_page_type page0(pos);
+    file_page_type page1(pos + size - 1);
+    if (page0 == page1)
     {
-        void *page = get_page(index0);
-        memcpy(buffer, static_cast<char *>(page) + offset, size);
+        page0.assign(get_page(page0.index()));
+        page0.read(buffer, size);
     }
     else
     {
-        // read data from the first cache page
-        size_type size0 = CACHE_PAGE_SIZE - offset; // size of useful data in the first cache page
-        void *page = get_page(index0);
-        memcpy(buffer, static_cast<char *>(page) + offset, size0);
-        buffer = static_cast<char *>(buffer) + size0;
-        // read data from next cache pages
-        for (pos_type i = index0 + 1; i < index1; ++i)
+        for (file_page_type page = page0; page < page1; ++page)
         {
-            page = get_page(i);
-            memcpy(buffer, page, CACHE_PAGE_SIZE);
-            buffer = static_cast<char *>(buffer) + CACHE_PAGE_SIZE;
+            page.assign(get_page(page.index()));
+            buffer = page.read(buffer);
         }
-        // read data from the last cache page
-        size_type size1 = end % CACHE_PAGE_SIZE + 1; // size of useful data in the last cache page
-        page = get_page(index1);
-        memcpy(buffer, page, size1);
+        page1.assign(get_page(page1.index()));
+        page1.read_rest(buffer);
     }
 }
 
@@ -162,48 +150,22 @@ void cache_file<pageSize, pageCount, File, Cache>::write(const void *buffer, siz
 template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
 void cache_file<pageSize, pageCount, File, Cache>::do_write(const void *buffer, size_type size, pos_type pos)
 {
-    const pos_type beg = pos;  // the first byte for write
-    const pos_type end = beg + size - 1; // the last byte for write
-    const pos_type index0 = beg / CACHE_PAGE_SIZE; // the index that has the first byte
-    const pos_type index1 = end / CACHE_PAGE_SIZE; // the index that has the last byte
-
-    pos_type offset = pos % CACHE_PAGE_SIZE; // the position in the cache page for write the first byte
-    // check the cache page has full data for write
-    if (index0 == index1)
+    file_page_type page0(pos);
+    file_page_type page1(pos + size - 1);
+    if (page0 == page1)
     {
-        void *page = get_page(index0);
-        if (page != NULL)
-        {
-            memcpy(static_cast<char *>(page) + offset, buffer, size);
-        }
+        page0.assign(get_page(page0.index()));
+        page0.write(buffer, size);
     }
     else
     {
-        // write data from the first cache page
-        size_type size0 = CACHE_PAGE_SIZE - offset; // size of useful data in the first cache page
-        void *page = get_page(index0);
-        if (page != NULL)
+        for (file_page_type page = page0; page < page1; ++page)
         {
-            memcpy(static_cast<char *>(page) + offset, buffer, size0);
+            page.assign(get_page(page.index()));
+            buffer = page.write(buffer);
         }
-        buffer = static_cast<const char *>(buffer) + size0;
-        // write data from next cache pages
-        for (pos_type i = index0 + 1; i < index1; ++i)
-        {
-            page = get_page(i);
-            if (page != NULL)
-            {
-                memcpy(page, buffer, CACHE_PAGE_SIZE);
-            }
-            buffer = static_cast<const char *>(buffer) + CACHE_PAGE_SIZE;
-        }
-        // write data from the last cache page
-        size_type size1 = end % CACHE_PAGE_SIZE + 1; // size of useful data in the last cache page
-        page = get_page(index1);
-        if (page != NULL)
-        {
-            memcpy(page, buffer, size1);
-        }
+        page1.assign(get_page(page1.index()));
+        page1.write_rest(buffer);
     }
 }
 
@@ -286,7 +248,7 @@ void cache_file<pageSize, pageCount, File, Cache>::stop()
     {
         OUROBOROS_THROW_BUG("there isn't any transaction");
     }
-    /*@attention if the line will be executed after the next line then 
+    /*@attention if the line will be executed after the next line then
      * your data may be lost! */
     m_cache.clean();
     m_trans = TR_STOPPED;
