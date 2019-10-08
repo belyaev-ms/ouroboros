@@ -23,10 +23,10 @@ namespace ouroboros
  */
 template <int pageSize = 1024, int pageCount = 1024, typename File = file_lock,
         template <typename, int, int> class Cache = cache>
-class backup_file : public cache_file<pageSize, pageCount, File, Cache>
+class backup_file : public cache_file<pageSize, pageCount, File, file_page, Cache>
 {
     typedef File simple_file;
-    typedef cache_file<pageSize, pageCount, File, Cache> base_class;
+    typedef cache_file<pageSize, pageCount, File, file_page, Cache> base_class;
 public:
     typedef typename base_class::page_status_type page_status_type;
     explicit backup_file(const std::string& name);

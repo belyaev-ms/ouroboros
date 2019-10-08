@@ -7,6 +7,7 @@
 #define OUROBOROS_PAGE_H
 
 #include "ouroboros/global.h"
+#include <vector>
 
 namespace ouroboros
 {
@@ -14,16 +15,19 @@ namespace ouroboros
 /**
  * The base file page that provide access to useful data and to service data
  */
-template <int pageSize>
+template <int pageSize, int serviceSize = 0>
 class file_page
 {
 public:
     enum
     {
-        FILE_PAGE_SIZE = pageSize
+        TOTAL_SIZE      = pageSize,
+        SERVICE_SIZE    = serviceSize,
+        DATA_SIZE       = TOTAL_SIZE - SERVICE_SIZE
     };
 
     file_page();
+    virtual ~file_page();
     explicit file_page(const pos_type pos);
     file_page(const file_page& page);
     const pos_type pos() const;
@@ -41,6 +45,8 @@ public:
     file_page& operator++ ();
     file_page& operator= (const file_page& page);
     static const size_type static_size();
+    static const size_type static_data_size();
+    static const pos_type static_convert(const pos_type pos);
 private:
     void *do_read(void *buffer, const pos_type offset, const size_type size) const;
     const void *do_write(const void *buffer, const pos_type offset, const size_type size);
@@ -50,39 +56,93 @@ private:
     void *m_ptr;
 };
 
+class file_region
+{
+public:
+    typedef std::pair<offset_type, offset_type> range_type;
+    typedef std::vector<file_region> region_list;
+    file_region();
+    file_region(const size_t count, const size_t size);
+    file_region(const size_t count, const file_region& region);
+    file_region(const size_t count, const region_list& regions);
+    file_region& operator+ (const file_region& region);
+    const range_type operator[] (const size_t index) const;
+private:
+    const std::pair<offset_type, bool> get_offset(const size_t index, size_t& count, size_t offset) const;
+private:
+    size_t m_count;
+    size_t m_size;
+    region_list m_regions;
+};
+
 //==============================================================================
 //  file_page
 //==============================================================================
 /**
  * Get the size of the file page
- * @return
+ * @return the size of the file page
  */
-template <int pageSize>
 //static
-const size_type file_page<pageSize>::static_size()
+template <int pageSize, int serviceSize>
+const size_type file_page<pageSize, serviceSize>::static_size()
 {
-    return pageSize;
+    return TOTAL_SIZE;
+}
+
+/**
+ * Get the size of a block data in the file page
+ * @return the size of a block data in the file page
+ */
+//static
+template <int pageSize, int serviceSize>
+const size_type file_page<pageSize, serviceSize>::static_data_size()
+{
+    return DATA_SIZE;
+}
+
+/**
+ * Convert a position of useful data to a real position of data in a file
+ * @param pos a position of useful data
+ * @return a real position of data in a file
+ */
+//static
+template <int pageSize, int serviceSize>
+const pos_type file_page<pageSize, serviceSize>::static_convert(const pos_type pos)
+{
+    if (SERVICE_SIZE == 0)
+    {
+        return pos;
+    }
+    const pos_type index = pos / DATA_SIZE;
+    return index * TOTAL_SIZE + pos % DATA_SIZE;
 }
 
 /**
  * Constructor
  */
-template <int pageSize>
-file_page<pageSize>::file_page() :
+template <int pageSize, int serviceSize>
+file_page<pageSize, serviceSize>::file_page() :
     m_pos(NIL),
     m_index(NIL),
     m_ptr(NULL)
 {
 }
 
+//virtual
+template <int pageSize, int serviceSize>
+file_page<pageSize, serviceSize>::~file_page()
+{
+
+}
+
 /**
  * Constructor
  * @param pos the position in the data file
  */
-template <int pageSize>
-file_page<pageSize>::file_page(const pos_type pos) :
-    m_pos(pos),
-    m_index(pos / pageSize),
+template <int pageSize, int serviceSize>
+file_page<pageSize, serviceSize>::file_page(const pos_type pos) :
+    m_pos(static_convert(pos)),
+    m_index(pos / DATA_SIZE),
     m_ptr(NULL)
 {
 }
@@ -91,8 +151,8 @@ file_page<pageSize>::file_page(const pos_type pos) :
  * Constructor
  * @param page another file page
  */
-template <int pageSize>
-file_page<pageSize>::file_page(const file_page& page) :
+template <int pageSize, int serviceSize>
+file_page<pageSize, serviceSize>::file_page(const file_page& page) :
     m_pos(page.m_pos),
     m_index(page.m_index),
     m_ptr(page.m_ptr)
@@ -103,8 +163,8 @@ file_page<pageSize>::file_page(const file_page& page) :
  * Get the position in the data file
  * @return the position in the data file
  */
-template <int pageSize>
-const pos_type file_page<pageSize>::pos() const
+template <int pageSize, int serviceSize>
+const pos_type file_page<pageSize, serviceSize>::pos() const
 {
     return m_pos;
 }
@@ -113,8 +173,8 @@ const pos_type file_page<pageSize>::pos() const
  * Get the index of the file page
  * @return the index of the file page
  */
-template <int pageSize>
-const pos_type file_page<pageSize>::index() const
+template <int pageSize, int serviceSize>
+const pos_type file_page<pageSize, serviceSize>::index() const
 {
     return m_index;
 }
@@ -123,8 +183,8 @@ const pos_type file_page<pageSize>::index() const
  * Assign a memory data page
  * @param ptr the pointer to a memory data page
  */
-template <int pageSize>
-void file_page<pageSize>::assign(void *ptr)
+template <int pageSize, int serviceSize>
+void file_page<pageSize, serviceSize>::assign(void *ptr)
 {
     m_ptr = ptr;
 }
@@ -134,11 +194,11 @@ void file_page<pageSize>::assign(void *ptr)
  * @param buffer the pointer to the buffer
  * @return the pointer to the next position of the buffer
  */
-template <int pageSize>
-void *file_page<pageSize>::read(void *buffer) const
+template <int pageSize, int serviceSize>
+void *file_page<pageSize, serviceSize>::read(void *buffer) const
 {
-    const pos_type offset = m_pos % pageSize;
-    const size_type size = pageSize - offset;
+    const pos_type offset = m_pos % DATA_SIZE;
+    const size_type size = DATA_SIZE - offset;
     return do_read(buffer, offset, size);
 }
 
@@ -147,10 +207,10 @@ void *file_page<pageSize>::read(void *buffer) const
  * @param buffer the pointer to the buffer
  * @return the pointer to the next position of the buffer
  */
-template <int pageSize>
-void *file_page<pageSize>::read_rest(void *buffer) const
+template <int pageSize, int serviceSize>
+void *file_page<pageSize, serviceSize>::read_rest(void *buffer) const
 {
-    const size_type size = m_pos % pageSize + 1;
+    const size_type size = m_pos % DATA_SIZE + 1;
     return do_read(buffer, 0, size);
 }
 
@@ -160,10 +220,10 @@ void *file_page<pageSize>::read_rest(void *buffer) const
  * @param size the size of the useful memory block
  * @return the pointer to the next position of the buffer
  */
-template <int pageSize>
-void *file_page<pageSize>::read(void *buffer, const size_type size) const
+template <int pageSize, int serviceSize>
+void *file_page<pageSize, serviceSize>::read(void *buffer, const size_type size) const
 {
-    const pos_type offset = m_pos % pageSize;
+    const pos_type offset = m_pos % DATA_SIZE;
     return do_read(buffer, offset, size);
 }
 
@@ -174,10 +234,10 @@ void *file_page<pageSize>::read(void *buffer, const size_type size) const
  * @param size the size of the useful data
  * @return the pointer to the next position of the buffer
  */
-template <int pageSize>
-void *file_page<pageSize>::do_read(void *buffer, const pos_type offset, const size_type size) const
+template <int pageSize, int serviceSize>
+void *file_page<pageSize, serviceSize>::do_read(void *buffer, const pos_type offset, const size_type size) const
 {
-    OUROBOROS_ASSERT(buffer != NULL && valid() && offset + size <= FILE_PAGE_SIZE);
+    OUROBOROS_ASSERT(buffer != NULL && valid() && offset + size <= DATA_SIZE);
     memcpy(buffer, static_cast<char *>(m_ptr) + offset, size);
     return static_cast<char *>(buffer) + size;
 }
@@ -187,11 +247,11 @@ void *file_page<pageSize>::do_read(void *buffer, const pos_type offset, const si
  * @param buffer the pointer to the buffer
  * @return the pointer to the next position of the buffer
  */
-template <int pageSize>
-const void *file_page<pageSize>::write(const void *buffer)
+template <int pageSize, int serviceSize>
+const void *file_page<pageSize, serviceSize>::write(const void *buffer)
 {
-    const pos_type offset = m_pos % pageSize;
-    const size_type size = pageSize - offset;
+    const pos_type offset = m_pos % DATA_SIZE;
+    const size_type size = DATA_SIZE - offset;
     return do_write(buffer, offset, size);
 }
 
@@ -200,10 +260,10 @@ const void *file_page<pageSize>::write(const void *buffer)
  * @param buffer the pointer to the buffer
  * @return the pointer to the next position of the buffer
  */
-template <int pageSize>
-const void *file_page<pageSize>::write_rest(const void *buffer)
+template <int pageSize, int serviceSize>
+const void *file_page<pageSize, serviceSize>::write_rest(const void *buffer)
 {
-    const size_type size = m_pos % pageSize + 1;
+    const size_type size = m_pos % DATA_SIZE + 1;
     return do_write(buffer, 0, size);
 }
 
@@ -213,10 +273,10 @@ const void *file_page<pageSize>::write_rest(const void *buffer)
  * @param size the size of data
  * @return the pointer to the next position of the buffer
  */
-template <int pageSize>
-const void *file_page<pageSize>::write(const void *buffer, const size_type size)
+template <int pageSize, int serviceSize>
+const void *file_page<pageSize, serviceSize>::write(const void *buffer, const size_type size)
 {
-    const pos_type offset = m_pos % pageSize;
+    const pos_type offset = m_pos % DATA_SIZE;
     return do_write(buffer, offset, size);
 }
 
@@ -227,10 +287,10 @@ const void *file_page<pageSize>::write(const void *buffer, const size_type size)
  * @param size the size of data
  * @return the pointer to the next position of the buffer
  */
-template <int pageSize>
-const void *file_page<pageSize>::do_write(const void *buffer, const pos_type offset, const size_type size)
+template <int pageSize, int serviceSize>
+const void *file_page<pageSize, serviceSize>::do_write(const void *buffer, const pos_type offset, const size_type size)
 {
-    OUROBOROS_ASSERT(buffer != NULL && valid() && offset + size <= FILE_PAGE_SIZE);
+    OUROBOROS_ASSERT(buffer != NULL && valid() && offset + size <= DATA_SIZE);
     memcpy(static_cast<char *>(m_ptr) + offset, buffer, size);
     return static_cast<const char *>(buffer) + size;
 }
@@ -239,8 +299,8 @@ const void *file_page<pageSize>::do_write(const void *buffer, const pos_type off
  * Check the file page is valid
  * @return the result of the checking
  */
-template <int pageSize>
-const bool file_page<pageSize>::valid() const
+template <int pageSize, int serviceSize>
+const bool file_page<pageSize, serviceSize>::valid() const
 {
     return m_ptr != NULL && m_pos != NIL && m_index != NIL;
 }
@@ -250,8 +310,8 @@ const bool file_page<pageSize>::valid() const
  * @param page the another file page
  * @return the result of the checking
  */
-template <int pageSize>
-const bool file_page<pageSize>::operator== (const file_page& page) const
+template <int pageSize, int serviceSize>
+const bool file_page<pageSize, serviceSize>::operator== (const file_page& page) const
 {
     return m_index == page.m_index;
 }
@@ -261,8 +321,8 @@ const bool file_page<pageSize>::operator== (const file_page& page) const
  * @param page the another file page
  * @return the result of the checking
  */
-template <int pageSize>
-const bool file_page<pageSize>::operator< (const file_page& page) const
+template <int pageSize, int serviceSize>
+const bool file_page<pageSize, serviceSize>::operator< (const file_page& page) const
 {
     return m_index < page.m_index;
 }
@@ -271,11 +331,11 @@ const bool file_page<pageSize>::operator< (const file_page& page) const
  * Operator ++
  * @return the next file page
  */
-template <int pageSize>
-file_page<pageSize>& file_page<pageSize>::operator++ ()
+template <int pageSize, int serviceSize>
+file_page<pageSize, serviceSize>& file_page<pageSize, serviceSize>::operator++ ()
 {
     ++m_index;
-    m_pos = m_index * pageSize;
+    m_pos = m_index * TOTAL_SIZE;
     m_ptr = NULL;
     return *this;
 }
@@ -285,13 +345,131 @@ file_page<pageSize>& file_page<pageSize>::operator++ ()
  * @param page the another file page
  * @return reference to yourself
  */
-template <int pageSize>
-file_page<pageSize>& file_page<pageSize>::operator= (const file_page& page)
+template <int pageSize, int serviceSize>
+file_page<pageSize, serviceSize>& file_page<pageSize, serviceSize>::operator= (const file_page& page)
 {
     m_pos = page.m_pos;
     m_index = page.m_index;
     m_ptr = page.m_ptr;
     return *this;
+}
+
+//==============================================================================
+//  file_region
+//==============================================================================
+/**
+ * Constructor
+ */
+file_region::file_region() :
+    m_count(0),
+    m_size(0)
+{
+}
+
+/**
+ * Constructor
+ * @param count the count of subregion
+ * @param size the size of a subregion
+ */
+file_region::file_region(const size_t count, const size_t size) :
+    m_count(count),
+    m_size(size)
+{
+}
+
+/**
+ * Constructor
+ * @param count the count of a subregion
+ * @param region the subregion
+ */
+file_region::file_region(const size_t count, const file_region& region) :
+    m_count(count),
+    m_size(0),
+    m_regions(1, region)
+{
+}
+
+/**
+ * Constructor
+ * @param count the count of a list of subregion
+ * @param regions the list of subregion
+ */
+file_region::file_region(const size_t count, const region_list& regions) :
+    m_count(count),
+    m_size(0),
+    m_regions(regions)
+{
+}
+
+/**
+ * Add a subregion
+ * @param region the subregion
+ * @return reference to yourself
+ */
+file_region& file_region::operator+ (const file_region& region)
+{
+    OUROBOROS_ASSERT(m_size == 0);
+    m_regions.push_back(region);
+    return *this;
+}
+
+/**
+ * Get the range of the index'th region
+ * @param index the index of the region
+ * @return the range of the region
+ */
+const file_region::range_type file_region::operator[] (const size_t index) const
+{
+    range_type range(0, 0);
+    size_t count = 0;
+    std::pair<offset_type, bool> result;
+    if (index > 0)
+    {
+        result = get_offset(index, count, 0);
+        OUROBOROS_ASSERT(result.second);
+        range.first = result.first;
+    }
+    count = 0;
+    result = get_offset(index + 1, count, 0);
+    OUROBOROS_ASSERT(result.second);
+    range.second = result.first;
+    return range;
+}
+
+/**
+ * Get the offset of the index'th region
+ * @param index the index of the region
+ * @param count the count of the passed regions
+ * @param offset the current offset
+ * @return the offset of the current region and the flag of successful
+ */
+const std::pair<offset_type, bool> file_region::get_offset(const size_t index, size_t& count, size_t offset) const
+{
+    if (m_size > 0)
+    {
+        if (m_count + count >= index)
+        {
+            return std::make_pair(m_size * (index - count) + offset, true);
+        }
+        count += m_count;
+        return std::make_pair(m_count * m_size + offset, false);
+    }
+    else
+    {
+        for (size_t i = 0; i < m_count; ++i)
+        {
+            for (region_list::const_iterator it = m_regions.begin(); it != m_regions.end(); ++it)
+            {
+                const std::pair<offset_type, bool> result = it->get_offset(index, count, offset);
+                if (result.second)
+                {
+                    return result;
+                }
+                offset = result.first;
+            }
+        }
+        return std::make_pair(offset, false);
+    }
 }
 
 }   //namespace ouroboros
