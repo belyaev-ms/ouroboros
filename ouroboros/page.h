@@ -56,22 +56,32 @@ private:
     void *m_ptr;
 };
 
+/**
+ * The base file region that solves the problem  of separating a file into
+ * several aligned regions
+ */
+template <int pageSize>
 class file_region
 {
 public:
+    enum
+    {
+        FILE_PAGE_SIZE = pageSize
+    };
     typedef std::pair<offset_type, offset_type> range_type;
     typedef std::vector<file_region> region_list;
     file_region();
-    file_region(const size_t count, const size_t size);
-    file_region(const size_t count, const file_region& region);
-    file_region(const size_t count, const region_list& regions);
+    file_region(const count_type count, const size_type size);
+    file_region(const count_type count, const file_region& region);
+    file_region(const count_type count, const region_list& regions);
     file_region& operator+ (const file_region& region);
-    const range_type operator[] (const size_t index) const;
+    const range_type operator[] (const pos_type index) const;
 private:
-    const std::pair<offset_type, bool> get_offset(const size_t index, size_t& count, size_t offset) const;
+    const size_type align_size(const size_type size) const;
+    const std::pair<offset_type, bool> get_offset(const pos_type index, count_type& count, offset_type offset) const;
 private:
-    size_t m_count;
-    size_t m_size;
+    count_type m_count;
+    size_type m_size;
     region_list m_regions;
 };
 
@@ -360,7 +370,8 @@ file_page<pageSize, serviceSize>& file_page<pageSize, serviceSize>::operator= (c
 /**
  * Constructor
  */
-file_region::file_region() :
+template <int pageSize>
+file_region<pageSize>::file_region() :
     m_count(0),
     m_size(0)
 {
@@ -371,7 +382,8 @@ file_region::file_region() :
  * @param count the count of subregion
  * @param size the size of a subregion
  */
-file_region::file_region(const size_t count, const size_t size) :
+template <int pageSize>
+file_region<pageSize>::file_region(const count_type count, const size_type size) :
     m_count(count),
     m_size(size)
 {
@@ -382,7 +394,8 @@ file_region::file_region(const size_t count, const size_t size) :
  * @param count the count of a subregion
  * @param region the subregion
  */
-file_region::file_region(const size_t count, const file_region& region) :
+template <int pageSize>
+file_region<pageSize>::file_region(const count_type count, const file_region& region) :
     m_count(count),
     m_size(0),
     m_regions(1, region)
@@ -394,7 +407,8 @@ file_region::file_region(const size_t count, const file_region& region) :
  * @param count the count of a list of subregion
  * @param regions the list of subregion
  */
-file_region::file_region(const size_t count, const region_list& regions) :
+template <int pageSize>
+file_region<pageSize>::file_region(const count_type count, const region_list& regions) :
     m_count(count),
     m_size(0),
     m_regions(regions)
@@ -406,7 +420,8 @@ file_region::file_region(const size_t count, const region_list& regions) :
  * @param region the subregion
  * @return reference to yourself
  */
-file_region& file_region::operator+ (const file_region& region)
+template <int pageSize>
+file_region<pageSize>& file_region<pageSize>::operator+ (const file_region& region)
 {
     OUROBOROS_ASSERT(m_size == 0);
     m_regions.push_back(region);
@@ -418,10 +433,12 @@ file_region& file_region::operator+ (const file_region& region)
  * @param index the index of the region
  * @return the range of the region
  */
-const file_region::range_type file_region::operator[] (const size_t index) const
+template <int pageSize>
+const typename file_region<pageSize>::range_type file_region<pageSize>::
+    operator[] (const pos_type index) const
 {
     range_type range(0, 0);
-    size_t count = 0;
+    count_type count = 0;
     std::pair<offset_type, bool> result;
     if (index > 0)
     {
@@ -437,28 +454,48 @@ const file_region::range_type file_region::operator[] (const size_t index) const
 }
 
 /**
+ * Align a size of a region
+ * @param size the size of a region
+ * @return the aligned size of a region
+ */
+template <int pageSize>
+const size_type file_region<pageSize>::align_size(const size_type size) const
+{
+    count_type count = size / pageSize;
+    if (size % pageSize != 0)
+    {
+        ++count;
+    }
+    return count * pageSize;
+}
+
+/**
  * Get the offset of the index'th region
  * @param index the index of the region
  * @param count the count of the passed regions
  * @param offset the current offset
  * @return the offset of the current region and the flag of successful
  */
-const std::pair<offset_type, bool> file_region::get_offset(const size_t index, size_t& count, size_t offset) const
+template <int pageSize>
+const std::pair<offset_type, bool> file_region<pageSize>::
+    get_offset(const pos_type index, count_type& count, offset_type offset) const
 {
     if (m_size > 0)
     {
+        const size_type size = align_size(m_size);
         if (m_count + count >= index)
         {
-            return std::make_pair(m_size * (index - count) + offset, true);
+            return std::make_pair(size * (index - count) + offset, true);
         }
         count += m_count;
-        return std::make_pair(m_count * m_size + offset, false);
+        return std::make_pair(m_count * size + offset, false);
     }
     else
     {
         for (size_t i = 0; i < m_count; ++i)
         {
-            for (region_list::const_iterator it = m_regions.begin(); it != m_regions.end(); ++it)
+            for (typename region_list::const_iterator it = m_regions.begin();
+                    it != m_regions.end(); ++it)
             {
                 const std::pair<offset_type, bool> result = it->get_offset(index, count, offset);
                 if (result.second)

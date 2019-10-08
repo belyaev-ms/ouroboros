@@ -118,64 +118,65 @@ BOOST_AUTO_TEST_CASE(file_region_test)
 {
     size_t count = 3;
     size_t size = 5;
-    file_region subregion(count, size);
+    typedef file_region<8> file_region_type;
+    file_region_type subregion(count, size);
     {
         offset_type offset = 0;
         for (size_t i = 0; i < count; ++i)
         {
-            file_region::range_type result = subregion[i];
+            file_region_type::range_type result = subregion[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
-            BOOST_REQUIRE_EQUAL(result.second, offset + size);
-            offset += size;
+            BOOST_REQUIRE_EQUAL(result.second, offset + file_region_type::FILE_PAGE_SIZE);
+            offset += file_region_type::FILE_PAGE_SIZE;
         }
     }
     {
-        file_region region(1, subregion);
+        file_region_type region(1, subregion);
         offset_type offset = 0;
         for (size_t i = 0; i < count; ++i)
         {
-            file_region::range_type result = region[i];
+            file_region_type::range_type result = region[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
-            BOOST_REQUIRE_EQUAL(result.second, offset + size);
-            offset += size;
+            BOOST_REQUIRE_EQUAL(result.second, offset + file_region_type::FILE_PAGE_SIZE);
+            offset += file_region_type::FILE_PAGE_SIZE;
         }
     }
     {
-        file_region region(3, subregion);
+        file_region_type region(3, subregion);
         offset_type offset = 0;
         for (size_t i = 0; i < 3 * count; ++i)
         {
-            file_region::range_type result = region[i];
+            file_region_type::range_type result = region[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
-            BOOST_REQUIRE_EQUAL(result.second, offset + size);
-            offset += size;
+            BOOST_REQUIRE_EQUAL(result.second, offset + file_region_type::FILE_PAGE_SIZE);
+            offset += file_region_type::FILE_PAGE_SIZE;
         }
     }
     {
         size_t count1 = 2;
         size_t size1 = 10;
-        file_region subregion1(2, 10);
-        file_region::region_list subregions;
+        file_region_type subregion1(2, 10);
+        file_region_type::region_list subregions;
         subregions.push_back(subregion);
         subregions.push_back(subregion1);
-        file_region region(3, subregions);
+        file_region_type region(3, subregions);
         offset_type offset = 0;
         size_t j = 0;
         for (size_t k = 0; k < 3; ++k)
         {
             for (size_t i = 0; i < count; ++i)
             {
-                file_region::range_type result = region[j++];
+                file_region_type::range_type result = region[j++];
                 BOOST_REQUIRE_EQUAL(result.first, offset);
-                BOOST_REQUIRE_EQUAL(result.second, offset + size);
-                offset += size;
+                BOOST_REQUIRE_EQUAL(result.second, offset + file_region_type::FILE_PAGE_SIZE);
+                offset += file_region_type::FILE_PAGE_SIZE;
             }
             for (size_t i = 0; i < count1; ++i)
             {
-                file_region::range_type result = region[j++];
+                file_region_type::range_type result = region[j++];
                 BOOST_REQUIRE_EQUAL(result.first, offset);
-                BOOST_REQUIRE_EQUAL(result.second, offset + size1);
-                offset += size1;
+                BOOST_REQUIRE_EQUAL(result.second, offset + 2 * file_region_type::FILE_PAGE_SIZE);
+                offset += 2 * file_region_type::FILE_PAGE_SIZE;
             }
         }
     }
