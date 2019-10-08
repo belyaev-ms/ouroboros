@@ -7,7 +7,7 @@
 #include <vector>
 
 using namespace ouroboros;
-#if 0
+
 //==============================================================================
 //  Check the file page
 //==============================================================================
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(file_page_test)
         BOOST_REQUIRE(!page.valid());
     }
 }
-#endif
+
 //==============================================================================
 //  Check the file region
 //==============================================================================
@@ -151,19 +151,32 @@ BOOST_AUTO_TEST_CASE(file_region_test)
             offset += size;
         }
     }
-//    {
-//        file_region subregion1(2, 10);
-//        file_region::region_list subregions;
-//        subregions.push_back(subregion);
-//        subregions.push_back(subregion1);
-//        file_region region(3, subregions);
-//        offset_type offset = 0;
-//        for (size_t i = 0; i < 3 * (count + 2); ++i)
-//        {
-//            file_region::range_type result = region[i];
-//            BOOST_REQUIRE_EQUAL(result.first, offset);
-//            BOOST_REQUIRE_EQUAL(result.second, offset + size);
-//            offset += size;
-//        }
-//    }
+    {
+        size_t count1 = 2;
+        size_t size1 = 10;
+        file_region subregion1(2, 10);
+        file_region::region_list subregions;
+        subregions.push_back(subregion);
+        subregions.push_back(subregion1);
+        file_region region(3, subregions);
+        offset_type offset = 0;
+        size_t j = 0;
+        for (size_t k = 0; k < 3; ++k)
+        {
+            for (size_t i = 0; i < count; ++i)
+            {
+                file_region::range_type result = region[j++];
+                BOOST_REQUIRE_EQUAL(result.first, offset);
+                BOOST_REQUIRE_EQUAL(result.second, offset + size);
+                offset += size;
+            }
+            for (size_t i = 0; i < count1; ++i)
+            {
+                file_region::range_type result = region[j++];
+                BOOST_REQUIRE_EQUAL(result.first, offset);
+                BOOST_REQUIRE_EQUAL(result.second, offset + size1);
+                offset += size1;
+            }
+        }
+    }
 }
