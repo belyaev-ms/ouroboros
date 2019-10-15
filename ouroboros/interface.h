@@ -26,7 +26,7 @@ struct base_table_memory_interface
 {
     template <typename T> struct object_type : public local_object<T> {};
     typedef memory_file file_type;
-    typedef file_region<1> file_region_type;
+    typedef file_page<1> file_page_type;
     typedef stub_locker locker_type;
 };
 
@@ -38,7 +38,7 @@ template <int pageCount = OUROBOROS_PAGE_COUNT>
 struct base_table_local_interface : public base_table_memory_interface
 {
     typedef journal_file<OUROBOROS_PAGE_SIZE, pageCount> file_type;
-    typedef file_region<OUROBOROS_PAGE_SIZE> file_region_type;
+    typedef file_page<OUROBOROS_PAGE_SIZE> file_page_type;
 };
 
 /**

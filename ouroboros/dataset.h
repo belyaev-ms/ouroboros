@@ -59,7 +59,8 @@ public:
     typedef info info_type; ///< the struct of the information about the dataset
     typedef Interface interface_type; ///< the interface
     typedef typename interface_type::file_type file_type; ///< the file of the dataset
-    typedef typename interface_type::file_region_type file_region_type; ///< the file region of the dataset
+    typedef typename interface_type::file_page_type file_page_type; ///< the file page the dataset
+    typedef file_region<file_page_type> file_region_type; ///< the file region of the dataset
     typedef typename interface_type::template table_type<Record, Index, Key> table_type; ///< the table of data
     typedef typename interface_type::template key_table_type<skey_type, simple_key> key_table_type; ///< the table of keys
     typedef typename interface_type::template info_table_type<info_type, simple_key> info_table_type; ///< the table of inforamtion about the dataset

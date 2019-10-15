@@ -40,7 +40,7 @@ struct test_table_interface
 {
     template <typename T> struct object_type : public shared_object<T> {};
     typedef journal_file<OUROBOROS_PAGE_SIZE, OUROBOROS_PAGE_COUNT> file_type;
-    typedef file_region<OUROBOROS_PAGE_SIZE> file_region_type;
+    typedef file_page<OUROBOROS_PAGE_SIZE> file_page_type;
     template <typename Key, typename Field>
     struct skey_list : public shared_map<Key, Field> {};
     struct locker_type : public locker<mutex_lock>

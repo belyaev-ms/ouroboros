@@ -46,6 +46,7 @@ public:
     file_page& operator= (const file_page& page);
     static const size_type static_size();
     static const size_type static_data_size();
+    static const size_type static_align_size(const size_type size);
     static const pos_type static_convert(const pos_type pos);
 private:
     void *do_read(void *buffer, const pos_type offset, const size_type size) const;
@@ -60,14 +61,11 @@ private:
  * The base file region that solves the problem  of separating a file into
  * several aligned regions
  */
-template <int pageSize>
+template <typename FilePage>
 class file_region
 {
 public:
-    enum
-    {
-        FILE_PAGE_SIZE = pageSize
-    };
+    typedef FilePage file_page_type;
     typedef std::pair<offset_type, offset_type> range_type;
     typedef std::vector<file_region> region_list;
     file_region();
@@ -112,6 +110,23 @@ template <int pageSize, int serviceSize>
 const size_type file_page<pageSize, serviceSize>::static_data_size()
 {
     return DATA_SIZE;
+}
+
+/**
+ * Align a size by the page
+ * @param size the size
+ * @return the aligned size by the page
+ */
+//static
+template <int pageSize, int serviceSize>
+const size_type file_page<pageSize, serviceSize>::static_align_size(const size_type size)
+{
+    count_type count = size / DATA_SIZE;
+    if (size % DATA_SIZE != 0)
+    {
+        ++count;
+    }
+    return count != 0 ? count * TOTAL_SIZE : TOTAL_SIZE;
 }
 
 /**
@@ -374,8 +389,8 @@ file_page<pageSize, serviceSize>& file_page<pageSize, serviceSize>::operator= (c
 /**
  * Constructor
  */
-template <int pageSize>
-file_region<pageSize>::file_region() :
+template <typename FilePage>
+file_region<FilePage>::file_region() :
     m_count(0),
     m_size(0)
 {
@@ -386,8 +401,8 @@ file_region<pageSize>::file_region() :
  * @param count the count of subregion
  * @param size the size of a subregion
  */
-template <int pageSize>
-file_region<pageSize>::file_region(const count_type count, const size_type size) :
+template <typename FilePage>
+file_region<FilePage>::file_region(const count_type count, const size_type size) :
     m_count(count),
     m_size(size)
 {
@@ -398,8 +413,8 @@ file_region<pageSize>::file_region(const count_type count, const size_type size)
  * @param count the count of a subregion
  * @param region the subregion
  */
-template <int pageSize>
-file_region<pageSize>::file_region(const count_type count, const file_region& region) :
+template <typename FilePage>
+file_region<FilePage>::file_region(const count_type count, const file_region& region) :
     m_count(count),
     m_size(0),
     m_regions(1, region)
@@ -411,8 +426,8 @@ file_region<pageSize>::file_region(const count_type count, const file_region& re
  * @param count the count of a list of subregion
  * @param regions the list of subregion
  */
-template <int pageSize>
-file_region<pageSize>::file_region(const count_type count, const region_list& regions) :
+template <typename FilePage>
+file_region<FilePage>::file_region(const count_type count, const region_list& regions) :
     m_count(count),
     m_size(0),
     m_regions(regions)
@@ -424,8 +439,8 @@ file_region<pageSize>::file_region(const count_type count, const region_list& re
  * @param region the subregion
  * @return reference to yourself
  */
-template <int pageSize>
-file_region<pageSize>& file_region<pageSize>::add(const file_region& region)
+template <typename FilePage>
+file_region<FilePage>& file_region<FilePage>::add(const file_region& region)
 {
     if (m_size != 0)
     {
@@ -443,8 +458,8 @@ file_region<pageSize>& file_region<pageSize>::add(const file_region& region)
  * @param index the index of the region
  * @return the range of the region
  */
-template <int pageSize>
-const typename file_region<pageSize>::range_type file_region<pageSize>::
+template <typename FilePage>
+const typename file_region<FilePage>::range_type file_region<FilePage>::
     operator[] (const pos_type index) const
 {
     range_type range(0, 0);
@@ -464,35 +479,19 @@ const typename file_region<pageSize>::range_type file_region<pageSize>::
 }
 
 /**
- * Align a size of a region
- * @param size the size of a region
- * @return the aligned size of a region
- */
-template <int pageSize>
-const size_type file_region<pageSize>::align_size(const size_type size) const
-{
-    count_type count = size / pageSize;
-    if (size % pageSize != 0)
-    {
-        ++count;
-    }
-    return count != 0 ? count * pageSize : pageSize;
-}
-
-/**
  * Get the offset of the index'th region
  * @param index the index of the region
  * @param count the count of the passed regions
  * @param offset the current offset
  * @return the offset of the current region and the flag of successful
  */
-template <int pageSize>
-const std::pair<offset_type, bool> file_region<pageSize>::
+template <typename FilePage>
+const std::pair<offset_type, bool> file_region<FilePage>::
     get_offset(const pos_type index, count_type& count, offset_type offset) const
 {
     if (m_size > 0)
     {
-        const size_type size = align_size(m_size);
+        const size_type size = file_page_type::static_align_size(m_size);
         if (m_count + count >= index || m_count == 0)
         {
             return std::make_pair(size * (index - count) + offset, true);
@@ -524,8 +523,8 @@ const std::pair<offset_type, bool> file_region<pageSize>::
  * @param raw_offset the raw offset
  * @return the real offset in the file
  */
-template <int pageSize>
-const offset_type file_region<pageSize>::to_offset(const offset_type raw_offset) const
+template <typename FilePage>
+const offset_type file_region<FilePage>::to_offset(const offset_type raw_offset) const
 {
     offset_type offset = raw_offset;
     const std::pair<offset_type, bool> result = get_offset(offset, 0);
@@ -539,12 +538,13 @@ const offset_type file_region<pageSize>::to_offset(const offset_type raw_offset)
  * @param offset the current offset
  * @return the real offset in the file
  */
-template <int pageSize>
-const std::pair<offset_type, bool> file_region<pageSize>::get_offset(offset_type& raw_offset, offset_type offset) const
+template <typename FilePage>
+const std::pair<offset_type, bool> file_region<FilePage>::
+    get_offset(offset_type& raw_offset, offset_type offset) const
 {
     if (m_size > 0)
     {
-        const size_type size = align_size(m_size);
+        const size_type size = file_page_type::static_align_size(m_size);
         if (raw_offset < m_count * m_size || 0 == m_count)
         {
             const count_type count = raw_offset / m_size;

@@ -195,13 +195,14 @@ public:
  * The interface class for table source with support lock i/o operations
  */
 template <typename Interface>
-class locked_source : public source<typename Interface::file_type, typename Interface::file_region_type>
+class locked_source : public source<typename Interface::file_type, typename Interface::file_page_type>
 {
-    typedef source<typename Interface::file_type, typename Interface::file_region_type> base_class;
+    typedef source<typename Interface::file_type, typename Interface::file_page_type> base_class;
 public:
     typedef Interface interface_type;
     typedef typename interface_type::file_type file_type;
-    typedef typename interface_type::file_region_type file_region_type;
+    typedef typename interface_type::file_page_type file_page_type;
+    typedef typename base_class::file_region_type file_region_type;
     inline locked_source(file_type& file, const size_type rec_size, const options_type& options = options_type());
     inline locked_source(file_type& file, const count_type tbl_count, const size_type rec_size, const options_type& options = options_type());
     inline locked_source(file_type& file, const count_type tbl_count, const count_type rec_count, const size_type rec_size, const options_type& options = options_type());

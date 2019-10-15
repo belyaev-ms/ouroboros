@@ -118,7 +118,8 @@ BOOST_AUTO_TEST_CASE(file_region_test)
 {
     size_t count = 3;
     size_t size = 5;
-    typedef file_region<8> file_region_type;
+    typedef file_page<8> file_page_type;
+    typedef file_region<file_page_type> file_region_type;
     file_region_type subregion(count, size);
     {
         offset_type offset = 0;
@@ -126,8 +127,8 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         {
             file_region_type::range_type result = subregion[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
-            BOOST_REQUIRE_EQUAL(result.second, offset + file_region_type::FILE_PAGE_SIZE);
-            offset += file_region_type::FILE_PAGE_SIZE;
+            BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
+            offset += file_page_type::TOTAL_SIZE;
         }
         BOOST_REQUIRE_THROW(subregion[count], bug_error);
         offset = 0;
@@ -135,7 +136,7 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         {
             if (i > 0 && i % size == 0)
             {
-                offset += file_region_type::FILE_PAGE_SIZE - size;
+                offset += file_page_type::TOTAL_SIZE - size;
             }
             BOOST_REQUIRE_EQUAL(subregion.to_offset(i), offset);
             ++offset;
@@ -149,8 +150,8 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         {
             file_region_type::range_type result = subregion[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
-            BOOST_REQUIRE_EQUAL(result.second, offset + file_region_type::FILE_PAGE_SIZE);
-            offset += file_region_type::FILE_PAGE_SIZE;
+            BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
+            offset += file_page_type::TOTAL_SIZE;
         }
         BOOST_REQUIRE_NO_THROW(region[count + 1000]);
         offset = 0;
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         {
             if (i > 0 && i % size == 0)
             {
-                offset += file_region_type::FILE_PAGE_SIZE - size;
+                offset += file_page_type::TOTAL_SIZE - size;
             }
             BOOST_REQUIRE_EQUAL(region.to_offset(i), offset);
             ++offset;
@@ -172,8 +173,8 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         {
             file_region_type::range_type result = region[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
-            BOOST_REQUIRE_EQUAL(result.second, offset + file_region_type::FILE_PAGE_SIZE);
-            offset += file_region_type::FILE_PAGE_SIZE;
+            BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
+            offset += file_page_type::TOTAL_SIZE;
         }
         BOOST_REQUIRE_THROW(region[count], bug_error);
         offset = 0;
@@ -181,7 +182,7 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         {
             if (i > 0 && i % size == 0)
             {
-                offset += file_region_type::FILE_PAGE_SIZE - size;
+                offset += file_page_type::TOTAL_SIZE - size;
             }
             BOOST_REQUIRE_EQUAL(region.to_offset(i), offset);
             ++offset;
@@ -195,8 +196,8 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         {
             file_region_type::range_type result = region[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
-            BOOST_REQUIRE_EQUAL(result.second, offset + file_region_type::FILE_PAGE_SIZE);
-            offset += file_region_type::FILE_PAGE_SIZE;
+            BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
+            offset += file_page_type::TOTAL_SIZE;
         }
         BOOST_REQUIRE_THROW(region[3 * count], bug_error);
         offset = 0;
@@ -204,7 +205,7 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         {
             if (i > 0 && i % size == 0)
             {
-                offset += file_region_type::FILE_PAGE_SIZE - size;
+                offset += file_page_type::TOTAL_SIZE - size;
             }
             BOOST_REQUIRE_EQUAL(region.to_offset(i), offset);
             ++offset;
@@ -218,8 +219,8 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         {
             file_region_type::range_type result = region[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
-            BOOST_REQUIRE_EQUAL(result.second, offset + file_region_type::FILE_PAGE_SIZE);
-            offset += file_region_type::FILE_PAGE_SIZE;
+            BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
+            offset += file_page_type::TOTAL_SIZE;
         }
         BOOST_REQUIRE_NO_THROW(region[3 * count]);
         offset = 0;
@@ -227,7 +228,7 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         {
             if (i > 0 && i % size == 0)
             {
-                offset += file_region_type::FILE_PAGE_SIZE - size;
+                offset += file_page_type::TOTAL_SIZE - size;
             }
             BOOST_REQUIRE_EQUAL(region.to_offset(i), offset);
             ++offset;
@@ -250,15 +251,15 @@ BOOST_AUTO_TEST_CASE(file_region_test)
             {
                 file_region_type::range_type result = region[j++];
                 BOOST_REQUIRE_EQUAL(result.first, offset);
-                BOOST_REQUIRE_EQUAL(result.second, offset + file_region_type::FILE_PAGE_SIZE);
-                offset += file_region_type::FILE_PAGE_SIZE;
+                BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
+                offset += file_page_type::TOTAL_SIZE;
             }
             for (size_t i = 0; i < count1; ++i)
             {
                 file_region_type::range_type result = region[j++];
                 BOOST_REQUIRE_EQUAL(result.first, offset);
-                BOOST_REQUIRE_EQUAL(result.second, offset + 2 * file_region_type::FILE_PAGE_SIZE);
-                offset += 2 * file_region_type::FILE_PAGE_SIZE;
+                BOOST_REQUIRE_EQUAL(result.second, offset + 2 * file_page_type::TOTAL_SIZE);
+                offset += 2 * file_page_type::TOTAL_SIZE;
             }
         }
         BOOST_REQUIRE_THROW(region[j], bug_error);
