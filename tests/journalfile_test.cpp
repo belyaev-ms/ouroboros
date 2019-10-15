@@ -6,12 +6,14 @@
 #include "ouroboros/cache.h"
 #include "ouroboros/journalfile.h"
 #include "ouroboros/interface.h"
+#include "ouroboros/page.h"
 
 using namespace ouroboros;
 
 #define TEST_FILE_NAME "test.dat"
 
-typedef journal_file<1024, 8> file_type;
+typedef file_page<1024> file_page_type;
+typedef journal_file<file_page_type, 8> file_type;
 
 #define TEST_FULL_TRANSACTION
 #include "cachefile_test.h"

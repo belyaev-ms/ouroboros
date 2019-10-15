@@ -20,12 +20,12 @@ namespace ouroboros
  * the file, but before it, the original data will be copied to the backup file
  * and the index of the cache page will be stored in journal file.
  */
-template <int pageSize = 1024, int pageCount = 1024, typename File = file_lock,
+template <typename FilePage, int pageCount = 1024, typename File = file_lock,
         template <typename, int, int> class Cache = cache>
-class journal_file : public backup_file<pageSize, pageCount, File, Cache>
+class journal_file : public backup_file<FilePage, pageCount, File, Cache>
 {
     typedef File simple_file;
-    typedef backup_file<pageSize, pageCount, File, Cache> base_class;
+    typedef backup_file<FilePage, pageCount, File, Cache> base_class;
 public:
     explicit journal_file(const std::string& name);
     const bool init(); ///< ititialize
@@ -50,8 +50,9 @@ private:
  * @param name the name of the file
  */
 //static
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void journal_file<pageSize, pageCount, File, Cache>::remove(const std::string& name)
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void journal_file<FilePage, pageCount, File, Cache>::remove(const std::string& name)
 {
     simple_file::remove(name + ".jrn");
     base_class::remove(name);
@@ -61,8 +62,9 @@ void journal_file<pageSize, pageCount, File, Cache>::remove(const std::string& n
  * Constructor
  * @param name the name of the file
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-inline journal_file<pageSize, pageCount, File, Cache>::journal_file(const std::string& name) :
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+inline journal_file<FilePage, pageCount, File, Cache>::journal_file(const std::string& name) :
     base_class(name),
     m_journal(name + ".jrn")
 {
@@ -72,8 +74,9 @@ inline journal_file<pageSize, pageCount, File, Cache>::journal_file(const std::s
  * Initialize
  * @return result of the initialization
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-const bool journal_file<pageSize, pageCount, File, Cache>::init()
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+const bool journal_file<FilePage, pageCount, File, Cache>::init()
 {
     base_class::init();
     return init_indexes();
@@ -83,8 +86,9 @@ const bool journal_file<pageSize, pageCount, File, Cache>::init()
  * Change the size of the file
  * @param size the size of the file
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-const size_type journal_file<pageSize, pageCount, File, Cache>::resize(const size_type size)
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+const size_type journal_file<FilePage, pageCount, File, Cache>::resize(const size_type size)
 {
     const size_type result = base_class::resize(size);
     m_journal.resize(result / base_class::CACHE_PAGE_SIZE);
@@ -95,8 +99,9 @@ const size_type journal_file<pageSize, pageCount, File, Cache>::resize(const siz
  * Initialize the indexes of backup pages
  * @return the result of the initialization
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-const bool journal_file<pageSize, pageCount, File, Cache>::init_indexes()
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+const bool journal_file<FilePage, pageCount, File, Cache>::init_indexes()
 {
     // check the last transaction was successful
     bool success = true;
@@ -130,8 +135,9 @@ const bool journal_file<pageSize, pageCount, File, Cache>::init_indexes()
  * @param pos the index of the page
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void journal_file<pageSize, pageCount, File, Cache>::do_before_add_index(const pos_type& pos) const
+template <typename FilePage, int pageCount,
+    typename File, template <typename, int, int> class Cache>
+void journal_file<FilePage, pageCount, File, Cache>::do_before_add_index(const pos_type& pos) const
 {
 #ifdef OUROBOROS_FLUSH_ENABLED
     base_class::flush_backup();
@@ -143,8 +149,9 @@ void journal_file<pageSize, pageCount, File, Cache>::do_before_add_index(const p
  * @param pos the index of the page
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void journal_file<pageSize, pageCount, File, Cache>::do_after_add_index(const pos_type& pos) const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void journal_file<FilePage, pageCount, File, Cache>::do_after_add_index(const pos_type& pos) const
 {
     // store the index in the log file
     const uint8_t flag = 1;
@@ -159,8 +166,9 @@ void journal_file<pageSize, pageCount, File, Cache>::do_after_add_index(const po
  * @param pos the index of the page
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void journal_file<pageSize, pageCount, File, Cache>::do_after_remove_index(const pos_type& pos) const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void journal_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const pos_type& pos) const
 {
     // remove the index from the log file
     const uint8_t flag = 0;
@@ -171,8 +179,9 @@ void journal_file<pageSize, pageCount, File, Cache>::do_after_remove_index(const
  * Perform an action before remove all indexes
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void journal_file<pageSize, pageCount, File, Cache>::do_before_clear_indexes() const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void journal_file<FilePage, pageCount, File, Cache>::do_before_clear_indexes() const
 {
 #ifdef OUROBOROS_FLUSH_ENABLED
     base_class::flush();
@@ -183,8 +192,9 @@ void journal_file<pageSize, pageCount, File, Cache>::do_before_clear_indexes() c
  * Perform an action after remove all indexes
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void journal_file<pageSize, pageCount, File, Cache>::do_after_clear_indexes() const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void journal_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes() const
 {
 #ifdef OUROBOROS_FLUSH_ENABLED
     m_journal.flush();

@@ -5,11 +5,13 @@
 #include <iostream>
 #include "ouroboros/cache.h"
 #include "ouroboros/cachefile.h"
+#include "ouroboros/page.h"
 
 using namespace ouroboros;
 
 #define TEST_FILE_NAME "test.dat"
 
-typedef cache_file<1024, 8> file_type;
+typedef file_page<1024> file_page_type;
+typedef cache_file<file_page_type, 8> file_type;
 
 #include "cachefile_test.h"

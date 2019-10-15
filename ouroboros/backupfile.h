@@ -21,12 +21,12 @@ namespace ouroboros
  * When a transaction is canceled due to an error, the original file will
  * be recovered from the backup file.
  */
-template <int pageSize = 1024, int pageCount = 1024, typename File = file_lock,
+template <typename FilePage, int pageCount = 1024, typename File = file_lock,
         template <typename, int, int> class Cache = cache>
-class backup_file : public cache_file<pageSize, pageCount, File, file_page, Cache>
+class backup_file : public cache_file<FilePage, pageCount, File, Cache>
 {
     typedef File simple_file;
-    typedef cache_file<pageSize, pageCount, File, file_page, Cache> base_class;
+    typedef cache_file<FilePage, pageCount, File, Cache> base_class;
 public:
     typedef typename base_class::page_status_type page_status_type;
     explicit backup_file(const std::string& name);
@@ -69,8 +69,9 @@ private:
  * @param name the name of the file
  */
 //static
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::remove(const std::string& name)
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::remove(const std::string& name)
 {
     base_class::remove(name + ".bak");
     base_class::remove(name);
@@ -80,8 +81,9 @@ void backup_file<pageSize, pageCount, File, Cache>::remove(const std::string& na
  * Constructor
  * @param name the name of the file
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-backup_file<pageSize, pageCount, File, Cache>::backup_file(const std::string& name) :
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+backup_file<FilePage, pageCount, File, Cache>::backup_file(const std::string& name) :
     base_class(name),
     m_backup(name + ".bak")
 {
@@ -91,8 +93,9 @@ backup_file<pageSize, pageCount, File, Cache>::backup_file(const std::string& na
  * Change the size of the file
  * @param size the size of the file
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-const size_type backup_file<pageSize, pageCount, File, Cache>::resize(const size_type size)
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+const size_type backup_file<FilePage, pageCount, File, Cache>::resize(const size_type size)
 {
     return m_backup.resize(base_class::resize(size));
 }
@@ -103,8 +106,9 @@ const size_type backup_file<pageSize, pageCount, File, Cache>::resize(const size
  * @return the pointer to the buffer of the cache page for write
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void *backup_file<pageSize, pageCount, File, Cache>::get_page(const pos_type index)
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void *backup_file<FilePage, pageCount, File, Cache>::get_page(const pos_type index)
 {
     const page_status_type status = base_class::m_cache.page_exists(index);
     void *page = base_class::m_cache.get_page(status);
@@ -129,8 +133,9 @@ void *backup_file<pageSize, pageCount, File, Cache>::get_page(const pos_type ind
  * @return the pointer to the buffer of the cache page for read
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void *backup_file<pageSize, pageCount, File, Cache>::get_page(const pos_type index) const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void *backup_file<FilePage, pageCount, File, Cache>::get_page(const pos_type index) const
 {
     const page_status_type status = base_class::m_cache.page_exists(index);
     void *page = base_class::m_cache.get_page(status);
@@ -146,8 +151,9 @@ void *backup_file<pageSize, pageCount, File, Cache>::get_page(const pos_type ind
 /**
  * Start the transaction
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::start()
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::start()
 {
     base_class::start();
     clear_indexes();
@@ -156,8 +162,9 @@ void backup_file<pageSize, pageCount, File, Cache>::start()
 /**
  * Stop the transaction
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::stop()
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::stop()
 {
     base_class::stop();
     clear_indexes();
@@ -166,8 +173,9 @@ void backup_file<pageSize, pageCount, File, Cache>::stop()
 /**
  * Cancel the transaction
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::cancel()
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::cancel()
 {
     base_class::cancel();
     recovery();
@@ -176,8 +184,9 @@ void backup_file<pageSize, pageCount, File, Cache>::cancel()
 /**
  * Restore the file from the backup file
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-inline void backup_file<pageSize, pageCount, File, Cache>::recovery()
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+inline void backup_file<FilePage, pageCount, File, Cache>::recovery()
 {
     char page[base_class::CACHE_PAGE_SIZE];
     index_list::const_iterator end = m_indexes.end();
@@ -196,8 +205,9 @@ inline void backup_file<pageSize, pageCount, File, Cache>::recovery()
  * Add the index of the page to the backup set
  * @param pos the index of the page
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::add_index(const pos_type& pos) const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::add_index(const pos_type& pos) const
 {
     do_before_add_index(pos);
     m_indexes.insert(pos);
@@ -208,8 +218,9 @@ void backup_file<pageSize, pageCount, File, Cache>::add_index(const pos_type& po
  * Remove the index of the page to the backup set
  * @param pos the index of the page
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-inline void backup_file<pageSize, pageCount, File, Cache>::remove_index(const pos_type& pos) const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+inline void backup_file<FilePage, pageCount, File, Cache>::remove_index(const pos_type& pos) const
 {
     do_before_remove_index(pos);
     m_indexes.erase(pos);
@@ -219,8 +230,9 @@ inline void backup_file<pageSize, pageCount, File, Cache>::remove_index(const po
 /**
  * Remove all indexes of pages from the backup set
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::clear_indexes()
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::clear_indexes()
 {
     do_before_clear_indexes();
     index_list::const_iterator it = m_indexes.begin();
@@ -240,8 +252,9 @@ void backup_file<pageSize, pageCount, File, Cache>::clear_indexes()
  * @param pos the index of the page
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::do_before_add_index(const pos_type& pos) const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::do_before_add_index(const pos_type& pos) const
 {
 
 }
@@ -251,8 +264,9 @@ void backup_file<pageSize, pageCount, File, Cache>::do_before_add_index(const po
  * @param pos the index of the page
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::do_after_add_index(const pos_type& pos) const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::do_after_add_index(const pos_type& pos) const
 {
 
 }
@@ -262,8 +276,9 @@ void backup_file<pageSize, pageCount, File, Cache>::do_after_add_index(const pos
  * @param pos the index of the page
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::do_before_remove_index(const pos_type& pos) const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::do_before_remove_index(const pos_type& pos) const
 {
 
 }
@@ -273,8 +288,9 @@ void backup_file<pageSize, pageCount, File, Cache>::do_before_remove_index(const
  * @param pos the index of the page
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::do_after_remove_index(const pos_type& pos) const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const pos_type& pos) const
 {
 
 }
@@ -283,8 +299,9 @@ void backup_file<pageSize, pageCount, File, Cache>::do_after_remove_index(const 
  * Perform an action before remove all indexes
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::do_before_clear_indexes() const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::do_before_clear_indexes() const
 {
 
 }
@@ -293,8 +310,9 @@ void backup_file<pageSize, pageCount, File, Cache>::do_before_clear_indexes() co
  * Perform an action after remove all indexes
  */
 //virtual
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::do_after_clear_indexes() const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes() const
 {
 
 }
@@ -303,8 +321,9 @@ void backup_file<pageSize, pageCount, File, Cache>::do_after_clear_indexes() con
 /**
  * Forced synchronization data of the backup file
  */
-template <int pageSize, int pageCount, typename File, template <typename, int, int> class Cache>
-void backup_file<pageSize, pageCount, File, Cache>::flush_backup() const
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::flush_backup() const
 {
     m_backup.flush();
 }

@@ -37,8 +37,8 @@ struct base_table_memory_interface
 template <int pageCount = OUROBOROS_PAGE_COUNT>
 struct base_table_local_interface : public base_table_memory_interface
 {
-    typedef journal_file<OUROBOROS_PAGE_SIZE, pageCount> file_type;
     typedef file_page<OUROBOROS_PAGE_SIZE> file_page_type;
+    typedef journal_file<file_page_type, pageCount> file_type;
 };
 
 /**
