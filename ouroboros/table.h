@@ -81,13 +81,14 @@ public:
  * @attention the source has an external object File which
  * can be used for building several different sources
  */
-template <typename File>
+template <typename File, typename FileRegion>
 class source
 {
     template <typename Key, typename Record, template <typename> class Index, typename Interface>
     friend class data_set;
 public:
     typedef File file_type; ///< type of a file source
+    typedef FileRegion file_region_type; ///< type of a file region
 
     /** constructors using an external table source file */
     source(file_type& file, const size_type rec_size, const options_type& options = options_type());
@@ -100,6 +101,12 @@ public:
     source(const std::string& name, const count_type tbl_count, const count_type rec_count, const size_type rec_size, const options_type& options = options_type());
 
     ~source();
+
+    void file_region(const file_region_type& region)
+    {
+        m_file_region = &region;
+        resize();
+    }
 
     void init(const count_type tbl_count, const count_type rec_count); ///< initialize the source
 
@@ -128,6 +135,7 @@ public:
 protected:
     void resize(); ///< change the file of the source
     const file_type& file() const; ///< get the file of the source
+    inline const offset_type to_offset(const offset_type raw_offset) const; ///< convert the raw offset to the real offset in the file
 private:
     source();
     source(const source& );
@@ -139,6 +147,7 @@ private:
     count_type m_tbl_count; ///< the count of the tables
     count_type m_rec_count; ///< the count of the records in a table
     options_type m_options; ///< the additional options
+    const file_region_type *m_file_region; ///< the file region
 };
 
 //==============================================================================
@@ -684,8 +693,8 @@ inline const bool table<Source, Key>::valid_range(const pos_type beg, const pos_
  * @param name the name of the source of data
  */
 //static
-template <typename File>
-void source<File>::remove(const std::string& name)
+template <typename File, typename FileRegion>
+void source<File, FileRegion>::remove(const std::string& name)
 {
     file_type::remove(name);
 }
@@ -697,14 +706,16 @@ void source<File>::remove(const std::string& name)
  * @param rec_size the size of the records
  * @param options additional options
  */
-template <typename File>
-source<File>::source(file_type& file, const size_type rec_size, const options_type& options) :
+template <typename File, typename FileRegion>
+source<File, FileRegion>::source(file_type& file, const size_type rec_size,
+        const options_type& options) :
     m_file(&file),
     m_owner(false),
     m_rec_size(rec_size),
     m_tbl_count(0),
     m_rec_count(0),
-    m_options(options)
+    m_options(options),
+    m_file_region(NULL)
 {
 }
 
@@ -716,15 +727,16 @@ source<File>::source(file_type& file, const size_type rec_size, const options_ty
  * @param rec_size the size of the records
  * @param options additional options
  */
-template <typename File>
-source<File>::source(file_type& file, const count_type tbl_count, const size_type rec_size,
-        const options_type& options) :
+template <typename File, typename FileRegion>
+source<File, FileRegion>::source(file_type& file, const count_type tbl_count,
+        const size_type rec_size, const options_type& options) :
     m_file(&file),
     m_owner(false),
     m_rec_size(rec_size),
     m_tbl_count(tbl_count),
     m_rec_count(0),
-    m_options(options)
+    m_options(options),
+    m_file_region(NULL)
 {
 }
 
@@ -736,15 +748,17 @@ source<File>::source(file_type& file, const count_type tbl_count, const size_typ
  * @param rec_size the size of the records
  * @param options additional options
  */
-template <typename File>
-source<File>::source(file_type& file, const count_type tbl_count,
-        const count_type rec_count, const size_type rec_size, const options_type& options) :
+template <typename File, typename FileRegion>
+source<File, FileRegion>::source(file_type& file, const count_type tbl_count,
+        const count_type rec_count, const size_type rec_size,
+        const options_type& options) :
     m_file(&file),
     m_owner(false),
     m_rec_size(rec_size),
     m_tbl_count(0),
     m_rec_count(0),
-    m_options(options)
+    m_options(options),
+    m_file_region(NULL)
 {
     init(tbl_count, rec_count);
 }
@@ -756,13 +770,15 @@ source<File>::source(file_type& file, const count_type tbl_count,
  * @param rec_size the size of the records
  * @param options additional options
  */
-template <typename File>
-source<File>::source(const std::string& name, const size_type rec_size, const options_type& options) :
+template <typename File, typename FileRegion>
+source<File, FileRegion>::source(const std::string& name, const size_type rec_size,
+        const options_type& options) :
     m_owner(true),
     m_rec_size(rec_size),
     m_tbl_count(0),
     m_rec_count(0),
-    m_options(options)
+    m_options(options),
+    m_file_region(NULL)
 {
     m_file = new file_type(name);
 }
@@ -775,14 +791,15 @@ source<File>::source(const std::string& name, const size_type rec_size, const op
  * @param rec_size the size of the records
  * @param options additional options
  */
-template <typename File>
-source<File>::source(const std::string& name, const count_type tbl_count, const size_type rec_size,
-        const options_type& options) :
+template <typename File, typename FileRegion>
+source<File, FileRegion>::source(const std::string& name, const count_type tbl_count,
+        const size_type rec_size, const options_type& options) :
     m_owner(true),
     m_rec_size(rec_size),
     m_tbl_count(tbl_count),
     m_rec_count(0),
-    m_options(options)
+    m_options(options),
+    m_file_region(NULL)
 {
     m_file = new file_type(name);
 }
@@ -795,14 +812,16 @@ source<File>::source(const std::string& name, const count_type tbl_count, const 
  * @param rec_size the size of the records
  * @param options additional options
  */
-template <typename File>
-source<File>::source(const std::string& name, const count_type tbl_count,
-            const count_type rec_count, const size_type rec_size, const options_type& options) :
+template <typename File, typename FileRegion>
+source<File, FileRegion>::source(const std::string& name, const count_type tbl_count,
+        const count_type rec_count, const size_type rec_size,
+        const options_type& options) :
     m_owner(true),
     m_rec_size(rec_size),
     m_tbl_count(0),
     m_rec_count(0),
-    m_options(options)
+    m_options(options),
+    m_file_region(NULL)
 {
     m_file = new file_type(name);
     init(tbl_count, rec_count);
@@ -811,8 +830,8 @@ source<File>::source(const std::string& name, const count_type tbl_count,
 /**
  * Destructor
  */
-template <typename File>
-source<File>::~source()
+template <typename File, typename FileRegion>
+source<File, FileRegion>::~source()
 {
     if (m_owner)
     {
@@ -826,13 +845,13 @@ source<File>::~source()
  * @param tbl_count the count of the tables
  * @param rec_count the count of the records
  */
-template <typename File>
-void source<File>::init(const count_type tbl_count, const count_type rec_count)
+template <typename File, typename FileRegion>
+void source<File, FileRegion>::init(const count_type tbl_count, const count_type rec_count)
 {
     if (m_rec_count != 0)
     {
-        OUROBOROS_THROW_BUG(PR(name()) << PR(m_tbl_count) << PR(m_rec_count) << PR(tbl_count) << PR(rec_count) <<
-            "attempt to reinitialize");
+        OUROBOROS_THROW_BUG(PR(name()) << PR(m_tbl_count) << PR(m_rec_count)
+            << PR(tbl_count) << PR(rec_count) << "attempt to reinitialize");
     }
     m_tbl_count = tbl_count;
     m_rec_count = rec_count;
@@ -843,8 +862,8 @@ void source<File>::init(const count_type tbl_count, const count_type rec_count)
  * Get the name of the data source
  * @return the name of the data source
  */
-template <typename File>
-inline const std::string& source<File>::name() const
+template <typename File, typename FileRegion>
+inline const std::string& source<File, FileRegion>::name() const
 {
     return m_file->name();
 }
@@ -853,10 +872,21 @@ inline const std::string& source<File>::name() const
  * Get the size of the data source
  * @return the size of the data source
  */
-template <typename File>
-const size_type source<File>::size() const
+template <typename File, typename FileRegion>
+const size_type source<File, FileRegion>::size() const
 {
     return 0 == table_count() ? 0 : table_count() * (table_size() + table_space());
+}
+
+/**
+ * Convert the raw offset to the real offset in the file
+ * @param raw_offset the raw offset
+ * @return the real offset in the file
+ */
+template <typename File, typename FileRegion>
+inline const offset_type source<File, FileRegion>::to_offset(const offset_type raw_offset) const
+{
+    return NULL == m_file_region ? raw_offset : m_file_region->to_offset(raw_offset);
 }
 
 /**
@@ -865,10 +895,11 @@ const size_type source<File>::size() const
  * @param size the size of the data
  * @param offset the offset of the data
  */
-template <typename File>
-inline void source<File>::read(void *data, const size_type size, const offset_type offset)
+template <typename File, typename FileRegion>
+inline void source<File, FileRegion>::read(void *data, const size_type size,
+        const offset_type offset)
 {
-    m_file->read(data, size, offset);
+    m_file->read(data, size, to_offset(offset));
 }
 
 /**
@@ -877,29 +908,30 @@ inline void source<File>::read(void *data, const size_type size, const offset_ty
  * @param size the size of the data
  * @param offset the offset of the data
  */
-template <typename File>
-inline void source<File>::write(const void *data, const size_type size, const offset_type offset)
+template <typename File, typename FileRegion>
+inline void source<File, FileRegion>::write(const void *data, const size_type size,
+        const offset_type offset)
 {
-    m_file->write(data, size, offset);
+    m_file->write(data, size, to_offset(offset));
 }
 
 /**
  * Refresh data of the table
  * @param offset the offset of the table
  */
-template <typename File>
-inline void source<File>::refresh(const offset_type offset)
+template <typename File, typename FileRegion>
+inline void source<File, FileRegion>::refresh(const offset_type offset)
 {
-    m_file->refresh(table_size(), offset);
+    m_file->refresh(table_size(), to_offset(offset));
 }
 
 /**
  * Change the size of the data source
  */
-template <typename File>
-void source<File>::resize()
+template <typename File, typename FileRegion>
+void source<File, FileRegion>::resize()
 {
-    const size_type new_size = offset() + size();
+    const size_type new_size = to_offset(offset() + size());
     if (m_file->size() < new_size)
     {
         m_file->resize(new_size);
@@ -911,8 +943,8 @@ void source<File>::resize()
  * @param index the index of the table
  * @return the offset of the table
  */
-template <typename File>
-const offset_type source<File>::table_offset(const pos_type index) const
+template <typename File, typename FileRegion>
+const offset_type source<File, FileRegion>::table_offset(const pos_type index) const
 {
     if (index < table_count())
     {
@@ -930,8 +962,8 @@ const offset_type source<File>::table_offset(const pos_type index) const
  * @param table_offset the offset of the table
  * @return the index of the table
  */
-template <typename File>
-const pos_type source<File>::table_index(const offset_type table_offset) const
+template <typename File, typename FileRegion>
+const pos_type source<File, FileRegion>::table_index(const offset_type table_offset) const
 {
     if ((table_offset - offset()) % (table_size() + table_space()) != 0)
     {
@@ -944,8 +976,8 @@ const pos_type source<File>::table_index(const offset_type table_offset) const
  * Get the size of a table
  * @return the size of a table
  */
-template <typename File>
-inline const size_type source<File>::table_size() const
+template <typename File, typename FileRegion>
+inline const size_type source<File, FileRegion>::table_size() const
 {
     return rec_count() * (rec_size() + rec_space());
 }
@@ -954,8 +986,8 @@ inline const size_type source<File>::table_size() const
  * Get the count of tables
  * @return the count of tables
  */
-template <typename File>
-inline const count_type source<File>::table_count() const
+template <typename File, typename FileRegion>
+inline const count_type source<File, FileRegion>::table_count() const
 {
     return m_tbl_count;
 }
@@ -964,8 +996,8 @@ inline const count_type source<File>::table_count() const
  * Get the size of a tables separator
  * @return the size of a tables separator
  */
-template <typename File>
-inline const size_type source<File>::table_space() const
+template <typename File, typename FileRegion>
+inline const size_type source<File, FileRegion>::table_space() const
 {
     return m_options.tbl_space;
 }
@@ -974,8 +1006,8 @@ inline const size_type source<File>::table_space() const
  * Get the size of the record
  * @return the size of the record
  */
-template <typename File>
-inline const size_type source<File>::rec_size() const
+template <typename File, typename FileRegion>
+inline const size_type source<File, FileRegion>::rec_size() const
 {
     return m_rec_size;
 }
@@ -984,8 +1016,8 @@ inline const size_type source<File>::rec_size() const
  * Get the count of the records in the table
  * @return the count of the records in the table
  */
-template <typename File>
-inline const size_type source<File>::rec_count() const
+template <typename File, typename FileRegion>
+inline const size_type source<File, FileRegion>::rec_count() const
 {
     return m_rec_count;
 }
@@ -994,8 +1026,8 @@ inline const size_type source<File>::rec_count() const
  * Get the size of a records separator
  * @return the size of a records separator
  */
-template <typename File>
-inline const size_type source<File>::rec_space() const
+template <typename File, typename FileRegion>
+inline const size_type source<File, FileRegion>::rec_space() const
 {
     return m_options.rec_space;
 }
@@ -1004,8 +1036,8 @@ inline const size_type source<File>::rec_space() const
  * Get the offset of the data source
  * @return the offset of the data source
  */
-template <typename File>
-inline const offset_type source<File>::offset() const
+template <typename File, typename FileRegion>
+inline const offset_type source<File, FileRegion>::offset() const
 {
     return m_options.offset;
 }
@@ -1013,8 +1045,8 @@ inline const offset_type source<File>::offset() const
 /**
  * Start the transaction
  */
-template <typename File>
-inline void source<File>::start()
+template <typename File, typename FileRegion>
+inline void source<File, FileRegion>::start()
 {
     m_file->start();
 }
@@ -1022,8 +1054,8 @@ inline void source<File>::start()
 /**
  * Stop the transaction
  */
-template <typename File>
-inline void source<File>::stop()
+template <typename File, typename FileRegion>
+inline void source<File, FileRegion>::stop()
 {
     m_file->stop();
 }
@@ -1031,8 +1063,8 @@ inline void source<File>::stop()
 /**
  * Cancel the transaction
  */
-template <typename File>
-inline void source<File>::cancel()
+template <typename File, typename FileRegion>
+inline void source<File, FileRegion>::cancel()
 {
     m_file->cancel();
 }
@@ -1041,8 +1073,8 @@ inline void source<File>::cancel()
  * Get the state of the transaction
  * @return the state of the transaction
  */
-template <typename File>
-inline const transaction_state source<File>::state() const
+template <typename File, typename FileRegion>
+inline const transaction_state source<File, FileRegion>::state() const
 {
     return m_file->state();
 }
@@ -1051,8 +1083,8 @@ inline const transaction_state source<File>::state() const
  * Get the file of the data source
  * @return the file of the data source
  */
-template <typename File>
-inline const typename source<File>::file_type& source<File>::file() const
+template <typename File, typename FileRegion>
+inline const typename source<File, FileRegion>::file_type& source<File, FileRegion>::file() const
 {
     return *m_file;
 }

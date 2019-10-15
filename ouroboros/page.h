@@ -74,11 +74,15 @@ public:
     file_region(const count_type count, const size_type size);
     file_region(const count_type count, const file_region& region);
     file_region(const count_type count, const region_list& regions);
-    file_region& operator+ (const file_region& region);
+    file_region& add(const file_region& region);
     const range_type operator[] (const pos_type index) const;
+    const offset_type to_offset(const offset_type raw_offset) const;
 private:
     const size_type align_size(const size_type size) const;
-    const std::pair<offset_type, bool> get_offset(const pos_type index, count_type& count, offset_type offset) const;
+    const std::pair<offset_type, bool> get_offset(const pos_type index,
+            count_type& count, offset_type offset) const;
+    const std::pair<offset_type, bool> get_offset(offset_type& raw_offset,
+            offset_type offset) const;
 private:
     count_type m_count;
     size_type m_size;
@@ -421,9 +425,15 @@ file_region<pageSize>::file_region(const count_type count, const region_list& re
  * @return reference to yourself
  */
 template <int pageSize>
-file_region<pageSize>& file_region<pageSize>::operator+ (const file_region& region)
+file_region<pageSize>& file_region<pageSize>::add(const file_region& region)
 {
-    OUROBOROS_ASSERT(m_size == 0);
+    if (m_size != 0)
+    {
+        OUROBOROS_ASSERT(m_regions.empty());
+        m_regions.push_back(*this);
+        m_size = 0;
+        m_count = 1;
+    }
     m_regions.push_back(region);
     return *this;
 }
@@ -466,7 +476,7 @@ const size_type file_region<pageSize>::align_size(const size_type size) const
     {
         ++count;
     }
-    return count * pageSize;
+    return count != 0 ? count * pageSize : pageSize;
 }
 
 /**
@@ -483,7 +493,7 @@ const std::pair<offset_type, bool> file_region<pageSize>::
     if (m_size > 0)
     {
         const size_type size = align_size(m_size);
-        if (m_count + count >= index)
+        if (m_count + count >= index || m_count == 0)
         {
             return std::make_pair(size * (index - count) + offset, true);
         }
@@ -492,12 +502,65 @@ const std::pair<offset_type, bool> file_region<pageSize>::
     }
     else
     {
-        for (size_t i = 0; i < m_count; ++i)
+        for (size_t i = 0; i < m_count || 0 == m_count; ++i)
         {
             for (typename region_list::const_iterator it = m_regions.begin();
                     it != m_regions.end(); ++it)
             {
                 const std::pair<offset_type, bool> result = it->get_offset(index, count, offset);
+                if (result.second)
+                {
+                    return result;
+                }
+                offset = result.first;
+            }
+        }
+        return std::make_pair(offset, false);
+    }
+}
+
+/**
+ * Convert the raw offset to the real offset in the file
+ * @param raw_offset the raw offset
+ * @return the real offset in the file
+ */
+template <int pageSize>
+const offset_type file_region<pageSize>::to_offset(const offset_type raw_offset) const
+{
+    offset_type offset = raw_offset;
+    const std::pair<offset_type, bool> result = get_offset(offset, 0);
+    OUROBOROS_ASSERT(result.second);
+    return result.first;
+}
+
+/**
+ * Get the real offset in the file
+ * @param raw_offset the raw offset
+ * @param offset the current offset
+ * @return the real offset in the file
+ */
+template <int pageSize>
+const std::pair<offset_type, bool> file_region<pageSize>::get_offset(offset_type& raw_offset, offset_type offset) const
+{
+    if (m_size > 0)
+    {
+        const size_type size = align_size(m_size);
+        if (raw_offset < m_count * m_size || 0 == m_count)
+        {
+            const count_type count = raw_offset / m_size;
+            return std::make_pair(count * size + raw_offset % m_size + offset, true);
+        }
+        raw_offset -= m_count * m_size;
+        return std::make_pair(m_count * size + offset, false);
+    }
+    else
+    {
+        for (size_t i = 0; i < m_count || 0 == m_count; ++i)
+        {
+            for (typename region_list::const_iterator it = m_regions.begin();
+                    it != m_regions.end(); ++it)
+            {
+                const std::pair<offset_type, bool> result = it->get_offset(raw_offset, offset);
                 if (result.second)
                 {
                     return result;

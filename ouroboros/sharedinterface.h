@@ -27,6 +27,7 @@ struct base_table_shared_interface
 {
     template <typename T> struct object_type : public shared_object<T> {};
     typedef journal_file<OUROBOROS_PAGE_SIZE, pageCount> file_type;
+    typedef file_region<OUROBOROS_PAGE_SIZE> file_region_type;
     struct locker_type : public locker<mutex_lock>
     {
         locker_type(const std::string& name, count_type& scoped_count, count_type& sharable_count) :

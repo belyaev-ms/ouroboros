@@ -13,6 +13,7 @@ struct test_table_interface
 {
     template <typename T> struct object_type : public shared_object<T> {};
     typedef journal_file<OUROBOROS_PAGE_SIZE, OUROBOROS_PAGE_COUNT> file_type;
+    typedef file_region<OUROBOROS_PAGE_SIZE> file_region_type;
     struct locker_type : public locker<mutex_lock>
     {
         locker_type(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(session_blocked_test)
         BOOST_CHECK_EQUAL(db().state(), TR_STOPPED);
     }
     // lock the table 0
-    mutex_lock locker0("ouroboros.dat.1536.locker");
+    mutex_lock locker0("ouroboros.dat.812.locker");
     locker0.lock();
     // check that only the table 0 is locked
     for (size_t index = 0; index < tbl_count; ++index)
@@ -131,7 +132,7 @@ BOOST_AUTO_TEST_CASE(session_blocked_test)
         BOOST_CHECK_EQUAL(db().state(), TR_STOPPED);
     }
     // lock the table 1
-    mutex_lock locker1("ouroboros.dat.9728.locker");
+    mutex_lock locker1("ouroboros.dat.8040.locker");
     locker1.lock();
     // check that only the table 1 is locked
     for (size_t index = 0; index < tbl_count; ++index)
@@ -207,7 +208,7 @@ BOOST_AUTO_TEST_CASE(session_blocked_test)
         BOOST_CHECK_EQUAL(db().state(), TR_STOPPED);
     }
     // lock the key table
-    mutex_lock klocker("ouroboros.dat.1024.locker");
+    mutex_lock klocker("ouroboros.dat.784.locker");
     klocker.lock();
     try
     {

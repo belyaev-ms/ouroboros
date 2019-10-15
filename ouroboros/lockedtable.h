@@ -195,12 +195,13 @@ public:
  * The interface class for table source with support lock i/o operations
  */
 template <typename Interface>
-class locked_source : public source<typename Interface::file_type>
+class locked_source : public source<typename Interface::file_type, typename Interface::file_region_type>
 {
-    typedef source<typename Interface::file_type> base_class;
+    typedef source<typename Interface::file_type, typename Interface::file_region_type> base_class;
 public:
     typedef Interface interface_type;
     typedef typename interface_type::file_type file_type;
+    typedef typename interface_type::file_region_type file_region_type;
     inline locked_source(file_type& file, const size_type rec_size, const options_type& options = options_type());
     inline locked_source(file_type& file, const count_type tbl_count, const size_type rec_size, const options_type& options = options_type());
     inline locked_source(file_type& file, const count_type tbl_count, const count_type rec_count, const size_type rec_size, const options_type& options = options_type());
@@ -1042,7 +1043,7 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::cancel()
  */
 template <typename Interface>
 inline locked_source<Interface>::locked_source(file_type& file, const size_type rec_size, const options_type& options) :
-    source<file_type>(file, rec_size, options)
+    base_class(file, rec_size, options)
 {
 }
 
@@ -1057,7 +1058,7 @@ inline locked_source<Interface>::locked_source(file_type& file, const size_type 
 template <typename Interface>
 inline locked_source<Interface>::locked_source(file_type& file, const count_type tbl_count,
         const size_type rec_size, const options_type& options) :
-    source<file_type>(file, tbl_count, rec_size, options)
+    base_class(file, tbl_count, rec_size, options)
 {
 }
 
@@ -1072,7 +1073,7 @@ inline locked_source<Interface>::locked_source(file_type& file, const count_type
 template <typename Interface>
 inline locked_source<Interface>::locked_source(file_type& file, const count_type tbl_count,
         const count_type rec_count, const size_type rec_size, const options_type& options) :
-    source<file_type>(file, tbl_count, rec_count, rec_size, options)
+    base_class(file, tbl_count, rec_count, rec_size, options)
 {
 }
 
@@ -1086,7 +1087,7 @@ inline locked_source<Interface>::locked_source(file_type& file, const count_type
 template <typename Interface>
 inline locked_source<Interface>::locked_source(const std::string& name,
         const size_type rec_size, const options_type& options) :
-    source<file_type>(name, rec_size, options)
+    base_class(name, rec_size, options)
 {
 }
 
@@ -1101,7 +1102,7 @@ inline locked_source<Interface>::locked_source(const std::string& name,
 template <typename Interface>
 inline locked_source<Interface>::locked_source(const std::string& name,
         const count_type tbl_count, const size_type rec_size, const options_type& options) :
-    source<file_type>(name, tbl_count, rec_size, options)
+    base_class(name, tbl_count, rec_size, options)
 {
 }
 
@@ -1116,7 +1117,7 @@ inline locked_source<Interface>::locked_source(const std::string& name,
 template <typename Interface>
 inline locked_source<Interface>::locked_source(const std::string& name, const count_type tbl_count,
         const count_type rec_count, const size_type rec_size, const options_type& options) :
-    source<file_type>(name, tbl_count, rec_count, rec_size, options)
+    base_class(name, tbl_count, rec_count, rec_size, options)
 {
 }
 

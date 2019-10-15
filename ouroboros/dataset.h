@@ -14,6 +14,7 @@
 #include "ouroboros/session.h"
 #include "ouroboros/transaction.h"
 #include "ouroboros/lockedtable.h"
+#include "ouroboros/page.h"
 
 namespace ouroboros
 {
@@ -58,6 +59,7 @@ public:
     typedef info info_type; ///< the struct of the information about the dataset
     typedef Interface interface_type; ///< the interface
     typedef typename interface_type::file_type file_type; ///< the file of the dataset
+    typedef typename interface_type::file_region_type file_region_type; ///< the file region of the dataset
     typedef typename interface_type::template table_type<Record, Index, Key> table_type; ///< the table of data
     typedef typename interface_type::template key_table_type<skey_type, simple_key> key_table_type; ///< the table of keys
     typedef typename interface_type::template info_table_type<info_type, simple_key> info_table_type; ///< the table of inforamtion about the dataset
@@ -146,6 +148,7 @@ protected:
     skey_list m_skeys; ///< the list of the table keys
     object<pos_type, interface_type::template object_type> m_hole_count; ///< the count of removed keys
     lazy_transaction_type *m_lazy_transaction; ///< the pointer to current lazy transaction
+    file_region_type m_file_region; ///< the file region
 };
 
 /**
@@ -158,27 +161,20 @@ inline const std::string make_dbname(const std::string& name)
     return name + ".dat";
 }
 
-/**
- * Get the size of object which is aligned by the cache page
- * @param size the size of object
- * @return the size of object which is aligned by the cache page
- */
-template <typename File>
-inline const size_type cache_alignment(const size_type size)
+template <typename T>
+inline T make_file_regions(const size_type info_size, const size_type key_size,
+    const size_type table_size)
 {
-    const size_type result = calc_cache_size(size, File::CACHE_PAGE_SIZE);
-    return result;
-}
-
-/**
- * Get the size of the separator for aligning the object by the cache page
- * @param size the size of object
- * @return the size of the separator
- */
-template <typename File>
-inline const size_type separator_size(const size_type size)
-{
-    return cache_alignment<File>(size) - size;
+    typedef T file_region_type;
+    file_region_type region(1, info_size);
+    file_region_type region_key(1, key_size);
+    file_region_type region_table(1, table_size);
+    typename file_region_type::region_list regions;
+    regions.push_back(region_key);
+    regions.push_back(region_table);
+    file_region_type region_keytable(0, regions);
+    region.add(region_keytable);
+    return region;
 }
 
 //==============================================================================
@@ -209,14 +205,14 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name) :
     m_info_source(m_file, 1, 1),
     m_skey_info(make_object_name(m_info_source.name(), "info")),
     m_info_table(m_info_source, m_skey_info(), typename info_table_type::guard_type()),
-    m_source(m_file, options_type(cache_alignment<file_type>(m_info_source.size()) +
-        cache_alignment<file_type>(skey_type::static_size()), 0, NIL)),
-    m_key_source(m_file, 1, options_type(cache_alignment<file_type>(m_info_source.size()), NIL, 0)),
+    m_source(m_file, options_type(m_info_source.size() + skey_type::static_size(), 0, NIL)),
+    m_key_source(m_file, 1, options_type(m_info_source.size(), NIL, 0)),
     m_skey_key(make_object_name(m_key_source.name(), "key")),
     m_key_table(m_key_source, m_skey_key(), typename key_table_type::guard_type()),
     m_skeys(make_object_name(name, "keyList")),
     m_hole_count(make_object_name(name, "cntHole"), 0),
-    m_lazy_transaction(NULL)
+    m_lazy_transaction(NULL),
+    m_file_region(make_file_regions<file_region_type>(m_info_source.size(), skey_type::static_size(), 0))
 {
 }
 
@@ -239,19 +235,21 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name, const
     m_info_source(m_file, 1, 1),
     m_skey_info(make_object_name(m_info_source.name(), "info")),
     m_info_table(m_info_source, m_skey_info(), typename info_table_type::guard_type()),
-    m_source(m_file, tbl_count, rec_count, options_type(cache_alignment<file_type>(m_info_source.size()) +
-        cache_alignment<file_type>(skey_type::static_size()), table_type::REC_SPACE,
-        separator_size<file_type>((raw_record_type::static_size() + table_type::REC_SPACE) * rec_count) +
-        cache_alignment<file_type>(skey_type::static_size()))),
-    m_key_source(m_file, 1, tbl_count, options_type(cache_alignment<file_type>(m_info_source.size()),
-        cache_alignment<file_type>(m_source.table_size()) + separator_size<file_type>(skey_type::static_size()), 0)),
+    m_source(m_file, tbl_count, rec_count, options_type(m_info_source.size() +
+        skey_type::static_size(), table_type::REC_SPACE, skey_type::static_size())),
+    m_key_source(m_file, 1, tbl_count, options_type(m_info_source.size(), m_source.table_size(), 0)),
     m_skey_key(make_object_name(m_key_source.name(), "key")),
     m_key_table(m_key_source, m_skey_key(), typename key_table_type::guard_type()),
     m_skeys(make_object_name(name, "keyList")),
     m_hole_count(make_object_name(name, "cntHole"), 0),
-    m_lazy_transaction(NULL)
+    m_lazy_transaction(NULL),
+    m_file_region(make_file_regions<file_region_type>(m_info_source.size(), skey_type::static_size(),
+        (raw_record_type::static_size() + table_type::REC_SPACE) * rec_count))
 {
     OUROBOROS_DEBUG("create the dataset " << PR(name) << PR(tbl_count) << PE(rec_count));
+    m_info_source.file_region(m_file_region);
+    m_key_source.file_region(m_file_region);
+    m_source.file_region(m_file_region);
     // set the global lock until the end of the initialization
     lock_type glock(5 * OUROBOROS_LOCK_TIMEOUT);
     m_info_table.recovery();
@@ -370,6 +368,10 @@ void data_set<Key, Record, Index, Interface>::open()
     OUROBOROS_DEBUG("open db " << PE(m_name));
     // set the global lock until the end of the initialization
     lock_type glock(5 * OUROBOROS_LOCK_TIMEOUT);
+    m_file_region = make_file_regions<file_region_type>(m_info_source.size(),
+        skey_type::static_size(), 0);
+    m_info_source.file_region(m_file_region);
+    m_key_source.file_region(m_file_region);
     m_info_table.recovery();
     m_key_table.recovery();
     // read the information about the dataset
@@ -382,12 +384,15 @@ void data_set<Key, Record, Index, Interface>::open()
     // initialize the dataset
     m_info = info;
     m_source.m_options.rec_space = table_type::REC_SPACE;
-    m_source.m_options.tbl_space = separator_size<file_type>((raw_record_type::static_size() +
-            table_type::REC_SPACE) * info.rec_count) + cache_alignment<file_type>(skey_type::static_size());
+    m_source.m_options.tbl_space = skey_type::static_size();
+    m_info_source.file_region(m_file_region);
+    m_key_source.file_region(m_file_region);
+    m_source.file_region(m_file_region);
     m_source.init(info.tbl_count, info.rec_count);
-    m_key_source.m_options.rec_space = cache_alignment<file_type>(m_source.table_size()) +
-            separator_size<file_type>(skey_type::static_size());
+    m_key_source.m_options.rec_space = m_source.table_size();
     m_key_source.init(1, info.tbl_count);
+    m_file_region = make_file_regions<file_region_type>(m_info_source.size(),
+        skey_type::static_size(), (raw_record_type::static_size() + table_type::REC_SPACE) * info.rec_count);
     init(info);
 }
 

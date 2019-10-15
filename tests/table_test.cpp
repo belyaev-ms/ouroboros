@@ -7,13 +7,14 @@
 
 #include "ouroboros/key.h"
 #include "ouroboros/table.h"
+#include "ouroboros/page.h"
 
 using namespace ouroboros;
 
 BOOST_AUTO_TEST_CASE(test1)
 {
     typedef simple_key skey_type;
-    typedef source<file> source_type;
+    typedef source<file, file_region<1> > source_type;
     typedef table<source_type, skey_type> table_type;
     typedef boost::shared_ptr<table_type> ptable_type;
     typedef std::vector<skey_type> skey_list;
