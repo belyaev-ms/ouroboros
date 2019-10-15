@@ -130,21 +130,20 @@ BOOST_AUTO_TEST_CASE(file_page_service_data_test)
     test_file_page<file_page_type>();
 }
 
-//==============================================================================
-//  Check the file region
-//==============================================================================
-BOOST_AUTO_TEST_CASE(file_region_test)
+template <typename FilePage>
+void test_file_region()
 {
     size_t count = 3;
     size_t size = 5;
-    typedef file_page<8> file_page_type;
+    typedef FilePage file_page_type;
     typedef file_region<file_page_type> file_region_type;
+    typedef typename file_region_type::range_type range_type;
     file_region_type subregion(count, size);
     {
         offset_type offset = 0;
         for (size_t i = 0; i < count; ++i)
         {
-            file_region_type::range_type result = subregion[i];
+            range_type result = subregion[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
             BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
             offset += file_page_type::TOTAL_SIZE;
@@ -167,7 +166,7 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         offset_type offset = 0;
         for (size_t i = 0; i < count; ++i)
         {
-            file_region_type::range_type result = subregion[i];
+            range_type result = subregion[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
             BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
             offset += file_page_type::TOTAL_SIZE;
@@ -190,7 +189,7 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         offset_type offset = 0;
         for (size_t i = 0; i < count; ++i)
         {
-            file_region_type::range_type result = region[i];
+            range_type result = region[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
             BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
             offset += file_page_type::TOTAL_SIZE;
@@ -213,7 +212,7 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         offset_type offset = 0;
         for (size_t i = 0; i < 3 * count; ++i)
         {
-            file_region_type::range_type result = region[i];
+            range_type result = region[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
             BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
             offset += file_page_type::TOTAL_SIZE;
@@ -236,7 +235,7 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         offset_type offset = 0;
         for (size_t i = 0; i < 3 * count; ++i)
         {
-            file_region_type::range_type result = region[i];
+            range_type result = region[i];
             BOOST_REQUIRE_EQUAL(result.first, offset);
             BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
             offset += file_page_type::TOTAL_SIZE;
@@ -258,7 +257,7 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         size_t count1 = 2;
         size_t size1 = 10;
         file_region_type subregion1(2, 10);
-        file_region_type::region_list subregions;
+        typename file_region_type::region_list subregions;
         subregions.push_back(subregion);
         subregions.push_back(subregion1);
         file_region_type region(3, subregions);
@@ -268,14 +267,14 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         {
             for (size_t i = 0; i < count; ++i)
             {
-                file_region_type::range_type result = region[j++];
+                range_type result = region[j++];
                 BOOST_REQUIRE_EQUAL(result.first, offset);
                 BOOST_REQUIRE_EQUAL(result.second, offset + file_page_type::TOTAL_SIZE);
                 offset += file_page_type::TOTAL_SIZE;
             }
             for (size_t i = 0; i < count1; ++i)
             {
-                file_region_type::range_type result = region[j++];
+                range_type result = region[j++];
                 BOOST_REQUIRE_EQUAL(result.first, offset);
                 BOOST_REQUIRE_EQUAL(result.second, offset + 2 * file_page_type::TOTAL_SIZE);
                 offset += 2 * file_page_type::TOTAL_SIZE;
@@ -283,4 +282,22 @@ BOOST_AUTO_TEST_CASE(file_region_test)
         }
         BOOST_REQUIRE_THROW(region[j], bug_error);
     }
+}
+
+//==============================================================================
+//  Check the file region
+//==============================================================================
+BOOST_AUTO_TEST_CASE(file_region_test)
+{
+    typedef file_page<8> file_page_type;
+    test_file_region<file_page_type>();
+}
+
+//==============================================================================
+//  Check the file region that has a file page with service data
+//==============================================================================
+BOOST_AUTO_TEST_CASE(file_region_with_service_data_test)
+{
+    typedef file_page<12, 4> file_page_type;
+    test_file_region<file_page_type>();
 }
