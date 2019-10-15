@@ -102,12 +102,7 @@ public:
 
     ~source();
 
-    void file_region(const file_region_type& region)
-    {
-        m_file_region = &region;
-        resize();
-    }
-
+    void set_file_region(const file_region_type& region); ///< set the file region
     void init(const count_type tbl_count, const count_type rec_count); ///< initialize the source
 
     inline const std::string& name() const; ///< get the name of the source
@@ -837,6 +832,17 @@ source<File, FileRegion>::~source()
     {
         delete m_file;
     }
+}
+
+/**
+ * Set the file region
+ * @param region the file region
+ */
+template <typename File, typename FileRegion>
+void source<File, FileRegion>::set_file_region(const file_region_type& region)
+{
+    m_file_region = &region;
+    resize();
 }
 
 /**

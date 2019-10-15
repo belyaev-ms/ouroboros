@@ -161,6 +161,13 @@ inline const std::string make_dbname(const std::string& name)
     return name + ".dat";
 }
 
+/**
+ * Make a file region for a dataset
+ * @param info_size the size of an informantion of a dataset
+ * @param key_size the size of a key of a dataset
+ * @param table_size the size of a data table of a dataset
+ * @return the file region for a dataset
+ */
 template <typename T>
 inline T make_file_regions(const size_type info_size, const size_type key_size,
     const size_type table_size)
@@ -212,7 +219,8 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name) :
     m_skeys(make_object_name(name, "keyList")),
     m_hole_count(make_object_name(name, "cntHole"), 0),
     m_lazy_transaction(NULL),
-    m_file_region(make_file_regions<file_region_type>(m_info_source.size(), skey_type::static_size(), 0))
+    m_file_region(make_file_regions<file_region_type>(m_info_source.size(),
+        skey_type::static_size(), 0))
 {
 }
 
@@ -247,9 +255,9 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name, const
         (raw_record_type::static_size() + table_type::REC_SPACE) * rec_count))
 {
     OUROBOROS_DEBUG("create the dataset " << PR(name) << PR(tbl_count) << PE(rec_count));
-    m_info_source.file_region(m_file_region);
-    m_key_source.file_region(m_file_region);
-    m_source.file_region(m_file_region);
+    m_info_source.set_file_region(m_file_region);
+    m_key_source.set_file_region(m_file_region);
+    m_source.set_file_region(m_file_region);
     // set the global lock until the end of the initialization
     lock_type glock(5 * OUROBOROS_LOCK_TIMEOUT);
     m_info_table.recovery();
@@ -366,12 +374,11 @@ template <typename Key, typename Record, template <typename> class Index, typena
 void data_set<Key, Record, Index, Interface>::open()
 {
     OUROBOROS_DEBUG("open db " << PE(m_name));
+    m_info_source.set_file_region(m_file_region);
+    m_key_source.set_file_region(m_file_region);
+    m_source.set_file_region(m_file_region);
     // set the global lock until the end of the initialization
     lock_type glock(5 * OUROBOROS_LOCK_TIMEOUT);
-    m_file_region = make_file_regions<file_region_type>(m_info_source.size(),
-        skey_type::static_size(), 0);
-    m_info_source.file_region(m_file_region);
-    m_key_source.file_region(m_file_region);
     m_info_table.recovery();
     m_key_table.recovery();
     // read the information about the dataset
@@ -385,14 +392,12 @@ void data_set<Key, Record, Index, Interface>::open()
     m_info = info;
     m_source.m_options.rec_space = table_type::REC_SPACE;
     m_source.m_options.tbl_space = skey_type::static_size();
-    m_info_source.file_region(m_file_region);
-    m_key_source.file_region(m_file_region);
-    m_source.file_region(m_file_region);
     m_source.init(info.tbl_count, info.rec_count);
     m_key_source.m_options.rec_space = m_source.table_size();
     m_key_source.init(1, info.tbl_count);
     m_file_region = make_file_regions<file_region_type>(m_info_source.size(),
-        skey_type::static_size(), (raw_record_type::static_size() + table_type::REC_SPACE) * info.rec_count);
+        skey_type::static_size(),
+        (raw_record_type::static_size() + table_type::REC_SPACE) * info.rec_count);
     init(info);
 }
 
