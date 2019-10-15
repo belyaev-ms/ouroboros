@@ -8,15 +8,14 @@
 
 using namespace ouroboros;
 
-//==============================================================================
-//  Check the file page
-//==============================================================================
-BOOST_AUTO_TEST_CASE(file_page_test)
+template <typename FilePage>
+void test_file_page()
 {
-    typedef file_page<1024> file_page_type;
+    typedef FilePage file_page_type;
+    BOOST_REQUIRE_EQUAL(file_page_type::static_size(), file_page_type::TOTAL_SIZE);
+    BOOST_REQUIRE_EQUAL(file_page_type::static_data_size(), file_page_type::DATA_SIZE);
+    BOOST_REQUIRE_EQUAL(file_page_type::TOTAL_SIZE, file_page_type::SERVICE_SIZE + file_page_type::DATA_SIZE);
     std::vector<uint8_t> buffer(3 * file_page_type::DATA_SIZE);
-    BOOST_REQUIRE_EQUAL(file_page_type::static_size(), 1024);
-    BOOST_REQUIRE_EQUAL(file_page_type::DATA_SIZE, 1024);
     {
         file_page_type page;
         BOOST_REQUIRE(!page.valid());
@@ -44,7 +43,7 @@ BOOST_AUTO_TEST_CASE(file_page_test)
         BOOST_REQUIRE_EQUAL(page.index(), 0);
         BOOST_REQUIRE_THROW(page.read(&buffer[0]), bug_error);
         BOOST_REQUIRE_THROW(page.read(NULL), bug_error);
-        std::vector<uint8_t> data(file_page_type::DATA_SIZE);
+        std::vector<uint8_t> data(file_page_type::TOTAL_SIZE);
         page.assign(&data[0]);
         BOOST_REQUIRE(page.valid());
         BOOST_REQUIRE_NO_THROW(page.read(&buffer[0]));
@@ -67,19 +66,21 @@ BOOST_AUTO_TEST_CASE(file_page_test)
         BOOST_REQUIRE_THROW(page.write_rest(NULL), bug_error);
         file_page_type page0 = page;
         BOOST_REQUIRE(page == page0);
+
         ++page;
         BOOST_REQUIRE(page0 < page);
-        BOOST_REQUIRE_EQUAL(page.pos(), file_page_type::DATA_SIZE);
+        BOOST_REQUIRE_EQUAL(page.pos(), file_page_type::TOTAL_SIZE);
         BOOST_REQUIRE_EQUAL(page.index(), 1);
         BOOST_REQUIRE(!page.valid());
         
         const pos_type offset = file_page_type::DATA_SIZE / 4;
         const pos_type index = 2;
-        const pos_type pos = file_page_type::DATA_SIZE * index + offset;
-        file_page_type page2(pos);
+        const pos_type raw_pos = file_page_type::DATA_SIZE * index + offset;
+        const pos_type real_pos = file_page_type::TOTAL_SIZE * index + offset;
+        file_page_type page2(raw_pos);
         file_page_type page1(page2);
         page = page1;
-        BOOST_REQUIRE_EQUAL(page.pos(), pos);
+        BOOST_REQUIRE_EQUAL(page.pos(), real_pos);
         BOOST_REQUIRE_EQUAL(page.index(), 2);
         BOOST_REQUIRE_THROW(page.read(&buffer[0]), bug_error);
         BOOST_REQUIRE_THROW(page.read(NULL), bug_error);
@@ -105,10 +106,28 @@ BOOST_AUTO_TEST_CASE(file_page_test)
         BOOST_REQUIRE_THROW(page.write_rest(NULL), bug_error);
         ++page;
         BOOST_REQUIRE(page1 < page);
-        BOOST_REQUIRE_EQUAL(page.pos(), (index + 1) * file_page_type::DATA_SIZE);
+        BOOST_REQUIRE_EQUAL(page.pos(), (index + 1) * file_page_type::TOTAL_SIZE);
         BOOST_REQUIRE_EQUAL(page.index(), index + 1);
         BOOST_REQUIRE(!page.valid());
     }
+}
+
+//==============================================================================
+//  Check the file page
+//==============================================================================
+BOOST_AUTO_TEST_CASE(file_page_test)
+{
+    typedef file_page<1024> file_page_type;
+    test_file_page<file_page_type>();
+}
+
+//==============================================================================
+//  Check the file page that has a service data
+//==============================================================================
+BOOST_AUTO_TEST_CASE(file_page_service_data_test)
+{
+    typedef file_page<1024, 32> file_page_type;
+    test_file_page<file_page_type>();
 }
 
 //==============================================================================

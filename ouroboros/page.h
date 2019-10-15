@@ -226,7 +226,7 @@ void file_page<pageSize, serviceSize>::assign(void *ptr)
 template <int pageSize, int serviceSize>
 void *file_page<pageSize, serviceSize>::read(void *buffer) const
 {
-    const pos_type offset = m_pos % DATA_SIZE;
+    const pos_type offset = m_pos % TOTAL_SIZE;
     const size_type size = DATA_SIZE - offset;
     return do_read(buffer, offset, size);
 }
@@ -239,7 +239,7 @@ void *file_page<pageSize, serviceSize>::read(void *buffer) const
 template <int pageSize, int serviceSize>
 void *file_page<pageSize, serviceSize>::read_rest(void *buffer) const
 {
-    const size_type size = m_pos % DATA_SIZE + 1;
+    const size_type size = m_pos % TOTAL_SIZE + 1;
     return do_read(buffer, 0, size);
 }
 
@@ -252,7 +252,7 @@ void *file_page<pageSize, serviceSize>::read_rest(void *buffer) const
 template <int pageSize, int serviceSize>
 void *file_page<pageSize, serviceSize>::read(void *buffer, const size_type size) const
 {
-    const pos_type offset = m_pos % DATA_SIZE;
+    const pos_type offset = m_pos % TOTAL_SIZE;
     return do_read(buffer, offset, size);
 }
 
@@ -279,7 +279,7 @@ void *file_page<pageSize, serviceSize>::do_read(void *buffer, const pos_type off
 template <int pageSize, int serviceSize>
 const void *file_page<pageSize, serviceSize>::write(const void *buffer)
 {
-    const pos_type offset = m_pos % DATA_SIZE;
+    const pos_type offset = m_pos % TOTAL_SIZE;
     const size_type size = DATA_SIZE - offset;
     return do_write(buffer, offset, size);
 }
@@ -292,7 +292,7 @@ const void *file_page<pageSize, serviceSize>::write(const void *buffer)
 template <int pageSize, int serviceSize>
 const void *file_page<pageSize, serviceSize>::write_rest(const void *buffer)
 {
-    const size_type size = m_pos % DATA_SIZE + 1;
+    const size_type size = m_pos % TOTAL_SIZE + 1;
     return do_write(buffer, 0, size);
 }
 
@@ -305,7 +305,7 @@ const void *file_page<pageSize, serviceSize>::write_rest(const void *buffer)
 template <int pageSize, int serviceSize>
 const void *file_page<pageSize, serviceSize>::write(const void *buffer, const size_type size)
 {
-    const pos_type offset = m_pos % DATA_SIZE;
+    const pos_type offset = m_pos % TOTAL_SIZE;
     return do_write(buffer, offset, size);
 }
 
