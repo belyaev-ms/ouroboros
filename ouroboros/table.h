@@ -132,7 +132,8 @@ public:
 protected:
     void resize(); ///< change the file of the source
     const file_type& file() const; ///< get the file of the source
-    inline const offset_type to_offset(const offset_type raw_offset) const; ///< convert the raw offset to the real offset in the file
+    inline const offset_type convert_offset(const offset_type raw_offset) const; ///< convert the raw offset to the real offset in the file
+    inline const size_type convert_size(const offset_type raw_size) const; ///< convert the raw size to the real size in the file
 private:
     source();
     source(const source& );
@@ -892,9 +893,20 @@ const size_type source<File, FilePage>::size() const
  * @return the real offset in the file
  */
 template <typename File, typename FilePage>
-inline const offset_type source<File, FilePage>::to_offset(const offset_type raw_offset) const
+inline const offset_type source<File, FilePage>::convert_offset(const offset_type raw_offset) const
 {
-    return NULL == m_file_region ? raw_offset : m_file_region->to_offset(raw_offset);
+    return NULL == m_file_region ? raw_offset : m_file_region->convert_offset(raw_offset);
+}
+
+/**
+ * Convert the raw size to the real size in the file
+ * @param raw_size the raw size
+ * @return the real size in the file
+ */
+template <typename File, typename FilePage>
+inline const size_type source<File, FilePage>::convert_size(const size_type raw_size) const
+{
+    return NULL == m_file_region ? raw_size : m_file_region->convert_size(raw_size);
 }
 
 /**
@@ -907,7 +919,7 @@ template <typename File, typename FilePage>
 inline void source<File, FilePage>::read(void *data, const size_type size,
         const offset_type offset)
 {
-    m_file->read(data, size, to_offset(offset));
+    m_file->read(data, size, convert_offset(offset));
 }
 
 /**
@@ -920,7 +932,7 @@ template <typename File, typename FilePage>
 inline void source<File, FilePage>::write(const void *data, const size_type size,
         const offset_type offset)
 {
-    m_file->write(data, size, to_offset(offset));
+    m_file->write(data, size, convert_offset(offset));
 }
 
 /**
@@ -930,7 +942,7 @@ inline void source<File, FilePage>::write(const void *data, const size_type size
 template <typename File, typename FilePage>
 inline void source<File, FilePage>::refresh(const offset_type offset)
 {
-    m_file->refresh(table_size(), to_offset(offset));
+    m_file->refresh(table_size(), convert_offset(offset));
 }
 
 /**
@@ -939,7 +951,7 @@ inline void source<File, FilePage>::refresh(const offset_type offset)
 template <typename File, typename FilePage>
 void source<File, FilePage>::resize()
 {
-    const size_type new_size = to_offset(offset() + size());
+    const size_type new_size = convert_size(offset() + size());
     if (m_file->size() < new_size)
     {
         m_file->resize(new_size);

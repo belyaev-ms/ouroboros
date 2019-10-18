@@ -75,12 +75,11 @@ void test_file_page()
         
         const pos_type offset = file_page_type::DATA_SIZE / 4;
         const pos_type index = 2;
-        const pos_type raw_pos = file_page_type::DATA_SIZE * index + offset;
-        const pos_type real_pos = file_page_type::TOTAL_SIZE * index + offset;
-        file_page_type page2(raw_pos);
+        const pos_type pos = file_page_type::TOTAL_SIZE * index + offset;
+        file_page_type page2(pos);
         file_page_type page1(page2);
         page = page1;
-        BOOST_REQUIRE_EQUAL(page.pos(), real_pos);
+        BOOST_REQUIRE_EQUAL(page.pos(), pos);
         BOOST_REQUIRE_EQUAL(page.index(), 2);
         BOOST_REQUIRE_THROW(page.read(&buffer[0]), bug_error);
         BOOST_REQUIRE_THROW(page.read(NULL), bug_error);
@@ -156,10 +155,11 @@ void test_file_region()
             {
                 offset += file_page_type::TOTAL_SIZE - size;
             }
-            BOOST_REQUIRE_EQUAL(subregion.to_offset(i), offset);
+            BOOST_REQUIRE_EQUAL(subregion.convert_offset(i), offset);
             ++offset;
         }
-        BOOST_REQUIRE_THROW(subregion.to_offset(size * count), bug_error);
+        BOOST_REQUIRE_THROW(subregion.convert_offset(size * count), bug_error);
+        BOOST_REQUIRE_EQUAL(subregion.convert_size(size * count), file_page_type::TOTAL_SIZE * count);
     }
     {
         file_region_type region(0, size);
@@ -179,10 +179,11 @@ void test_file_region()
             {
                 offset += file_page_type::TOTAL_SIZE - size;
             }
-            BOOST_REQUIRE_EQUAL(region.to_offset(i), offset);
+            BOOST_REQUIRE_EQUAL(region.convert_offset(i), offset);
             ++offset;
         }
-        BOOST_REQUIRE_NO_THROW(region.to_offset(size * count));
+        BOOST_REQUIRE_NO_THROW(region.convert_offset(size * count));
+        BOOST_REQUIRE_EQUAL(subregion.convert_size(size * count), file_page_type::TOTAL_SIZE * count);
     }
     {
         file_region_type region(1, subregion);
@@ -202,10 +203,11 @@ void test_file_region()
             {
                 offset += file_page_type::TOTAL_SIZE - size;
             }
-            BOOST_REQUIRE_EQUAL(region.to_offset(i), offset);
+            BOOST_REQUIRE_EQUAL(region.convert_offset(i), offset);
             ++offset;
         }
-        BOOST_REQUIRE_THROW(region.to_offset(size * count), bug_error);
+        BOOST_REQUIRE_THROW(region.convert_offset(size * count), bug_error);
+        BOOST_REQUIRE_EQUAL(subregion.convert_size(size * count), file_page_type::TOTAL_SIZE * count);
     }
     {
         file_region_type region(3, subregion);
@@ -225,10 +227,10 @@ void test_file_region()
             {
                 offset += file_page_type::TOTAL_SIZE - size;
             }
-            BOOST_REQUIRE_EQUAL(region.to_offset(i), offset);
+            BOOST_REQUIRE_EQUAL(region.convert_offset(i), offset);
             ++offset;
         }
-        BOOST_REQUIRE_THROW(region.to_offset(3 * size * count), bug_error);
+        BOOST_REQUIRE_THROW(region.convert_offset(3 * size * count), bug_error);
     }
     {
         file_region_type region(0, subregion);
@@ -248,10 +250,10 @@ void test_file_region()
             {
                 offset += file_page_type::TOTAL_SIZE - size;
             }
-            BOOST_REQUIRE_EQUAL(region.to_offset(i), offset);
+            BOOST_REQUIRE_EQUAL(region.convert_offset(i), offset);
             ++offset;
         }
-        BOOST_REQUIRE_NO_THROW(region.to_offset(3 * size * count));
+        BOOST_REQUIRE_NO_THROW(region.convert_offset(3 * size * count));
     }
     {
         size_t count1 = 2;

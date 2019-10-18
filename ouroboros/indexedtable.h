@@ -8,9 +8,6 @@
 
 #include <string>
 #include <vector>
-#ifdef OUROBOROS_BOOST_ENABLED
-#include <boost/filesystem/operations.hpp>
-#endif
 
 #include "ouroboros/global.h"
 #include "ouroboros/table.h"

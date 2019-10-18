@@ -9,6 +9,7 @@ struct table_type : public datatable_type
 };
 
 typedef datatable_type::record_list record_list;
+typedef datasource_type::file_region_type file_region_type;
 
 //==============================================================================
 //  Check for exception if a table has incorrect parameters
@@ -20,6 +21,8 @@ BOOST_AUTO_TEST_CASE(simple_error_test)
     const count_type rec_count = 100;
     skey_type skey;
     datasource_type source(DATASOURCE_NAME, tbl_count, rec_count, options);
+    file_region_type file_region(tbl_count, source.table_size());
+    source.set_file_region(file_region);
     BOOST_CHECK_THROW(source.init(tbl_count, rec_count), ouroboros::bug_error);
     skey.pos = -1;
     BOOST_CHECK_THROW(datatable_type table(source, skey), ouroboros::range_error);
@@ -67,6 +70,8 @@ BOOST_AUTO_TEST_CASE(wrrd_wrrd_onblk_test)
     const size_t tbl_count = 10;
     const size_t rec_count = 100;
     datasource_type source(DATASOURCE_NAME, tbl_count, rec_count, options);
+    file_region_type file_region(tbl_count, source.table_size());
+    source.set_file_region(file_region);
     for (size_t index = 0; index < tbl_count; ++index)
     {
         BOOST_TEST_MESSAGE(PE(index));
@@ -97,6 +102,8 @@ BOOST_AUTO_TEST_CASE(wrwr_rdrd_onblk_test)
     const size_t tbl_count = 10;
     const size_t rec_count = 100;
     datasource_type source(DATASOURCE_NAME, tbl_count, rec_count, options);
+    file_region_type file_region(tbl_count, source.table_size());
+    source.set_file_region(file_region);
     record_list records_wr[tbl_count];
 
     for (size_t index = 0; index < tbl_count; ++index)
@@ -132,6 +139,8 @@ BOOST_AUTO_TEST_CASE(wrwr_rdrd_onblk_offset_test)
     const size_t rec_count = 100;
     skey_type skey;
     datasource_type source(DATASOURCE_NAME, 1, rec_count, options);
+    file_region_type file_region(1, source.table_size());
+    source.set_file_region(file_region);
     datatable_type table(source, skey);
     table.clear();
 
@@ -159,6 +168,8 @@ BOOST_AUTO_TEST_CASE(wrwr_rdrd_onblk_offset_test1)
     const size_t rec_count = 100;
     skey_type skey;
     datasource_type source(DATASOURCE_NAME, 1, rec_count, options);
+    file_region_type file_region(1, source.table_size());
+    source.set_file_region(file_region);
     datatable_type table(source, skey);
     table.clear();
 
@@ -188,6 +199,8 @@ BOOST_AUTO_TEST_CASE(wrrd_wrrd_offblk_test)
     const size_t tbl_count = 10;
     const size_t rec_count = 100;
     datasource_type source(DATASOURCE_NAME, tbl_count, rec_count, options);
+    file_region_type file_region(tbl_count, source.table_size());
+    source.set_file_region(file_region);
     for (size_t index = 0; index < tbl_count; ++index)
     {
         BOOST_TEST_MESSAGE(PE(index));
@@ -224,6 +237,8 @@ BOOST_AUTO_TEST_CASE(wrwr_rdrd_offblk_test)
     const size_t tbl_count = 10;
     const size_t rec_count = 100;
     datasource_type source(DATASOURCE_NAME, tbl_count, rec_count, options);
+    file_region_type file_region(tbl_count, source.table_size());
+    source.set_file_region(file_region);
 
     record_list records_wr[tbl_count];
 
@@ -267,6 +282,8 @@ BOOST_AUTO_TEST_CASE(wr_d1_rd_test)
     datasource_type::remove(DATASOURCE_NAME);
     size_t rec_count = 100;
     datasource_type source(DATASOURCE_NAME, 1, rec_count, options);
+    file_region_type file_region(1, source.table_size());
+    source.set_file_region(file_region);
     record_list records_wr;
     fill_records(records_wr, rec_count, 0);
 
@@ -325,6 +342,8 @@ BOOST_AUTO_TEST_CASE(wr_d_onblk_rd_test)
     const size_t count = 10;
     size_t rec_count = 100;
     datasource_type source(DATASOURCE_NAME, 1, rec_count, options);
+    file_region_type file_region(1, source.table_size());
+    source.set_file_region(file_region);
 
     skey_type skey;
     datatable_type table(source, skey);

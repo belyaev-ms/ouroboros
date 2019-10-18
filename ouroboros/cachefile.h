@@ -108,7 +108,7 @@ void cache_file<FilePage, pageCount, File, Cache>::
     do_read(void *buffer, size_type size, pos_type pos) const
 {
     file_page_type page0(pos);
-    file_page_type page1(pos + size - 1);
+    file_page_type page1(pos, size - 1);
     if (page0 == page1)
     {
         page0.assign(get_page(page0.index()));
@@ -159,7 +159,7 @@ void cache_file<FilePage, pageCount, File, Cache>::
     do_write(const void *buffer, size_type size, pos_type pos)
 {
     file_page_type page0(pos);
-    file_page_type page1(pos + size - 1);
+    file_page_type page1(pos, size - 1);
     if (page0 == page1)
     {
         page0.assign(get_page(page0.index()));

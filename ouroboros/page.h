@@ -29,6 +29,7 @@ public:
     file_page();
     virtual ~file_page();
     explicit file_page(const pos_type pos);
+    file_page(const pos_type pos, const offset_type offset);
     file_page(const file_page& page);
     const pos_type pos() const;
     const pos_type index() const;
@@ -48,6 +49,9 @@ public:
     static const size_type static_data_size();
     static const size_type static_align_size(const size_type size);
     static const pos_type static_convert(const pos_type pos);
+protected:
+    const void *get() const;
+    void *get();
 private:
     void *do_read(void *buffer, const pos_type offset, const size_type size) const;
     const void *do_write(const void *buffer, const pos_type offset, const size_type size);
@@ -74,7 +78,8 @@ public:
     file_region(const count_type count, const region_list& regions);
     file_region& add(const file_region& region);
     const range_type operator[] (const pos_type index) const;
-    const offset_type to_offset(const offset_type raw_offset) const;
+    const offset_type convert_offset(const offset_type raw_offset) const;
+    const size_type convert_size(const size_type raw_size) const;
 private:
     const size_type align_size(const size_type size) const;
     const std::pair<offset_type, bool> get_offset(const pos_type index,
@@ -85,6 +90,22 @@ private:
     count_type m_count;
     size_type m_size;
     region_list m_regions;
+};
+
+/**
+ * The file page that has a status block
+ */
+template <typename FilePage, typename Status = unsigned int>
+class status_file_page : public FilePage
+{
+    typedef FilePage base_class;
+    ///*@todo need to add a compile time assert (SERVICE_SIZE >= Status)
+public:
+    typedef Status status_type;
+    explicit status_file_page(void *ptr);
+    const bool verify() const;
+    void set_status(const status_type status);
+    const status_type get_status() const;
 };
 
 //==============================================================================
@@ -170,10 +191,29 @@ file_page<pageSize, serviceSize>::~file_page()
  */
 template <int pageSize, int serviceSize>
 file_page<pageSize, serviceSize>::file_page(const pos_type pos) :
-    m_pos(static_convert(pos)),
-    m_index(pos / DATA_SIZE),
+    m_pos(pos),
+    m_index(pos / TOTAL_SIZE),
     m_ptr(NULL)
 {
+}
+
+/**
+ * Constructor
+ * @param pos the position in the data file
+ * @param offset the offset in the file
+ */
+template <int pageSize, int serviceSize>
+file_page<pageSize, serviceSize>::file_page(const pos_type pos, const offset_type offset) :
+    m_pos(pos),
+    m_index(pos / TOTAL_SIZE),
+    m_ptr(NULL)
+{
+    const offset_type page_offset = pos % TOTAL_SIZE + offset;
+    if (page_offset >= DATA_SIZE)
+    {
+        m_pos = m_index * TOTAL_SIZE + static_convert(page_offset);
+        m_index = m_pos / TOTAL_SIZE;
+    }
 }
 
 /**
@@ -375,12 +415,33 @@ file_page<pageSize, serviceSize>& file_page<pageSize, serviceSize>::operator++ (
  * @return reference to yourself
  */
 template <int pageSize, int serviceSize>
-file_page<pageSize, serviceSize>& file_page<pageSize, serviceSize>::operator= (const file_page& page)
+file_page<pageSize, serviceSize>& file_page<pageSize, serviceSize>::
+    operator= (const file_page& page)
 {
     m_pos = page.m_pos;
     m_index = page.m_index;
     m_ptr = page.m_ptr;
     return *this;
+}
+
+/**
+ * Get a pointer to data
+ * @return the pointer to data
+ */
+template <int pageSize, int serviceSize>
+const void *file_page<pageSize, serviceSize>::get() const
+{
+    return m_ptr;
+}
+
+/**
+ * Get a pointer to data
+ * @return the pointer to data
+ */
+template <int pageSize, int serviceSize>
+void *file_page<pageSize, serviceSize>::get()
+{
+    return m_ptr;
 }
 
 //==============================================================================
@@ -524,11 +585,25 @@ const std::pair<offset_type, bool> file_region<FilePage>::
  * @return the real offset in the file
  */
 template <typename FilePage>
-const offset_type file_region<FilePage>::to_offset(const offset_type raw_offset) const
+const offset_type file_region<FilePage>::convert_offset(const offset_type raw_offset) const
 {
     offset_type offset = raw_offset;
     const std::pair<offset_type, bool> result = get_offset(offset, 0);
     OUROBOROS_ASSERT(result.second);
+    return result.first;
+}
+
+/**
+ * Convert the raw size to the real size in the file
+ * @param raw_size the raw size
+ * @return the real size in the file
+ */
+template <typename FilePage>
+const size_type file_region<FilePage>::convert_size(const size_type raw_size) const
+{
+    offset_type offset = raw_size;
+    const std::pair<offset_type, bool> result = get_offset(offset, 0);
+    OUROBOROS_ASSERT(offset == 0 || result.second);
     return result.first;
 }
 
@@ -548,7 +623,8 @@ const std::pair<offset_type, bool> file_region<FilePage>::
         if (raw_offset < m_count * m_size || 0 == m_count)
         {
             const count_type count = raw_offset / m_size;
-            return std::make_pair(count * size + raw_offset % m_size + offset, true);
+            return std::make_pair(count * size +
+                file_page_type::static_convert(raw_offset % m_size) + offset, true);
         }
         raw_offset -= m_count * m_size;
         return std::make_pair(m_count * size + offset, false);
@@ -570,6 +646,54 @@ const std::pair<offset_type, bool> file_region<FilePage>::
         }
         return std::make_pair(offset, false);
     }
+}
+
+//==============================================================================
+//  status_file_page
+//==============================================================================
+/**
+ * Constructor
+ * @param ptr the pointer to data of page
+ */
+template <typename FilePage, typename Status>
+status_file_page<FilePage, Status>::status_file_page(void *ptr)
+{
+    base_class::assign(ptr);
+}
+
+/**
+ * Verify the page
+ * @return the result of the checking
+ */
+template <typename FilePage, typename Status>
+const bool status_file_page<FilePage, Status>::verify() const
+{
+    return true;
+}
+
+/**
+ * Set a status of the page
+ * @param status the status of the page
+ */
+template <typename FilePage, typename Status>
+void status_file_page<FilePage, Status>::set_status(const status_type status)
+{
+    char *p = static_cast<char *>(base_class::get());
+    memcpy(p + base_class::DATA_SIZE, &status, sizeof(status));
+}
+
+/**
+ * Get a status of the page
+ * @return the status of the page
+ */
+template <typename FilePage, typename Status>
+const typename status_file_page<FilePage, Status>::status_type
+    status_file_page<FilePage, Status>::get_status() const
+{
+    const char *p = static_cast<const char *>(base_class::get());
+    status_type status;
+    memcpy(&status, p + base_class::DATA_SIZE, sizeof(status));
+    return status;
 }
 
 }   //namespace ouroboros
