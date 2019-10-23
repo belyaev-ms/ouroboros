@@ -44,7 +44,7 @@ public:
         reset();
     }
 #endif
-    inline void read(void *buffer, size_type size, const pos_type pos) const; ///< read data
+    void read(void *buffer, size_type size, const pos_type pos) const; ///< read data
     void write(const void *buffer, size_type size, const pos_type pos); ///< write data
     const size_type resize(const size_type size); ///< change the size of the file
 
@@ -59,8 +59,7 @@ public:
 protected:
     virtual void *get_page(const pos_type index); ///< get the buffer of the cache page
     virtual void *get_page(const pos_type index) const; ///< get the buffer of the cache page
-    void do_read(void *buffer, size_type size, pos_type pos) const; ///< read data
-    void do_write(const void *buffer, size_type size, pos_type pos); ///< write data
+    virtual void save_page(const file_page_type& page); /// save data of the file page
 protected:
     cache_type m_cache; ///< the cache
     transaction_state m_trans; ///< the state of the transaction
@@ -90,22 +89,8 @@ inline cache_file<FilePage, pageCount, File, Cache>::cache_file(const std::strin
  */
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-inline void cache_file<FilePage, pageCount, File, Cache>::
-    read(void *buffer, size_type size, const pos_type pos) const
-{
-    do_read(buffer, size, pos);
-}
-
-/**
- * Read data
- * @param buffer the buffer of the data
- * @param size the size of the data
- * @param pos the position of the data
- */
-template <typename FilePage, int pageCount, typename File,
-    template <typename, int, int> class Cache>
 void cache_file<FilePage, pageCount, File, Cache>::
-    do_read(void *buffer, size_type size, pos_type pos) const
+    read(void *buffer, size_type size, const pos_type pos) const
 {
     file_page_type page0(pos);
     file_page_type page1(pos, size - 1);
@@ -137,33 +122,13 @@ template <typename FilePage, int pageCount, typename File,
 void cache_file<FilePage, pageCount, File, Cache>::
     write(const void *buffer, size_type size, const pos_type pos)
 {
-    // check the transaction is active
-    if (TR_STARTED != m_trans)
-    {
-        // there isn't the transaction, write data to the file
-        base_class::write(buffer, size, pos);
-    }
-    // write data to the cache
-    do_write(buffer, size, pos);
-}
-
-/**
- * Write data
- * @param buffer the buffer of the data
- * @param size the size of the data
- * @param pos the position of the data
- */
-template <typename FilePage, int pageCount, typename File,
-    template <typename, int, int> class Cache>
-void cache_file<FilePage, pageCount, File, Cache>::
-    do_write(const void *buffer, size_type size, pos_type pos)
-{
     file_page_type page0(pos);
     file_page_type page1(pos, size - 1);
     if (page0 == page1)
     {
         page0.assign(get_page(page0.index()));
         page0.write(buffer, size);
+        save_page(page0);
     }
     else
     {
@@ -171,9 +136,11 @@ void cache_file<FilePage, pageCount, File, Cache>::
         {
             page.assign(get_page(page.index()));
             buffer = page.write(buffer);
+            save_page(page);
         }
         page1.assign(get_page(page1.index()));
         page1.write_rest(buffer);
+        save_page(page1);
     }
 }
 
@@ -307,6 +274,22 @@ void cache_file<FilePage, pageCount, File, Cache>::save_page(const pos_type inde
     if (TR_CANCELED != m_trans)
     {
         base_class::write(page, CACHE_PAGE_SIZE, index * CACHE_PAGE_SIZE);
+    }
+}
+
+/**
+ * Save data of the cache page
+ * @param page the file page
+ */
+//virtual
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void cache_file<FilePage, pageCount, File, Cache>::save_page(const file_page_type& page)
+{
+    if (TR_STARTED != m_trans)
+    {
+        base_class::write(page.get(), file_page_type::TOTAL_SIZE,
+            page.index() * file_page_type::TOTAL_SIZE);
     }
 }
 

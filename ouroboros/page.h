@@ -41,6 +41,8 @@ public:
     const void *write(const void *buffer, const size_type size);
     const void *write_rest(const void *buffer);
     const bool valid() const;
+    const void *get() const;
+    void *get();
     const bool operator== (const file_page& page) const;
     const bool operator< (const file_page& page) const;
     file_page& operator++ ();
@@ -49,9 +51,6 @@ public:
     static const size_type static_data_size();
     static const size_type static_align_size(const size_type size);
     static const pos_type static_convert(const pos_type pos);
-protected:
-    const void *get() const;
-    void *get();
 private:
     void *do_read(void *buffer, const pos_type offset, const size_type size) const;
     const void *do_write(const void *buffer, const pos_type offset, const size_type size);
