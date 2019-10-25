@@ -40,25 +40,26 @@ public:
 protected:
     virtual void *get_page(const pos_type index); ///< get the buffer of the cache page
     virtual void *get_page(const pos_type index) const; ///< get the buffer of the cache page
-    void add_index(const pos_type& pos) const; ///< add the index of the page to the backup set
-    void remove_index(const pos_type& pos) const; ///< remove the index of the page to the backup set
+    void add_index(const pos_type index, void *page); ///< add the index of the page to the backup set
+    void do_add_index(const pos_type index); ///< add the index of the page to the backup set
+    void remove_index(const pos_type index); ///< remove the index of the page to the backup set
     void recovery(); ///< restore the file from the backup file
     void clear_indexes(); ///< remove all indexes of pages from the backup set
 #ifdef OUROBOROS_FLUSH_ENABLED
     void flush_backup() const; ///< forced synchronization data of the backup file
 #endif
 private:
-    virtual void do_before_add_index(const pos_type& pos) const; ///< perform an action before add the index
-    virtual void do_after_add_index(const pos_type& pos) const; ///< perform an action after add the index
-    virtual void do_before_remove_index(const pos_type& pos) const; ///< perform an action before remove the index
-    virtual void do_after_remove_index(const pos_type& pos) const; ///< perform an action after remove the index
-    virtual void do_before_clear_indexes() const; ///< perform an action before remove all indexes
-    virtual void do_after_clear_indexes() const; ///< perform an action after remove all indexes
+    virtual void do_before_add_index(const pos_type index, void *page); ///< perform an action before add the index
+    virtual void do_after_add_index(const pos_type index, void *page); ///< perform an action after add the index
+    virtual void do_before_remove_index(const pos_type index); ///< perform an action before remove the index
+    virtual void do_after_remove_index(const pos_type index); ///< perform an action after remove the index
+    virtual void do_before_clear_indexes(); ///< perform an action before remove all indexes
+    virtual void do_after_clear_indexes(); ///< perform an action after remove all indexes
 
     typedef std::set<pos_type> index_list; ///< containter of a backup set
 private:
-    mutable simple_file m_backup; ///< the backup file
-    mutable index_list m_indexes; ///< the backup set
+    simple_file m_backup; ///< the backup file
+    index_list m_indexes; ///< the backup set
 };
 
 //==============================================================================
@@ -121,8 +122,9 @@ void *backup_file<FilePage, pageCount, File, Cache>::get_page(const pos_type ind
     // check if the page exists in the backup set
     if (TR_STARTED == base_class::state() && m_indexes.find(index) == m_indexes.end())
     {
+        // store the page into the backup file
         m_backup.write(page, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
-        add_index(index);
+        add_index(index, page);
     }
     return page;
 }
@@ -156,7 +158,6 @@ template <typename FilePage, int pageCount, typename File,
 void backup_file<FilePage, pageCount, File, Cache>::start()
 {
     base_class::start();
-    clear_indexes();
 }
 
 /**
@@ -203,28 +204,42 @@ inline void backup_file<FilePage, pageCount, File, Cache>::recovery()
 
 /**
  * Add the index of the page to the backup set
- * @param pos the index of the page
+ * @param index the index of the page
+ * @param page the pointer to the buffer of the page
  */
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-void backup_file<FilePage, pageCount, File, Cache>::add_index(const pos_type& pos) const
+void backup_file<FilePage, pageCount, File, Cache>::do_add_index(const pos_type index)
 {
-    do_before_add_index(pos);
-    m_indexes.insert(pos);
-    do_after_add_index(pos);
+    m_indexes.insert(index);
+}
+
+/**
+ * Add the index of the page to the backup set
+ * @param index the index of the page
+ * @param page the pointer to the buffer of the page
+ */
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::add_index(const pos_type index,
+    void *page)
+{
+    do_before_add_index(index, page);
+    do_add_index(index);
+    do_after_add_index(index, page);
 }
 
 /**
  * Remove the index of the page to the backup set
- * @param pos the index of the page
+ * @param index the index of the page
  */
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-inline void backup_file<FilePage, pageCount, File, Cache>::remove_index(const pos_type& pos) const
+inline void backup_file<FilePage, pageCount, File, Cache>::remove_index(const pos_type index)
 {
-    do_before_remove_index(pos);
-    m_indexes.erase(pos);
-    do_after_remove_index(pos);
+    do_before_remove_index(index);
+    m_indexes.erase(index);
+    do_after_remove_index(index);
 }
 
 /**
@@ -249,48 +264,52 @@ void backup_file<FilePage, pageCount, File, Cache>::clear_indexes()
 
 /**
  * Perform an action before add the index
- * @param pos the index of the page
+ * @param index the index of the page
+ * @param page the pointer to the buffer of the page
  */
 //virtual
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-void backup_file<FilePage, pageCount, File, Cache>::do_before_add_index(const pos_type& pos) const
+void backup_file<FilePage, pageCount, File, Cache>::do_before_add_index(const pos_type index,
+    void *page)
 {
 
 }
 
 /**
  * Perform an action after add the index
- * @param pos the index of the page
+ * @param index the index of the page
+ * @param page the pointer to the buffer of the page
  */
 //virtual
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-void backup_file<FilePage, pageCount, File, Cache>::do_after_add_index(const pos_type& pos) const
+void backup_file<FilePage, pageCount, File, Cache>::do_after_add_index(const pos_type index,
+    void *page)
 {
 
 }
 
 /**
  * Perform an action before remove the index
- * @param pos the index of the page
+ * @param index the index of the page
  */
 //virtual
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-void backup_file<FilePage, pageCount, File, Cache>::do_before_remove_index(const pos_type& pos) const
+void backup_file<FilePage, pageCount, File, Cache>::do_before_remove_index(const pos_type index)
 {
 
 }
 
 /**
  * Perform an action after remove the index
- * @param pos the index of the page
+ * @param index the index of the page
  */
 //virtual
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-void backup_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const pos_type& pos) const
+void backup_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const pos_type index)
 {
 
 }
@@ -301,7 +320,7 @@ void backup_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const 
 //virtual
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-void backup_file<FilePage, pageCount, File, Cache>::do_before_clear_indexes() const
+void backup_file<FilePage, pageCount, File, Cache>::do_before_clear_indexes()
 {
 
 }
@@ -312,7 +331,7 @@ void backup_file<FilePage, pageCount, File, Cache>::do_before_clear_indexes() co
 //virtual
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-void backup_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes() const
+void backup_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes()
 {
 
 }

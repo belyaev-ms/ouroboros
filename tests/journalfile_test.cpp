@@ -12,7 +12,7 @@ using namespace ouroboros;
 
 #define TEST_FILE_NAME "test.dat"
 
-typedef file_page<1024> file_page_type;
+typedef file_page<1024, sizeof(journal_status_type)> file_page_type;
 typedef journal_file<file_page_type, 8> file_type;
 
 #define TEST_FULL_TRANSACTION

@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_full_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_page_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_page_test)
     file.resize(sizeof(outbuf));
     file.write(outbuf, sizeof(outbuf), 0);
 
-    char inbuf[file_type::CACHE_PAGE_SIZE];
+    char inbuf[file_page_type::DATA_SIZE];
     for (size_t i = 0; i < sizeof(outbuf) /  sizeof(inbuf); i++)
     {
         file.read(inbuf, sizeof(inbuf), i * sizeof(inbuf));
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_paged2_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_paged2_test)
     file.resize(sizeof(outbuf));
     file.write(outbuf, sizeof(outbuf), 0);
 
-    char inbuf[file_type::CACHE_PAGE_SIZE / 2];
+    char inbuf[file_page_type::DATA_SIZE / 2];
     for (size_t i = 0; i < sizeof(outbuf) /  sizeof(inbuf); i++)
     {
         file.read(inbuf, sizeof(inbuf), i * sizeof(inbuf));
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_pagep2_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_pagep2_test)
     file.resize(sizeof(outbuf));
     file.write(outbuf, sizeof(outbuf), 0);
 
-    char inbuf[file_type::CACHE_PAGE_SIZE * 2];
+    char inbuf[file_page_type::DATA_SIZE * 2];
     for (size_t i = 0; i < sizeof(outbuf) /  sizeof(inbuf); i++)
     {
         file.read(inbuf, sizeof(inbuf), i * sizeof(inbuf));
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_pg_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2 + 100];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2 + 100];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(wr_page_rd_full_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(wr_page_rd_full_test)
 
     file_type file(TEST_FILE_NAME);
     file.resize(sizeof(outbuf));
-    const size_t blockSize = file_type::CACHE_PAGE_SIZE;
+    const size_t blockSize = file_page_type::DATA_SIZE;
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
     {
         file.write(&outbuf[i * blockSize], blockSize, i * blockSize);
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(wr_paged2_rd_full_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(wr_paged2_rd_full_test)
 
     file_type file(TEST_FILE_NAME);
     file.resize(sizeof(outbuf));
-    const size_t blockSize = file_type::CACHE_PAGE_SIZE / 2;
+    const size_t blockSize = file_page_type::DATA_SIZE / 2;
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
     {
         file.write(&outbuf[i * blockSize], blockSize, i * blockSize);
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(wr_pagep2_rd_full_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(wr_pagep2_rd_full_test)
 
     file_type file(TEST_FILE_NAME);
     file.resize(sizeof(outbuf));
-    const size_t blockSize = file_type::CACHE_PAGE_SIZE * 2;
+    const size_t blockSize = file_page_type::DATA_SIZE * 2;
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
     {
         file.write(&outbuf[i * blockSize], blockSize, i * blockSize);
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(wr_page_TR_rd_full_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(wr_page_TR_rd_full_test)
 
     file_type file(TEST_FILE_NAME);
     file.resize(sizeof(outbuf));
-    const size_t blockSize = file_type::CACHE_PAGE_SIZE;
+    const size_t blockSize = file_page_type::DATA_SIZE;
 
     file.start();
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(wr_paged2_TR_rd_full_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(wr_paged2_TR_rd_full_test)
 
     file_type file(TEST_FILE_NAME);
     file.resize(sizeof(outbuf));
-    const size_t blockSize = file_type::CACHE_PAGE_SIZE / 2;
+    const size_t blockSize = file_page_type::DATA_SIZE / 2;
 
     file.start();
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(wr_pagep2_TR_rd_full_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(wr_pagep2_TR_rd_full_test)
 
     file_type file(TEST_FILE_NAME);
     file.resize(sizeof(outbuf));
-    const size_t blockSize = file_type::CACHE_PAGE_SIZE * 2;
+    const size_t blockSize = file_page_type::DATA_SIZE * 2;
 
     file.start();
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_full_wr_paged2_TR_rd_full_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_full_wr_paged2_TR_rd_full_test)
     }
 
     BOOST_TEST_MESSAGE("block write to file");
-    const size_t blockSize = file_type::CACHE_PAGE_SIZE / 2;
+    const size_t blockSize = file_page_type::DATA_SIZE / 2;
     file.start();
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
     {
@@ -425,8 +425,8 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_full_wr_one_TR_rd_full_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
-    
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+
     {
         for (size_t i = 0; i < sizeof(outbuf); i++)
         {
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_full_wr_one_TR_rd_full_test)
     }
 
     {
-        for (size_t i = file_type::CACHE_PAGE_SIZE / 2; i < sizeof(outbuf); i += file_type::CACHE_PAGE_SIZE)
+        for (size_t i = file_page_type::DATA_SIZE / 2; i < sizeof(outbuf); i += file_page_type::DATA_SIZE)
         {
             outbuf[i] = std::rand() % 100;
         }
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_full_wr_one_TR_rd_full_test)
         file_type file(TEST_FILE_NAME);
         file.resize(sizeof(outbuf));
         file.start();
-        for (size_t i = file_type::CACHE_PAGE_SIZE / 2; i < sizeof(outbuf); i += file_type::CACHE_PAGE_SIZE)
+        for (size_t i = file_page_type::DATA_SIZE / 2; i < sizeof(outbuf); i += file_page_type::DATA_SIZE)
         {
             file.write(&outbuf[i], 1, i);
         }
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(wrrd_page_TR_rd_full_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(wrrd_page_TR_rd_full_test)
 
     file_type file(TEST_FILE_NAME);
     file.resize(sizeof(outbuf));
-    const size_t blockSize = file_type::CACHE_PAGE_SIZE;
+    const size_t blockSize = file_page_type::DATA_SIZE;
 
     file.start();
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(rollback_test)
 {
     file_type::remove(TEST_FILE_NAME);
 
-    char outbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char outbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         outbuf[i] = i;
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(rollback_test)
 
     file_type file(TEST_FILE_NAME);
     file.resize(sizeof(outbuf));
-    const size_t blockSize = file_type::CACHE_PAGE_SIZE;
+    const size_t blockSize = file_page_type::DATA_SIZE;
 
     file.start();
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
@@ -542,7 +542,7 @@ BOOST_AUTO_TEST_CASE(rollback_test)
         BOOST_CHECK_EQUAL_COLLECTIONS(outbuf, ARRAY_END(outbuf), inbuf, ARRAY_END(inbuf));
     }
 
-    char stubbuf[file_type::CACHE_PAGE_SIZE * file_type::CACHE_PAGE_COUNT * 2];
+    char stubbuf[file_page_type::DATA_SIZE * file_type::CACHE_PAGE_COUNT * 2];
     for (size_t i = 0; i < sizeof(outbuf); i++)
     {
         stubbuf[i] = std::rand();
