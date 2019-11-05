@@ -13,6 +13,7 @@ using namespace ouroboros;
 
 typedef file_page<1024> file_page_type;
 typedef backup_file<file_page_type, 8> file_type;
+typedef file_type::file_region_type file_region_type;
 
 #define TEST_FULL_TRANSACTION
 #include "cachefile_test.h"

@@ -28,7 +28,7 @@ enum journal_status_type
  * the file, but before it, the original data will be copied to the backup file
  * and the index of the cache page will be stored in journal file.
  */
-template <typename FilePage, int pageCount = 1024, typename File = file_lock,
+template <typename FilePage, int pageCount = 1024, typename File = file_lock<FilePage>,
         template <typename, int, int> class Cache = cache>
 class journal_file : public backup_file<FilePage, pageCount, File, Cache>
 {
@@ -36,8 +36,10 @@ class journal_file : public backup_file<FilePage, pageCount, File, Cache>
     typedef backup_file<FilePage, pageCount, File, Cache> base_class;
 public:
     typedef FilePage file_page_type;
+    typedef typename base_class::file_region_type file_region_type;
     typedef typename base_class::page_status_type page_status_type;
     explicit journal_file(const std::string& name);
+    journal_file(const std::string& name, const file_region_type& region);
     const bool init(); ///< ititialize
 protected:
     const bool init_indexes(); ///< initialize the indexes of backup pages
@@ -57,8 +59,21 @@ protected:
  */
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-inline journal_file<FilePage, pageCount, File, Cache>::journal_file(const std::string& name) :
+journal_file<FilePage, pageCount, File, Cache>::journal_file(const std::string& name) :
     base_class(name)
+{
+}
+
+/**
+ * Constructor
+ * @param name the name of a file
+ * @param region the region of a file
+ */
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+journal_file<FilePage, pageCount, File, Cache>::journal_file(const std::string& name,
+        const file_region_type& region) :
+    base_class(name, region)
 {
 }
 
@@ -89,7 +104,7 @@ const bool journal_file<FilePage, pageCount, File, Cache>::init_indexes()
     const count_type count = base_class::size() / base_class::CACHE_PAGE_SIZE;
     for (pos_type index = 0; index < count; ++index)
     {
-        simple_file::read(buffer, count, index * base_class::CACHE_PAGE_SIZE);
+        simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
         if (status_page.get_status() != JS_CLEAN)
         {
             success = false;
@@ -155,15 +170,15 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const
         void *page = base_class::m_cache.get_page(status);
         status_file_page<file_page_type> status_page(page);
         status_page.set_status(JS_CLEAN);
-        simple_file::write(page, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
+        simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
     }
     else
     {
         char buffer[base_class::CACHE_PAGE_SIZE];
-        simple_file::read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
+        simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
         status_file_page<file_page_type> status_page(buffer);
         status_page.set_status(JS_CLEAN);
-        simple_file::write(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
+        simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
     }
 }
 

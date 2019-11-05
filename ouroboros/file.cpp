@@ -12,23 +12,23 @@ namespace ouroboros
 {
 
 //==============================================================================
-//  file
+//  base_file
 //==============================================================================
 /**
- * Remove a file by the name
- * @param name the name of the file
+ * Remove a base_file by the name
+ * @param name the name of the base_file
  */
 //static
-void file::remove(const std::string& name)
+void base_file::remove(const std::string& name)
 {
     ::remove(name.c_str());
 }
 
 /**
  * Constructor
- * @param name the name of the file
+ * @param name the name of the base_file
  */
-file::file(const std::string& name) :
+base_file::base_file(const std::string& name) :
     m_name(name),
     m_fd(open(name.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR))
 {
@@ -42,7 +42,7 @@ file::file(const std::string& name) :
  * Destructor
  */
 //virtual
-file::~file()
+base_file::~base_file()
 {
     if (close(m_fd) == -1)
     {
@@ -51,10 +51,10 @@ file::~file()
 }
 
 /**
- * Get the name of the file
- * @return the name of the file
+ * Get the name of the base_file
+ * @return the name of the base_file
  */
-const std::string& file::name() const
+const std::string& base_file::name() const
 {
     return m_name;
 }
@@ -63,7 +63,7 @@ const std::string& file::name() const
  * Initialize
  * @return result of the initialization
  */
-const bool file::init()
+const bool base_file::init()
 {
     return true;
 }
@@ -74,7 +74,8 @@ const bool file::init()
  * @param size the size of the data
  * @param pos the position of the data
  */
-void file::read(void *buffer, size_type size, const pos_type pos) const
+//virtual
+void base_file::do_read(void *buffer, size_type size, const pos_type pos) const
 {
     size_t count = 0;
     ssize_t result = pread(m_fd, buffer, size, pos);
@@ -84,7 +85,8 @@ void file::read(void *buffer, size_type size, const pos_type pos) const
         {
             if (++count >= OUROBOROS_IO_ERROR_MAX)
             {
-                OUROBOROS_THROW_ERROR(io_error, "error of reading: " << PR(m_fd) << PR(m_name) << PR(size) << PR(pos) << PE(result));
+                OUROBOROS_THROW_ERROR(io_error, "error of reading: " << 
+                    PR(m_fd) << PR(m_name) << PR(size) << PR(pos) << PE(result));
             }
         }
         else
@@ -92,7 +94,8 @@ void file::read(void *buffer, size_type size, const pos_type pos) const
             const int err = errno;
             if (err != EINTR && ++count >= OUROBOROS_IO_ERROR_MAX)
             {
-                OUROBOROS_THROW_ERROR(io_error, "error of reading: " << PR(m_fd) << PR(m_name) << PR(size) << PR(pos) << PR(result) << PE(err));
+                OUROBOROS_THROW_ERROR(io_error, "error of reading: " << 
+                    PR(m_fd) << PR(m_name) << PR(size) << PR(pos) << PR(result) << PE(err));
             }
         }
         usleep(OUROBOROS_IO_ERROR_DELAY);
@@ -106,7 +109,8 @@ void file::read(void *buffer, size_type size, const pos_type pos) const
  * @param size the size of the data
  * @param pos the position of the data
  */
-void file::write(const void *buffer, size_type size, const pos_type pos)
+//virtaul
+void base_file::do_write(const void *buffer, size_type size, const pos_type pos)
 {
     size_t count = 0;
     ssize_t result = pwrite(m_fd, buffer, size, pos);
@@ -116,7 +120,8 @@ void file::write(const void *buffer, size_type size, const pos_type pos)
         {
             if (++count >= OUROBOROS_IO_ERROR_MAX)
             {
-                OUROBOROS_THROW_ERROR(io_error, "error of writing: " << PR(m_fd) << PR(m_name) << PR(size) << PR(pos) << PE(result));
+                OUROBOROS_THROW_ERROR(io_error, "error of writing: " << 
+                    PR(m_fd) << PR(m_name) << PR(size) << PR(pos) << PE(result));
             }
         }
         else
@@ -124,7 +129,8 @@ void file::write(const void *buffer, size_type size, const pos_type pos)
             const int err = errno;
             if (err != EINTR && ++count >= OUROBOROS_IO_ERROR_MAX)
             {
-                OUROBOROS_THROW_ERROR(io_error, "error of writing: " << PR(m_fd) << PR(m_name) << PR(size) << PR(pos) << PR(result) << PE(err));
+                OUROBOROS_THROW_ERROR(io_error, "error of writing: " << 
+                    PR(m_fd) << PR(m_name) << PR(size) << PR(pos) << PR(result) << PE(err));
             }
         }
         usleep(OUROBOROS_IO_ERROR_DELAY);
@@ -133,23 +139,89 @@ void file::write(const void *buffer, size_type size, const pos_type pos)
 }
 
 /**
- * Change the size of the file
- * @param size the size of the file
+ * Read data
+ * @param buffer the buffer of the data
+ * @param size the size of the data
+ * @param pos the position of the data
  */
-const size_type file::resize(const size_type size)
+void base_file::read(void *buffer, size_type size, const pos_type pos) const
 {
+    do_read(buffer, size, pos);
+}
+
+/**
+ * Write data
+ * @param buffer the buffer of the data
+ * @param size the size of the data
+ * @param pos the position of the data
+ */
+void base_file::write(const void *buffer, size_type size, const offset_type pos)
+{
+    do_write(buffer, size, pos);
+}
+
+/**
+ * Change the size of the base_file
+ * @param size the size of the base_file
+ */
+//virtual
+const size_type base_file::do_resize(const size_type size)
+{
+    const size_type current_size = base_file::do_size();
     if (ftruncate(m_fd, size) == -1)
     {
-        OUROBOROS_THROW_ERROR(io_error, "error of changing size: " << PR(m_fd) << PR(m_name) << PR(size) << PE(errno));
+        OUROBOROS_THROW_ERROR(io_error, "error of changing size: " << 
+            PR(m_fd) << PR(m_name) << PR(size) << PE(errno));
+    }
+    if (current_size < size)
+    {
+        char buffer[OUROBOROS_PAGE_SIZE] = { 0 };
+        for (pos_type pos = current_size; pos < size; pos += OUROBOROS_PAGE_SIZE)
+        {
+            const size_type count = std::min(static_cast<size_type>(OUROBOROS_PAGE_SIZE), size - pos);
+            base_file::do_write(buffer, count, pos);
+        }
     }
     return size;
 }
 
 /**
- * Get the size of the file
+ * Change the size of the base_file
+ * @param size the size of the base_file
+ */
+const size_type base_file::resize(const size_type size)
+{
+    return do_resize(size);
+}
+
+/**
+ * Size up the file
+ * @param size the new size
  * @return the size of the file
  */
-const size_type file::size() const
+//virtual
+const size_type base_file::do_sizeup(const size_type size)
+{
+    const size_type current_size = do_size();
+    return current_size < size ? do_resize(size) : current_size;
+}
+
+/**
+ * Size up the file
+ * @param size the new size
+ * @return the size of the file
+ */
+const size_type base_file::sizeup(const size_type size)
+{
+    return do_sizeup(size);
+}
+
+/**
+ * Get the size of the base_file
+ * @return the size of the base_file
+ */
+//virtual
+const size_type base_file::do_size() const
 {
     const off_t result = lseek(m_fd, 0, SEEK_END);
     if (-1 == result)
@@ -160,19 +232,39 @@ const size_type file::size() const
 }
 
 /**
+ * Get the size of the base_file
+ * @return the size of the base_file
+ */
+const size_type base_file::size() const
+{
+    return do_size();
+}
+
+/**
  * Refresh data
  * @param size the size of the data
  * @param pos the position of the data
  */
-void file::refresh(size_type size, const pos_type pos)
+//virtual
+void base_file::do_refresh(size_type size, const pos_type pos)
 {
 //    OUROBOROS_THROW_BUG("method not supported");
 }
 
 /**
- * Forced synchronization data of the file
+ * Refresh data
+ * @param size the size of the data
+ * @param pos the position of the data
  */
-void file::flush() const
+void base_file::refresh(size_type size, const pos_type pos)
+{
+    do_refresh(size, pos);
+}
+
+/**
+ * Forced synchronization data of the base_file
+ */
+void base_file::flush() const
 {
     size_t count = 0;
     while (fdatasync(m_fd) != 0)
@@ -187,10 +279,10 @@ void file::flush() const
 }
 
 /**
- * Get the file descriptor
- * @return the file descriptor
+ * Get the base_file descriptor
+ * @return the base_file descriptor
  */
-const int file::fd() const
+const int base_file::fd() const
 {
     return m_fd;
 }
@@ -198,7 +290,7 @@ const int file::fd() const
 /**
  * Start the transaction
  */
-void file::start()
+void base_file::start()
 {
 //    OUROBOROS_THROW_BUG("method not supported");
 }
@@ -206,7 +298,7 @@ void file::start()
 /**
  * Stop the transaction
  */
-void file::stop()
+void base_file::stop()
 {
 //    OUROBOROS_THROW_BUG("method not supported");
 }
@@ -214,7 +306,7 @@ void file::stop()
 /**
  * Cancel the transaction
  */
-void file::cancel()
+void base_file::cancel()
 {
     OUROBOROS_THROW_BUG("method not supported");
 }
@@ -223,7 +315,7 @@ void file::cancel()
  * Get the state of the transaction
  * @return the state of the transaction
  */
-const transaction_state file::state() const
+const transaction_state base_file::state() const
 {
     return TR_UNKNOWN;
 }

@@ -13,5 +13,6 @@ using namespace ouroboros;
 
 typedef file_page<1024> file_page_type;
 typedef cache_file<file_page_type, 8> file_type;
+typedef file_type::file_region_type file_region_type;
 
 #include "cachefile_test.h"

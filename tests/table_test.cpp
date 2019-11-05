@@ -14,7 +14,8 @@ using namespace ouroboros;
 BOOST_AUTO_TEST_CASE(test1)
 {
     typedef simple_key skey_type;
-    typedef source<file, file_page<1> > source_type;
+    typedef source<file<> > source_type;
+    typedef typename source_type::file_type file_type;
     typedef table<source_type, skey_type> table_type;
     typedef boost::shared_ptr<table_type> ptable_type;
     typedef std::vector<skey_type> skey_list;
@@ -27,10 +28,10 @@ BOOST_AUTO_TEST_CASE(test1)
     const size_type size = rec_size * rec_count * tbl_count;
     const std::string filename = "test.dat";
 
-    file::remove(filename.c_str());
+    file_type::remove(filename.c_str());
     BOOST_REQUIRE(!boost::filesystem::exists(filename));
     {
-        file file(filename.c_str());
+        file_type file(filename.c_str());
         BOOST_REQUIRE(boost::filesystem::exists(filename));
         BOOST_REQUIRE_EQUAL(size, file.resize(size));
         BOOST_REQUIRE_EQUAL(size, file.size());
@@ -90,6 +91,6 @@ BOOST_AUTO_TEST_CASE(test1)
             }
         }
     }
-    file::remove(filename.c_str());
+    file_type::remove(filename.c_str());
     BOOST_REQUIRE(!boost::filesystem::exists(filename));
 }

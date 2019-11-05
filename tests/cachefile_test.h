@@ -29,7 +29,8 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_full_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.reset();
     file.resize(sizeof(outbuf));
     file.write(outbuf, sizeof(outbuf), 0);
@@ -55,7 +56,8 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_page_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     file.write(outbuf, sizeof(outbuf), 0);
 
@@ -85,7 +87,8 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_paged2_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     file.write(outbuf, sizeof(outbuf), 0);
 
@@ -115,7 +118,8 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_pagep2_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     file.write(outbuf, sizeof(outbuf), 0);
 
@@ -145,7 +149,8 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_pg_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     file.write(outbuf, sizeof(outbuf), 0);
 
@@ -192,7 +197,8 @@ BOOST_AUTO_TEST_CASE(wr_page_rd_full_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     const size_t blockSize = file_page_type::DATA_SIZE;
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
@@ -220,7 +226,8 @@ BOOST_AUTO_TEST_CASE(wr_paged2_rd_full_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     const size_t blockSize = file_page_type::DATA_SIZE / 2;
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
@@ -249,7 +256,8 @@ BOOST_AUTO_TEST_CASE(wr_pagep2_rd_full_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     const size_t blockSize = file_page_type::DATA_SIZE * 2;
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
@@ -278,7 +286,8 @@ BOOST_AUTO_TEST_CASE(wr_page_TR_rd_full_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     const size_t blockSize = file_page_type::DATA_SIZE;
 
@@ -317,7 +326,8 @@ BOOST_AUTO_TEST_CASE(wr_paged2_TR_rd_full_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     const size_t blockSize = file_page_type::DATA_SIZE / 2;
 
@@ -349,7 +359,8 @@ BOOST_AUTO_TEST_CASE(wr_pagep2_TR_rd_full_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     const size_t blockSize = file_page_type::DATA_SIZE * 2;
 
@@ -384,7 +395,8 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_full_wr_paged2_TR_rd_full_test)
     }
 
     BOOST_TEST_MESSAGE("write to file");
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     file.write(outbuf, sizeof(outbuf), 0);
 
@@ -433,7 +445,8 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_full_wr_one_TR_rd_full_test)
             outbuf[i] = i;
         }
         BOOST_TEST_MESSAGE("write to file");
-        file_type file(TEST_FILE_NAME);
+        file_region_type file_region(0, sizeof(outbuf));
+        file_type file(TEST_FILE_NAME, file_region);
         file.resize(sizeof(outbuf));
         file.write(outbuf, sizeof(outbuf), 0);
 
@@ -451,7 +464,8 @@ BOOST_AUTO_TEST_CASE(wr_full_rd_full_wr_one_TR_rd_full_test)
         }
 
         BOOST_TEST_MESSAGE("write 1 byte to file");
-        file_type file(TEST_FILE_NAME);
+        file_region_type file_region(0, sizeof(outbuf));
+        file_type file(TEST_FILE_NAME, file_region);
         file.resize(sizeof(outbuf));
         file.start();
         for (size_t i = file_page_type::DATA_SIZE / 2; i < sizeof(outbuf); i += file_page_type::DATA_SIZE)
@@ -487,7 +501,8 @@ BOOST_AUTO_TEST_CASE(wrrd_page_TR_rd_full_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     const size_t blockSize = file_page_type::DATA_SIZE;
 
@@ -524,7 +539,8 @@ BOOST_AUTO_TEST_CASE(rollback_test)
         outbuf[i] = i;
     }
 
-    file_type file(TEST_FILE_NAME);
+    file_region_type file_region(0, sizeof(outbuf));
+    file_type file(TEST_FILE_NAME, file_region);
     file.resize(sizeof(outbuf));
     const size_t blockSize = file_page_type::DATA_SIZE;
 

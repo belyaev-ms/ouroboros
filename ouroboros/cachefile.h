@@ -21,13 +21,14 @@ namespace ouroboros
  * cache memory will be exhausted, the oldest cache page will be stored in
  * the file.
  */
-template <typename FilePage, int pageCount = 1024, typename File = file_lock,
+template <typename FilePage, int pageCount = 1024, typename File = file_lock<FilePage>,
     template <typename, int, int> class Cache = cache>
 class cache_file : public File
 {
     typedef File base_class;
 public:
     typedef FilePage file_page_type;
+    typedef typename base_class::file_region_type file_region_type;
     enum
     {
         CACHE_PAGE_SIZE = file_page_type::TOTAL_SIZE,
@@ -38,25 +39,26 @@ public:
     typedef typename cache_type::page_status_type page_status_type;
 
     explicit cache_file(const std::string& name);
+    cache_file(const std::string& name, const file_region_type& region);
+
 #ifdef OUROBOROS_TEST_ENABLED
     virtual ~cache_file()
     {
         reset();
     }
 #endif
-    void read(void *buffer, size_type size, const pos_type pos) const; ///< read data
-    void write(const void *buffer, size_type size, const pos_type pos); ///< write data
-    const size_type resize(const size_type size); ///< change the size of the file
 
     void start();  ///< start the transaction
     void stop();   ///< stop the transaction
     void cancel(); ///< cancel the transaction
     const transaction_state state() const; ///< get the state of the transaction
     void reset(); ///< reset all caches
-    void refresh(size_type size, const pos_type pos); ///< refresh data
 
     virtual void save_page(const pos_type index, void *data); ///< save data of the cache page
 protected:
+    virtual void do_read(void *buffer, size_type size, const offset_type offset) const; ///< read data
+    virtual void do_write(const void *buffer, size_type size, const offset_type offset); ///< write data
+    virtual void do_refresh(size_type size, const offset_type pos); ///< refresh data
     virtual void *get_page(const pos_type index); ///< get the buffer of the cache page
     virtual void *get_page(const pos_type index) const; ///< get the buffer of the cache page
     virtual void save_page(const file_page_type& page); /// save data of the file page
@@ -74,8 +76,23 @@ protected:
  */
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-inline cache_file<FilePage, pageCount, File, Cache>::cache_file(const std::string& name) :
+cache_file<FilePage, pageCount, File, Cache>::cache_file(const std::string& name) :
     base_class(name),
+    m_cache(*this),
+    m_trans(TR_STOPPED)
+{
+}
+
+/**
+ * Constructor
+ * @param name the name of a file
+ * @param region the region of a file
+ */
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+cache_file<FilePage, pageCount, File, Cache>::cache_file(const std::string& name,
+        const file_region_type& region) :
+    base_class(name, region),
     m_cache(*this),
     m_trans(TR_STOPPED)
 {
@@ -87,13 +104,14 @@ inline cache_file<FilePage, pageCount, File, Cache>::cache_file(const std::strin
  * @param size the size of the data
  * @param pos the position of the data
  */
+//virtual
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 void cache_file<FilePage, pageCount, File, Cache>::
-    read(void *buffer, size_type size, const pos_type pos) const
+    do_read(void *buffer, size_type size, const offset_type offset) const
 {
-    file_page_type page0(pos);
-    file_page_type page1(pos, size - 1);
+    file_page_type page0(offset);
+    file_page_type page1(offset, size - 1);
     if (page0 == page1)
     {
         page0.assign(get_page(page0.index()));
@@ -117,10 +135,11 @@ void cache_file<FilePage, pageCount, File, Cache>::
  * @param size the size of the data
  * @param pos the position of the data
  */
+//virtual
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 void cache_file<FilePage, pageCount, File, Cache>::
-    write(const void *buffer, size_type size, const pos_type pos)
+    do_write(const void *buffer, size_type size, const pos_type pos)
 {
     file_page_type page0(pos);
     file_page_type page1(pos, size - 1);
@@ -145,19 +164,6 @@ void cache_file<FilePage, pageCount, File, Cache>::
 }
 
 /**
- * Change the size of the file
- * @param size the size of the file
- */
-template <typename FilePage, int pageCount, typename File,
-    template <typename, int, int> class Cache>
-const size_type cache_file<FilePage, pageCount, File, Cache>::resize(const size_type size)
-{
-    const size_type rsize = m_cache.aligned_size(size);
-    base_class::resize(rsize);
-    return rsize;
-}
-
-/**
  * Get the buffer of the cache page for read
  * @param index the index of the cache page
  * @return the pointer to the buffer of the cache page for read
@@ -175,7 +181,7 @@ void *cache_file<FilePage, pageCount, File, Cache>::get_page(const pos_type inde
     else
     {
         void *page = m_cache.get_page(status);
-        base_class::read(page, CACHE_PAGE_SIZE, status.index() * CACHE_PAGE_SIZE);
+        base_class::do_read(page, CACHE_PAGE_SIZE, status.index() * CACHE_PAGE_SIZE);
         return page;
     }
 }
@@ -198,7 +204,7 @@ void *cache_file<FilePage, pageCount, File, Cache>::get_page(const pos_type inde
     else
     {
         void *page = m_cache.get_page(status);
-        base_class::read(page, CACHE_PAGE_SIZE, status.index() * CACHE_PAGE_SIZE);
+        base_class::do_read(page, CACHE_PAGE_SIZE, status.index() * CACHE_PAGE_SIZE);
         return page;
     }
 }
@@ -273,7 +279,7 @@ void cache_file<FilePage, pageCount, File, Cache>::save_page(const pos_type inde
     OUROBOROS_ASSERT(page != NULL);
     if (TR_CANCELED != m_trans)
     {
-        base_class::write(page, CACHE_PAGE_SIZE, index * CACHE_PAGE_SIZE);
+        base_class::do_write(page, CACHE_PAGE_SIZE, index * CACHE_PAGE_SIZE);
     }
 }
 
@@ -288,8 +294,7 @@ void cache_file<FilePage, pageCount, File, Cache>::save_page(const file_page_typ
 {
     if (TR_STARTED != m_trans)
     {
-        base_class::write(page.get(), file_page_type::TOTAL_SIZE,
-            page.index() * file_page_type::TOTAL_SIZE);
+        base_class::do_write(page.get(), CACHE_PAGE_SIZE, page.index() * CACHE_PAGE_SIZE);
     }
 }
 
@@ -310,9 +315,10 @@ void cache_file<FilePage, pageCount, File, Cache>::reset()
  * @param size the size of the data
  * @param pos the position of the data
  */
+//virtual
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-void cache_file<FilePage, pageCount, File, Cache>::refresh(size_type size, const pos_type pos)
+void cache_file<FilePage, pageCount, File, Cache>::do_refresh(size_type size, const pos_type pos)
 {
     OUROBOROS_ASSERT(m_trans != TR_STARTED || m_cache.empty());
     const pos_type beg = pos / CACHE_PAGE_SIZE;

@@ -14,6 +14,7 @@ using namespace ouroboros;
 
 typedef file_page<1024, sizeof(journal_status_type)> file_page_type;
 typedef journal_file<file_page_type, 8> file_type;
+typedef file_type::file_region_type file_region_type;
 
 #define TEST_FULL_TRANSACTION
 #include "cachefile_test.h"
@@ -33,7 +34,8 @@ BOOST_AUTO_TEST_CASE(recovery_test)
     }
 
     {
-        file_type file(TEST_FILE_NAME);
+        file_region_type file_region(0, sizeof(outbuf));
+        file_type file(TEST_FILE_NAME, file_region);
         file.resize(sizeof(outbuf));
 
         file.start();
@@ -45,7 +47,8 @@ BOOST_AUTO_TEST_CASE(recovery_test)
     }
 
     {
-        file_type file(TEST_FILE_NAME);
+        file_region_type file_region(0, sizeof(outbuf));
+        file_type file(TEST_FILE_NAME, file_region);
         char stubbuf[blockSize * file_type::CACHE_PAGE_COUNT * 2];
         for (size_t i = 0; i < sizeof(outbuf); i++)
         {
@@ -68,7 +71,8 @@ BOOST_AUTO_TEST_CASE(recovery_test)
     }
 
     {
-        file_type file(TEST_FILE_NAME);
+        file_region_type file_region(0, sizeof(outbuf));
+        file_type file(TEST_FILE_NAME, file_region);
         file.init();
         char inbuf[sizeof(outbuf)];
         file.read(inbuf, sizeof(inbuf), 0);
