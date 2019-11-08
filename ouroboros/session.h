@@ -61,17 +61,17 @@ private:
  * The base session for a table. The session controls the state of a transaction
  * of a table
  */
-template <typename Dataset>
+template <typename Table, typename GlobalLock>
 class base_session
 {
 public:
-    typedef Dataset dataset_type;
-    typedef typename Dataset::key_type key_type;
-    typedef typename Dataset::table_type table_type;
+    typedef Table table_type;
+    typedef typename table_type::skey_type::key_type key_type;
+    typedef GlobalLock global_lock_type;
 
     base_session();
     base_session(const base_session& session);
-    base_session(dataset_type& dataset, const key_type& key);
+    explicit base_session(table_type *table);
     virtual ~base_session();
 
     inline table_type& table(); ///< get the table
@@ -99,25 +99,24 @@ protected:
 protected:
     mutable bool m_glock; ///< the sign that the global lock is set
     mutable bool m_primary; ///< the sign that the session is primary
-    dataset_type *m_dataset; ///< the supported dataset
     table_type *m_table; ///< the supported table
 };
 
 /**
  * The session for a table
  */
-template <typename Dataset, template <typename> class Table>
-class table_session : public base_session<Dataset>
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+class table_session : public base_session<Table, GlobalLock>
 {
-    typedef base_session<Dataset> base_class;
+    typedef base_session<Table, GlobalLock> base_class;
 public:
-    typedef typename base_class::dataset_type dataset_type;
-    typedef typename base_class::key_type key_type;
-    typedef Table<typename base_class::table_type> table_type;
+    typedef Table base_table_type;
+    typedef typename base_class::global_lock_type global_lock_type;
+    typedef TableInterface<typename base_class::table_type> table_type;
 
     table_session();
     table_session(const table_session& session);
-    table_session(dataset_type& dataset, const key_type& key);
+    explicit table_session(base_table_type *table);
 
     inline table_type& table(); ///< get the table
     inline const table_type& table() const; ///< get the table
@@ -138,24 +137,24 @@ protected:
 };
 
 /**
- * The session for read from a table
+ * The base session for read from a table
  */
-template <typename Dataset>
-class sharable_session : public table_session<Dataset, readable_table>
+template <typename Table, typename GlobalLock>
+class base_sharable_session : public table_session<Table, readable_table, GlobalLock>
 {
-    typedef base_session<Dataset> raw_class;
-    typedef table_session<Dataset, readable_table> base_class;
+    typedef base_session<Table, GlobalLock> raw_class;
+    typedef table_session<Table, readable_table, GlobalLock> base_class;
 public:
-    typedef typename base_class::dataset_type dataset_type;
-    typedef typename base_class::key_type key_type;
     typedef typename base_class::table_type table_type;
+    typedef typename base_class::base_table_type base_table_type;
+    typedef typename base_class::global_lock_type global_lock_type;
 
-    sharable_session();
-    sharable_session(const sharable_session& session);
-    sharable_session(dataset_type& dataset, const key_type& key);
-    virtual ~sharable_session();
+    base_sharable_session();
+    base_sharable_session(const base_sharable_session& session);
+    explicit base_sharable_session(base_table_type *table);
+    virtual ~base_sharable_session();
 
-    inline void operator= (const sharable_session& session);
+    inline void operator= (const base_sharable_session& session);
 protected:
     typedef typename base_class::unsafe_table unsafe_table;
     virtual void lock(); ///< lock the table
@@ -164,17 +163,74 @@ protected:
 };
 
 /**
+ * The base session for write to a table
+ */
+template <typename Table, typename GlobalLock>
+class base_scoped_session : public table_session<Table, writable_table, GlobalLock>
+{
+    typedef base_session<Table, GlobalLock> raw_class;
+    typedef table_session<Table, writable_table, GlobalLock> base_class;
+public:
+    typedef typename base_class::table_type table_type;
+    typedef typename base_class::base_table_type base_table_type;
+    typedef typename base_class::global_lock_type global_lock_type;
+
+    base_scoped_session();
+    base_scoped_session(const base_scoped_session& session);
+    explicit base_scoped_session(base_table_type *table);
+
+    inline void operator= (const base_scoped_session& session);
+protected:
+    typedef typename base_class::unsafe_table unsafe_table;
+
+    virtual void lock(); ///< lock the table
+    virtual void unlock(); ///< unlock the table
+    virtual const bool do_start();  ///< start the transation
+    virtual const bool do_stop();   ///< stop the transation
+    virtual const bool do_cancel(); ///< cancel the transation
+private:
+    virtual void update_key() = 0; ///< update a key of the table
+};
+
+/**
+ * The session for read from a table
+ */
+template <typename Dataset>
+class sharable_session : public base_sharable_session<typename Dataset::table_type,
+        global_lazy_lock<typename Dataset::interface_type> >
+{
+    typedef base_sharable_session<typename Dataset::table_type,
+        global_lazy_lock<typename Dataset::interface_type> > base_class;
+public:
+    typedef Dataset dataset_type;
+    typedef typename base_class::key_type key_type;
+    typedef typename base_class::table_type table_type;
+    typedef typename base_class::global_lock_type global_lock_type;
+
+    sharable_session();
+    sharable_session(const sharable_session& session);
+    sharable_session(dataset_type& dataset, const key_type& key);
+    virtual ~sharable_session();
+
+    inline void operator= (const sharable_session& session);
+};
+
+/**
  * The session for write to a table
  */
 template <typename Dataset>
-class scoped_session : public table_session<Dataset, writable_table>
+class scoped_session : public base_scoped_session<typename Dataset::table_type,
+        global_lazy_lock<typename Dataset::interface_type> >
 {
-    typedef base_session<Dataset> raw_class;
-    typedef table_session<Dataset, writable_table> base_class;
+    typedef base_session<typename Dataset::table_type,
+        global_lazy_lock<typename Dataset::interface_type> > raw_class;
+    typedef base_scoped_session<typename Dataset::table_type,
+        global_lazy_lock<typename Dataset::interface_type> > base_class;
 public:
-    typedef typename base_class::dataset_type dataset_type;
+    typedef Dataset dataset_type;
     typedef typename base_class::key_type key_type;
     typedef typename base_class::table_type table_type;
+    typedef typename base_class::global_lock_type global_lock_type;
 
     scoped_session();
     scoped_session(const scoped_session& session);
@@ -182,15 +238,39 @@ public:
     virtual ~scoped_session();
 
     inline void operator= (const scoped_session& session);
-protected:
-    typedef typename base_class::unsafe_table unsafe_table;
-    typedef typename dataset_type::lazy_transaction_type lazy_transaction_type;
+private:
+    virtual void update_key(); ///< update a key of the table
+private:
+    mutable dataset_type *m_dataset; ///< the supported dataset
+};
 
-    virtual void lock(); ///< lock the table
-    virtual void unlock(); ///< unlock the table
-    virtual const bool do_start();  ///< start the transation
-    virtual const bool do_stop();   ///< stop the transation
-    virtual const bool do_cancel(); ///< cancel the transation
+/**
+ * The session for write to a keys table
+ */
+template <typename Dataset>
+class scoped_key_session : public base_scoped_session<typename Dataset::key_table_type,
+        global_lock<typename Dataset::interface_type> >
+{
+    typedef base_session<typename Dataset::key_table_type,
+        global_lock<typename Dataset::interface_type> > raw_class;
+    typedef base_scoped_session<typename Dataset::key_table_type,
+        global_lock<typename Dataset::interface_type> > base_class;
+public:
+    typedef Dataset dataset_type;
+    typedef typename base_class::key_type key_type;
+    typedef typename base_class::table_type table_type;
+    typedef typename base_class::global_lock_type global_lock_type;
+
+    scoped_key_session();
+    scoped_key_session(const scoped_key_session& session);
+    explicit scoped_key_session(dataset_type& dataset);
+    virtual ~scoped_key_session();
+
+    inline void operator= (const scoped_key_session& session);
+private:
+    virtual void update_key(); ///< update a key of the table
+private:
+    mutable dataset_type *m_dataset; ///< the supported dataset
 };
 
 //==============================================================================
@@ -199,11 +279,10 @@ protected:
 /**
  * Constructor
  */
-template <typename Dataset>
-base_session<Dataset>::base_session() :
+template <typename Table, typename GlobalLock>
+base_session<Table, GlobalLock>::base_session() :
     m_glock(false),
     m_primary(false),
-    m_dataset(NULL),
     m_table(NULL)
 {
 }
@@ -212,11 +291,10 @@ base_session<Dataset>::base_session() :
  * Constructor
  * @param session the another session
  */
-template <typename Dataset>
-base_session<Dataset>::base_session(const base_session& session) :
+template <typename Table, typename GlobalLock>
+base_session<Table, GlobalLock>::base_session(const base_session& session) :
     m_glock(session.m_glock),
     m_primary(session.m_primary),
-    m_dataset(session.m_dataset),
     m_table(session.m_table)
 {
     session.m_glock = false;
@@ -225,15 +303,13 @@ base_session<Dataset>::base_session(const base_session& session) :
 
 /**
  * Constructor
- * @param dataset the supported dataset
- * @param key the key of the table
+ * @param table the supported table
  */
-template <typename Dataset>
-base_session<Dataset>::base_session(dataset_type& dataset, const key_type& key) :
+template <typename Table, typename GlobalLock>
+base_session<Table, GlobalLock>::base_session(table_type *table) :
     m_glock(false),
     m_primary(false),
-    m_dataset(&dataset),
-    m_table(dataset.table(key))
+    m_table(table)
 {
 }
 
@@ -241,8 +317,8 @@ base_session<Dataset>::base_session(dataset_type& dataset, const key_type& key) 
  * Destructor
  */
 //virtual
-template <typename Dataset>
-base_session<Dataset>::~base_session()
+template <typename Table, typename GlobalLock>
+base_session<Table, GlobalLock>::~base_session()
 {
     unlock();
 }
@@ -251,8 +327,9 @@ base_session<Dataset>::~base_session()
  * Get the table
  * @return the table
  */
-template <typename Dataset>
-inline typename base_session<Dataset>::table_type& base_session<Dataset>::table()
+template <typename Table, typename GlobalLock>
+inline typename base_session<Table, GlobalLock>::table_type&
+    base_session<Table, GlobalLock>::table()
 {
     return *m_table;
 }
@@ -261,8 +338,9 @@ inline typename base_session<Dataset>::table_type& base_session<Dataset>::table(
  * Get the table
  * @return the table
  */
-template <typename Dataset>
-inline const typename base_session<Dataset>::table_type& base_session<Dataset>::table() const
+template <typename Table, typename GlobalLock>
+inline const typename base_session<Table, GlobalLock>::table_type&
+    base_session<Table, GlobalLock>::table() const
 {
     return *m_table;
 }
@@ -271,8 +349,9 @@ inline const typename base_session<Dataset>::table_type& base_session<Dataset>::
  * Get the key of the table
  * @return the key of the table
  */
-template <typename Dataset>
-inline const typename base_session<Dataset>::key_type base_session<Dataset>::Key() const
+template <typename Table, typename GlobalLock>
+inline const typename base_session<Table, GlobalLock>::key_type
+    base_session<Table, GlobalLock>::Key() const
 {
     return m_table->skey().key;
 }
@@ -280,8 +359,8 @@ inline const typename base_session<Dataset>::key_type base_session<Dataset>::Key
 /**
  * Start the transaction
  */
-template <typename Dataset>
-void base_session<Dataset>::start()
+template <typename Table, typename GlobalLock>
+void base_session<Table, GlobalLock>::start()
 {
     if (TR_STARTED != state())
     {
@@ -295,8 +374,8 @@ void base_session<Dataset>::start()
 /**
  * Stop the transaction
  */
-template <typename Dataset>
-void base_session<Dataset>::stop()
+template <typename Table, typename GlobalLock>
+void base_session<Table, GlobalLock>::stop()
 {
     OUROBOROS_SAFE_BEGIN;
     const bool result = do_stop();
@@ -312,8 +391,8 @@ void base_session<Dataset>::stop()
 /**
  * Cancel the transaction
  */
-template <typename Dataset>
-void base_session<Dataset>::cancel()
+template <typename Table, typename GlobalLock>
+void base_session<Table, GlobalLock>::cancel()
 {
     OUROBOROS_SAFE_BEGIN;
     const bool result = do_cancel();
@@ -331,8 +410,8 @@ void base_session<Dataset>::cancel()
  * @return the result of the starting
  */
 //virtual
-template <typename Dataset>
-const bool base_session<Dataset>::do_start()
+template <typename Table, typename GlobalLock>
+const bool base_session<Table, GlobalLock>::do_start()
 {
     m_primary = TR_STARTED != state();
     return m_primary;
@@ -343,8 +422,8 @@ const bool base_session<Dataset>::do_start()
  * @return the result of the stopping
  */
 //virtual
-template <typename Dataset>
-const bool base_session<Dataset>::do_stop()
+template <typename Table, typename GlobalLock>
+const bool base_session<Table, GlobalLock>::do_stop()
 {
     if (m_primary)
     {
@@ -359,8 +438,8 @@ const bool base_session<Dataset>::do_stop()
  * @return the result of the canceling
  */
 //virtual
-template <typename Dataset>
-const bool base_session<Dataset>::do_cancel()
+template <typename Table, typename GlobalLock>
+const bool base_session<Table, GlobalLock>::do_cancel()
 {
     if (m_primary)
     {
@@ -374,8 +453,8 @@ const bool base_session<Dataset>::do_cancel()
  * Get the state of the transaction
  * @return the state of the transaction
  */
-template <typename Dataset>
-inline const transaction_state base_session<Dataset>::state() const
+template <typename Table, typename GlobalLock>
+inline const transaction_state base_session<Table, GlobalLock>::state() const
 {
     return table().state();
 }
@@ -384,8 +463,9 @@ inline const transaction_state base_session<Dataset>::state() const
  * Get the table
  * @return the table
  */
-template <typename Dataset>
-inline typename base_session<Dataset>::table_type& base_session<Dataset>::operator() ()
+template <typename Table, typename GlobalLock>
+inline typename base_session<Table, GlobalLock>::table_type&
+    base_session<Table, GlobalLock>::operator() ()
 {
     return table();
 }
@@ -394,8 +474,9 @@ inline typename base_session<Dataset>::table_type& base_session<Dataset>::operat
  * Get the table
  * @return the table
  */
-template <typename Dataset>
-inline const typename base_session<Dataset>::table_type& base_session<Dataset>::operator() () const
+template <typename Table, typename GlobalLock>
+inline const typename base_session<Table, GlobalLock>::table_type&
+    base_session<Table, GlobalLock>::operator() () const
 {
     return table();
 }
@@ -404,8 +485,9 @@ inline const typename base_session<Dataset>::table_type& base_session<Dataset>::
  * Get the pointer to the table
  * @return the pointer to the table
  */
-template <typename Dataset>
-inline typename base_session<Dataset>::table_type* base_session<Dataset>::operator-> ()
+template <typename Table, typename GlobalLock>
+inline typename base_session<Table, GlobalLock>::table_type*
+    base_session<Table, GlobalLock>::operator-> ()
 {
     return &table();
 }
@@ -414,8 +496,9 @@ inline typename base_session<Dataset>::table_type* base_session<Dataset>::operat
  * Get the pointer to the table
  * @return the pointer to the table
  */
-template <typename Dataset>
-inline const typename base_session<Dataset>::table_type* base_session<Dataset>::operator-> () const
+template <typename Table, typename GlobalLock>
+inline const typename base_session<Table, GlobalLock>::table_type*
+    base_session<Table, GlobalLock>::operator-> () const
 {
     return &table();
 }
@@ -424,12 +507,11 @@ inline const typename base_session<Dataset>::table_type* base_session<Dataset>::
  * The operator =
  * @param session the another session
  */
-template <typename Dataset>
-void base_session<Dataset>::operator= (const base_session& session)
+template <typename Table, typename GlobalLock>
+void base_session<Table, GlobalLock>::operator= (const base_session& session)
 {
     m_glock = session.m_glock;
     m_primary = session.m_primary;
-    m_dataset = session.m_dataset;
     m_table = session.m_table;
     session.m_glock = false;
     session.m_primary = false;
@@ -439,8 +521,8 @@ void base_session<Dataset>::operator= (const base_session& session)
  * Check the session is valid
  * @return the result of the checking
  */
-template <typename Dataset>
-inline const bool base_session<Dataset>::valid() const
+template <typename Table, typename GlobalLock>
+inline const bool base_session<Table, GlobalLock>::valid() const
 {
     return m_table != NULL;
 }
@@ -449,11 +531,11 @@ inline const bool base_session<Dataset>::valid() const
  * Lock the table
  */
 //virtual
-template <typename Dataset>
-void base_session<Dataset>::lock()
+template <typename Table, typename GlobalLock>
+void base_session<Table, GlobalLock>::lock()
 {
     assert(!m_glock);
-    global_lazy_lock<typename dataset_type::interface_type>::lock();
+    global_lock_type::lock();
     m_glock = true;
 }
 
@@ -461,12 +543,12 @@ void base_session<Dataset>::lock()
  * Unlock the table
  */
 //virtual
-template <typename Dataset>
-void base_session<Dataset>::unlock()
+template <typename Table, typename GlobalLock>
+void base_session<Table, GlobalLock>::unlock()
 {
     if (m_glock)
     {
-        global_lazy_lock<typename dataset_type::interface_type>::unlock();
+        global_lock_type::unlock();
         m_glock = false;
     }
 }
@@ -477,8 +559,8 @@ void base_session<Dataset>::unlock()
 /**
  * Constructor
  */
-template <typename Dataset, template <typename> class Table>
-table_session<Dataset, Table>::table_session() :
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+table_session<Table, TableInterface, GlobalLock>::table_session() :
     base_class(),
     m_lock(false)
 {
@@ -488,8 +570,8 @@ table_session<Dataset, Table>::table_session() :
  * Constructor
  * @param session the another session
  */
-template <typename Dataset, template <typename> class Table>
-table_session<Dataset, Table>::table_session(const table_session& session) :
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+table_session<Table, TableInterface, GlobalLock>::table_session(const table_session& session) :
     base_class(session),
     m_lock(session.m_lock)
 {
@@ -498,12 +580,11 @@ table_session<Dataset, Table>::table_session(const table_session& session) :
 
 /**
  * Constructor
- * @param dataset the supported dataset
- * @param key the key of the table
+ * @param table the supported table
  */
-template <typename Dataset, template <typename> class Table>
-table_session<Dataset, Table>::table_session(dataset_type& dataset, const key_type& key) :
-    base_class(dataset, key),
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+table_session<Table, TableInterface, GlobalLock>::table_session(base_table_type *table) :
+    base_class(table),
     m_lock(false)
 {
 }
@@ -512,8 +593,9 @@ table_session<Dataset, Table>::table_session(dataset_type& dataset, const key_ty
  * Get the table
  * @return the table
  */
-template <typename Dataset, template <typename> class Table>
-inline typename table_session<Dataset, Table>::table_type& table_session<Dataset, Table>::table()
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+inline typename table_session<Table, TableInterface, GlobalLock>::table_type&
+    table_session<Table, TableInterface, GlobalLock>::table()
 {
     return static_cast<table_type&>(base_class::table());
 }
@@ -522,8 +604,9 @@ inline typename table_session<Dataset, Table>::table_type& table_session<Dataset
  * Get the table
  * @return the table
  */
-template <typename Dataset, template <typename> class Table>
-inline const typename table_session<Dataset, Table>::table_type& table_session<Dataset, Table>::table() const
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+inline const typename table_session<Table, TableInterface, GlobalLock>::table_type&
+    table_session<Table, TableInterface, GlobalLock>::table() const
 {
     return static_cast<const table_type&>(base_class::table());
 }
@@ -532,8 +615,9 @@ inline const typename table_session<Dataset, Table>::table_type& table_session<D
  * Get the table
  * @return the table
  */
-template <typename Dataset, template <typename> class Table>
-inline typename table_session<Dataset, Table>::table_type& table_session<Dataset, Table>::operator() ()
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+inline typename table_session<Table, TableInterface, GlobalLock>::table_type&
+    table_session<Table, TableInterface, GlobalLock>::operator() ()
 {
     return table();
 }
@@ -542,8 +626,9 @@ inline typename table_session<Dataset, Table>::table_type& table_session<Dataset
  * Get the table
  * @return the table
  */
-template <typename Dataset, template <typename> class Table>
-inline const typename table_session<Dataset, Table>::table_type& table_session<Dataset, Table>::operator() () const
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+inline const typename table_session<Table, TableInterface, GlobalLock>::table_type&
+    table_session<Table, TableInterface, GlobalLock>::operator() () const
 {
     return table();
 }
@@ -552,8 +637,9 @@ inline const typename table_session<Dataset, Table>::table_type& table_session<D
  * Get the pointer to the table
  * @return the pointer to the table
  */
-template <typename Dataset, template <typename> class Table>
-inline typename table_session<Dataset, Table>::table_type* table_session<Dataset, Table>::operator-> ()
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+inline typename table_session<Table, TableInterface, GlobalLock>::table_type*
+    table_session<Table, TableInterface, GlobalLock>::operator-> ()
 {
     return &table();
 }
@@ -562,8 +648,9 @@ inline typename table_session<Dataset, Table>::table_type* table_session<Dataset
  * Get the pointer to the table
  * @return the pointer to the table
  */
-template <typename Dataset, template <typename> class Table>
-inline const typename table_session<Dataset, Table>::table_type* table_session<Dataset, Table>::operator-> () const
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+inline const typename table_session<Table, TableInterface, GlobalLock>::table_type*
+    table_session<Table, TableInterface, GlobalLock>::operator-> () const
 {
     return &table();
 }
@@ -572,8 +659,8 @@ inline const typename table_session<Dataset, Table>::table_type* table_session<D
  * The operator =
  * @param session the another session
  */
-template <typename Dataset, template <typename> class Table>
-void table_session<Dataset, Table>::operator= (const table_session& session)
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+void table_session<Table, TableInterface, GlobalLock>::operator= (const table_session& session)
 {
     m_lock = session.m_lock;
     session.m_lock = false;
@@ -585,8 +672,8 @@ void table_session<Dataset, Table>::operator= (const table_session& session)
  * @return the result of the starting
  */
 //virtual
-template <typename Dataset, template <typename> class Table>
-const bool table_session<Dataset, Table>::do_start()
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+const bool table_session<Table, TableInterface, GlobalLock>::do_start()
 {
     if (base_class::do_start())
     {
@@ -601,8 +688,8 @@ const bool table_session<Dataset, Table>::do_start()
  * @return the result of the stopping
  */
 //virtual
-template <typename Dataset, template <typename> class Table>
-const bool table_session<Dataset, Table>::do_stop()
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+const bool table_session<Table, TableInterface, GlobalLock>::do_stop()
 {
     if (base_class::do_stop())
     {
@@ -617,8 +704,8 @@ const bool table_session<Dataset, Table>::do_stop()
  * @return the result of the canceling
  */
 //virtual
-template <typename Dataset, template <typename> class Table>
-const bool table_session<Dataset, Table>::do_cancel()
+template <typename Table, template <typename> class TableInterface, typename GlobalLock>
+const bool table_session<Table, TableInterface, GlobalLock>::do_cancel()
 {
     if (base_class::do_cancel())
     {
@@ -626,6 +713,235 @@ const bool table_session<Dataset, Table>::do_cancel()
         return true;
     }
     return false;
+}
+
+//==============================================================================
+//  base_sharable_session
+//==============================================================================
+/**
+ * Constructor
+ */
+template <typename Table, typename GlobalLock>
+base_sharable_session<Table, GlobalLock>::base_sharable_session() :
+    base_class()
+{
+}
+
+/**
+ * Constructor
+ * @param session the another session
+ */
+template <typename Table, typename GlobalLock>
+base_sharable_session<Table, GlobalLock>::base_sharable_session(const base_sharable_session& session) :
+    base_class(session)
+{
+}
+
+/**
+ * Constructor
+ * @param table the supported table
+ */
+template <typename Table, typename GlobalLock>
+base_sharable_session<Table, GlobalLock>::base_sharable_session(base_table_type *table) :
+    base_class(table)
+{
+    if (base_class::valid())
+    {
+        base_class::start();
+    }
+}
+
+/**
+ * Destructor
+ */
+//virtual
+template <typename Table, typename GlobalLock>
+base_sharable_session<Table, GlobalLock>::~base_sharable_session()
+{
+    if (std::uncaught_exception())
+    {
+        base_class::cancel();
+    }
+    else
+    {
+        base_class::stop();
+    }
+}
+
+/**
+ * Lock the table
+ */
+//virtual
+template <typename Table, typename GlobalLock>
+void base_sharable_session<Table, GlobalLock>::lock()
+{
+    base_class::lock();
+    raw_class::table().lock_sharable();
+    base_class::m_lock = true;
+}
+
+/**
+ * Unlock the table
+ */
+//virtual
+template <typename Table, typename GlobalLock>
+void base_sharable_session<Table, GlobalLock>::unlock()
+{
+    if (base_class::m_lock)
+    {
+        base_class::m_lock = false;
+        raw_class::table().unlock_sharable();
+        base_class::unlock();
+    }
+}
+
+/**
+ * Start the transaction
+ * @return the result of the starting
+ */
+//virtual
+template <typename Table, typename GlobalLock>
+const bool base_sharable_session<Table, GlobalLock>::do_start()
+{
+    const bool result = base_class::do_start();
+    if (base_class::m_lock && 1 == raw_class::table().sharable_count())
+    {
+        raw_class::table().refresh();
+    }
+    return result;
+}
+
+/**
+ * The operator =
+ * @param session the another session
+ */
+template <typename Table, typename GlobalLock>
+inline void base_sharable_session<Table, GlobalLock>::operator= (const base_sharable_session& session)
+{
+    base_class::operator =(session);
+}
+
+//==============================================================================
+//  base_scoped_session
+//==============================================================================
+/**
+ * Constructor
+ */
+template <typename Table, typename GlobalLock>
+base_scoped_session<Table, GlobalLock>::base_scoped_session() :
+    base_class()
+{
+}
+
+/**
+ * Constructor
+ * @param session the another session
+ */
+template <typename Table, typename GlobalLock>
+base_scoped_session<Table, GlobalLock>::base_scoped_session(const base_scoped_session& session) :
+    base_class(session)
+{
+}
+
+/**
+ * Constructor
+ * @param dataset the supported dataset
+ * @param table the supported table
+ */
+template <typename Table, typename GlobalLock>
+base_scoped_session<Table, GlobalLock>::base_scoped_session(base_table_type *table) :
+    base_class(table)
+{
+    if (base_class::valid())
+    {
+        base_class::start();
+    }
+}
+
+/**
+ * Lock the table
+ */
+//virtual
+template <typename Table, typename GlobalLock>
+void base_scoped_session<Table, GlobalLock>::lock()
+{
+    base_class::lock();
+    raw_class::table().lock_scoped();
+    base_class::m_lock = true;
+}
+
+/**
+ * Unlock the table
+ */
+//virtual
+template <typename Table, typename GlobalLock>
+void base_scoped_session<Table, GlobalLock>::unlock()
+{
+    if (base_class::m_lock)
+    {
+        base_class::m_lock = false;
+        raw_class::table().unlock_scoped();
+        base_class::unlock();
+    }
+}
+
+/**
+ * Start the transaction
+ * @return the result of the starting
+ */
+//virtual
+template <typename Table, typename GlobalLock>
+const bool base_scoped_session<Table, GlobalLock>::do_start()
+{
+    const bool result = base_class::do_start();
+    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
+    {
+        raw_class::table().refresh();
+    }
+    return result;
+}
+
+/**
+ * Stop the transaction
+ * @return the result of the stopping
+ */
+//virtual
+template <typename Table, typename GlobalLock>
+const bool base_scoped_session<Table, GlobalLock>::do_stop()
+{
+    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
+    {
+        ///@todo unsafe_table execute lock!!! why?
+        raw_class::table().update();
+        update_key();
+    }
+    return base_class::do_stop();
+}
+
+/**
+ * Cancel the transaction
+ * @return the result of the canceling
+ */
+//virtual
+template <typename Table, typename GlobalLock>
+const bool base_scoped_session<Table, GlobalLock>::do_cancel()
+{
+    const bool result = base_class::do_cancel();
+    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
+    {
+        raw_class::table().recovery();
+    }
+    return result;
+}
+
+/**
+ * The operator =
+ * @param session the another session
+ */
+template <typename Table, typename GlobalLock>
+inline void base_scoped_session<Table, GlobalLock>::operator= (const base_scoped_session& session)
+{
+    base_class::operator =(session);
 }
 
 //==============================================================================
@@ -657,12 +973,8 @@ sharable_session<Dataset>::sharable_session(const sharable_session& session) :
  */
 template <typename Dataset>
 sharable_session<Dataset>::sharable_session(dataset_type& dataset, const key_type& key) :
-    base_class(dataset, key)
+    base_class(dataset.table(key))
 {
-    if (base_class::valid())
-    {
-        base_class::start();
-    }
 }
 
 /**
@@ -683,49 +995,6 @@ sharable_session<Dataset>::~sharable_session()
 }
 
 /**
- * Lock the table
- */
-//virtual
-template <typename Dataset>
-void sharable_session<Dataset>::lock()
-{
-    base_class::lock();
-    raw_class::table().lock_sharable();
-    base_class::m_lock = true;
-}
-
-/**
- * Unlock the table
- */
-//virtual
-template <typename Dataset>
-void sharable_session<Dataset>::unlock()
-{
-    if (base_class::m_lock)
-    {
-        base_class::m_lock = false;
-        raw_class::table().unlock_sharable();
-        base_class::unlock();
-    }
-}
-
-/**
- * Start the transaction
- * @return the result of the starting
- */
-//virtual
-template <typename Dataset>
-const bool sharable_session<Dataset>::do_start()
-{
-    const bool result = base_class::do_start();
-    if (base_class::m_lock && 1 == raw_class::table().sharable_count())
-    {
-        raw_class::table().refresh();
-    }
-    return result;
-}
-
-/**
  * The operator =
  * @param session the another session
  */
@@ -743,7 +1012,8 @@ inline void sharable_session<Dataset>::operator= (const sharable_session& sessio
  */
 template <typename Dataset>
 scoped_session<Dataset>::scoped_session() :
-    base_class()
+    base_class(),
+    m_dataset(NULL)
 {
 }
 
@@ -753,8 +1023,10 @@ scoped_session<Dataset>::scoped_session() :
  */
 template <typename Dataset>
 scoped_session<Dataset>::scoped_session(const scoped_session& session) :
-    base_class(session)
+    base_class(session),
+    m_dataset(session.m_dataset)
 {
+    session.m_dataset = NULL;
 }
 
 /**
@@ -764,12 +1036,12 @@ scoped_session<Dataset>::scoped_session(const scoped_session& session) :
  */
 template <typename Dataset>
 scoped_session<Dataset>::scoped_session(dataset_type& dataset, const key_type& key) :
-    base_class(dataset, key)
+    base_class(dataset.table(key)),
+    m_dataset(&dataset)
 {
     if (base_class::valid())
     {
-        base_class::start();
-        base_class::m_dataset->store_session(*this);
+        m_dataset->store_session(*this);
     }
 }
 
@@ -791,82 +1063,6 @@ scoped_session<Dataset>::~scoped_session()
 }
 
 /**
- * Lock the table
- */
-//virtual
-template <typename Dataset>
-void scoped_session<Dataset>::lock()
-{
-    base_class::lock();
-    raw_class::table().lock_scoped();
-    base_class::m_lock = true;
-}
-
-/**
- * Unlock the table
- */
-//virtual
-template <typename Dataset>
-void scoped_session<Dataset>::unlock()
-{
-    if (base_class::m_lock)
-    {
-        base_class::m_lock = false;
-        raw_class::table().unlock_scoped();
-        base_class::unlock();
-    }
-}
-
-/**
- * Start the transaction
- * @return the result of the starting
- */
-//virtual
-template <typename Dataset>
-const bool scoped_session<Dataset>::do_start()
-{
-    const bool result = base_class::do_start();
-    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
-    {
-        raw_class::table().refresh();
-    }
-    return result;
-}
-
-/**
- * Stop the transaction
- * @return the result of the stopping
- */
-//virtual
-template <typename Dataset>
-const bool scoped_session<Dataset>::do_stop()
-{
-    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
-    {
-        ///@todo unsafe_table execute lock!!! why?
-        raw_class::table().update();
-        base_class::m_dataset->update_key(raw_class::table());
-    }
-    return base_class::do_stop();
-}
-
-/**
- * Cancel the transaction
- * @return the result of the canceling
- */
-//virtual
-template <typename Dataset>
-const bool scoped_session<Dataset>::do_cancel()
-{
-    const bool result = base_class::do_cancel();
-    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
-    {
-        raw_class::table().recovery();
-    }
-    return result;
-}
-
-/**
  * The operator =
  * @param session the another session
  */
@@ -874,6 +1070,93 @@ template <typename Dataset>
 inline void scoped_session<Dataset>::operator= (const scoped_session& session)
 {
     base_class::operator =(session);
+    m_dataset = session.m_dataset;
+    session.m_dataset = NULL;
+}
+
+/**
+ * Update a key of the table
+ */
+//virtual
+template <typename Dataset>
+void scoped_session<Dataset>::update_key()
+{
+    m_dataset->update_key(raw_class::table());
+}
+
+//==============================================================================
+//  scoped_key_session
+//==============================================================================
+/**
+ * Constructor
+ */
+template <typename Dataset>
+scoped_key_session<Dataset>::scoped_key_session() :
+    base_class(),
+    m_dataset(NULL)
+{
+}
+
+/**
+ * Constructor
+ * @param session the another session
+ */
+template <typename Dataset>
+scoped_key_session<Dataset>::scoped_key_session(const scoped_key_session& session) :
+    base_class(session),
+    m_dataset(session.m_dataset)
+{
+    session.m_dataset = NULL;
+}
+
+/**
+ * Constructor
+ * @param dataset the supported dataset
+ */
+template <typename Dataset>
+scoped_key_session<Dataset>::scoped_key_session(dataset_type& dataset) :
+    base_class(&dataset.m_key_table),
+    m_dataset(&dataset)
+{
+}
+
+/**
+ * Destructor
+ */
+//virtual
+template <typename Dataset>
+scoped_key_session<Dataset>::~scoped_key_session()
+{
+    if (std::uncaught_exception())
+    {
+        base_class::cancel();
+    }
+    else
+    {
+        base_class::stop();
+    }
+}
+
+/**
+ * The operator =
+ * @param session the another session
+ */
+template <typename Dataset>
+inline void scoped_key_session<Dataset>::operator= (const scoped_key_session& session)
+{
+    base_class::operator =(session);
+    m_dataset = session.m_dataset;
+    session.m_dataset = NULL;
+}
+
+/**
+ * Update a key of the table
+ */
+//virtual
+template <typename Dataset>
+void scoped_key_session<Dataset>::update_key()
+{
+    m_dataset->update_info();
 }
 
 }   //namespace ouroboros

@@ -104,10 +104,11 @@ public:
 
     static void remove(const std::string& name); ///< remove the dataset
 protected:
-    friend class base_session<data_set>;
     friend class sharable_session<data_set>;
     friend class scoped_session<data_set>;
+    friend class scoped_key_session<data_set>;
     friend class lazy_transaction<data_set>;
+    typedef scoped_key_session<data_set> session_write_key; ///< the session for write data to a key table
     typedef typename table_type::source_type source_type;
     typedef typename key_table_type::source_type key_source_type;
     typedef typename info_table_type::source_type info_source_type;
@@ -420,8 +421,7 @@ inline const std::string& data_set<Key, Record, Index, Interface>::name() const
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
 const pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
 {
-    lock_type glock;
-    lock_write lock(m_key_table);
+    session_write_key session_key(*this);
     if (do_key_exists(key))
     {
         OUROBOROS_THROW_BUG(PR(key) << "another table has the key");
@@ -434,7 +434,7 @@ const pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type
     // check the removed keys are exists
     if (m_hole_count() > 0)
     {
-        // look for the firts removed key
+        // look for the first removed key
         const typename skey_list::iterator itend = m_skeys->end();
         for (typename skey_list::iterator it = m_skeys->begin(); it != itend; ++it)
         {
@@ -449,25 +449,23 @@ const pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type
                 m_tables.insert(typename table_list::value_type(key, table));
                 table->clear();
                 table->recovery();
-                m_key_table.write(skey, skey.pos);
+                session_key->write(skey, skey.pos);
                 --m_hole_count();
-                return m_key_table.back_pos();
+                return session_key->back_pos();
             }
         }
         OUROBOROS_THROW_BUG("the sign of removed key is exists, but the key is not found!");
     }
 
     // add the key and the table to the dataset
-    const pos_type pos = m_key_table.end_pos();
+    const pos_type pos = session_key->end_pos();
     skey_type& skey = m_skeys->insert(typename skey_list::value_type(key,
             skey_type(key, pos, 0, 0, 0, 0))).first->second;
     table_type *table = new table_type(m_source, skey);
     m_tables.insert(typename table_list::value_type(key, table));
     table->clear();
     table->recovery();
-    update_info();
-    const pos_type result = m_key_table.add(skey);
-    m_key_table.update();
+    const pos_type result = session_key->add(skey);
     return result;
 }
 
@@ -479,8 +477,7 @@ const pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
 const count_type data_set<Key, Record, Index, Interface>::remove_table(const key_type key)
 {
-    lock_type glock;
-    lock_write lock(m_key_table);
+    session_write_key session_key(*this);
     if (!do_key_exists(key))
     {
         OUROBOROS_THROW_BUG(PR(key) << "the key is not found");
@@ -505,11 +502,9 @@ const count_type data_set<Key, Record, Index, Interface>::remove_table(const key
     skey_type& skey = m_skeys()[key];
     const spos_type pos = skey.pos;
     skey.pos = -pos - 1;
-    m_key_table.write(&skey, pos);
-    m_key_table.update();
+    session_key->write(&skey, pos);
     ++m_hole_count();
-    update_info();
-    return m_key_table.end_pos();
+    return session_key->end_pos();
 }
 
 /**
