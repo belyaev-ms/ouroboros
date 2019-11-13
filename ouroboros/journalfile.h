@@ -16,8 +16,9 @@ namespace ouroboros
 /** the status of a journal file page */
 enum journal_status_type
 {
-    JS_CLEAN = 0,
-    JS_DIRTY = 1
+    JS_CLEAN    = 0,
+    JS_DIRTY    = 1,
+    JS_FIXED    = 2
 };
 
 /**
@@ -99,25 +100,52 @@ const bool journal_file<FilePage, pageCount, File, Cache>::init_indexes()
 {
     // check the last transaction was successful
     bool success = true;
+    bool fixed = false;
     char buffer[base_class::CACHE_PAGE_SIZE];
     status_file_page<file_page_type> status_page(buffer);
     const count_type count = base_class::size() / base_class::CACHE_PAGE_SIZE;
     for (pos_type index = 0; index < count; ++index)
     {
         simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
-        if (status_page.get_status() != JS_CLEAN)
+        const typename status_file_page<file_page_type>::status_type status = status_page.get_status();
+        if (0 == index && (status & JS_FIXED))
         {
-            success = false;
-            base_class::do_add_index(index);
+            fixed = true;
+            OUROBOROS_INFO("commit the file " << base_class::name());
+            continue;
         }
+        if (status != JS_CLEAN)
+        {
+            if (!fixed)
+            {
+                success = false;
+                base_class::do_add_index(index);
+            }
+            else
+            {
+                OUROBOROS_INFO("commit the page  " << index);
+                status_page.set_status(JS_CLEAN);
+                simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
+            }
+        }
+    }
+    // the last transactio wasn't finished
+    if (fixed)
+    {
+        OUROBOROS_INFO("commit the main page");
+        simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, 0);
+        status_page.set_status(JS_CLEAN);
+        simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, 0);
+        OUROBOROS_INFO("transaction completed");
+        return true;
     }
     // the last transaction wasn't successful
     if (!success)
     {
-        OUROBOROS_INFO("restore the file " << base_class::name());
         base_class::recovery();
+        return false;
     }
-    return success;
+    return true;
 }
 
 /**
@@ -169,7 +197,7 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const
     {
         void *page = base_class::m_cache.get_page(status);
         status_file_page<file_page_type> status_page(page);
-        status_page.set_status(JS_CLEAN);
+        status_page.set_status(0 == index ? JS_FIXED : JS_CLEAN);
         simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
     }
     else
@@ -177,7 +205,7 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const
         char buffer[base_class::CACHE_PAGE_SIZE];
         simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
         status_file_page<file_page_type> status_page(buffer);
-        status_page.set_status(JS_CLEAN);
+        status_page.set_status(0 == index ? JS_FIXED : JS_CLEAN);
         simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
     }
 }
@@ -190,9 +218,26 @@ template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 void journal_file<FilePage, pageCount, File, Cache>::do_before_clear_indexes()
 {
-#ifdef OUROBOROS_FLUSH_ENABLED
-    base_class::flush();
-#endif
+    const page_status_type status = base_class::m_cache.page_exists(0);
+    if (status.state() != PG_DETACHED)
+    {
+        void *page = base_class::m_cache.get_page(status);
+        status_file_page<file_page_type> status_page(page);
+        const typename status_file_page<file_page_type>::status_type status = status_page.get_status();
+        OUROBOROS_ASSERT(!(status & JS_FIXED));
+        status_page.set_status(status | JS_FIXED);
+        simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, 0);
+    }
+    else
+    {
+        char buffer[base_class::CACHE_PAGE_SIZE];
+        simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, 0);
+        status_file_page<file_page_type> status_page(buffer);
+        const typename status_file_page<file_page_type>::status_type status = status_page.get_status();
+        OUROBOROS_ASSERT(!(status & JS_FIXED));
+        status_page.set_status(status | JS_FIXED);
+        simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, 0);
+    }
 }
 
 /**
@@ -203,6 +248,24 @@ template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 void journal_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes()
 {
+    const page_status_type status = base_class::m_cache.page_exists(0);
+    if (status.state() != PG_DETACHED)
+    {
+        void *page = base_class::m_cache.get_page(status);
+        status_file_page<file_page_type> status_page(page);
+        OUROBOROS_ASSERT(status_page.get_status() == JS_FIXED);
+        status_page.set_status(JS_CLEAN);
+        simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, 0);
+    }
+    else
+    {
+        char buffer[base_class::CACHE_PAGE_SIZE];
+        simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, 0);
+        status_file_page<file_page_type> status_page(buffer);
+        OUROBOROS_ASSERT(status_page.get_status() == JS_FIXED);
+        status_page.set_status(JS_CLEAN);
+        simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, 0);
+    }
 }
 
 }    //namespace ouroboros

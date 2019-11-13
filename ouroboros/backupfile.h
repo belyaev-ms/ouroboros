@@ -206,6 +206,7 @@ template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 inline void backup_file<FilePage, pageCount, File, Cache>::recovery()
 {
+    OUROBOROS_INFO("restore the file " << base_class::name());
     char page[base_class::CACHE_PAGE_SIZE];
     index_list::const_iterator end = m_indexes.end();
     for (index_list::const_iterator it = m_indexes.begin(); it != end; ++it)
@@ -216,7 +217,8 @@ inline void backup_file<FilePage, pageCount, File, Cache>::recovery()
         simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
         base_class::m_cache.free_page(index);
     }
-    clear_indexes();
+    m_indexes.clear();
+    OUROBOROS_INFO("recovery completed");
 }
 
 /**
