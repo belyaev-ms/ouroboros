@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 #include "ouroboros/backupfile.h"
-#include "page.h"
+#include "ouroboros/page.h"
 
 namespace ouroboros
 {
@@ -39,6 +39,7 @@ public:
     typedef FilePage file_page_type;
     typedef typename base_class::file_region_type file_region_type;
     typedef typename base_class::page_status_type page_status_type;
+    typedef typename status_file_page<file_page_type>::status_type status_type;
     explicit journal_file(const std::string& name);
     journal_file(const std::string& name, const file_region_type& region);
     const bool init(); ///< ititialize
@@ -107,7 +108,7 @@ const bool journal_file<FilePage, pageCount, File, Cache>::init_indexes()
     for (pos_type index = 0; index < count; ++index)
     {
         simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
-        const typename status_file_page<file_page_type>::status_type status = status_page.get_status();
+        const status_type status = status_page.get_status();
         if (0 == index && (status & JS_FIXED))
         {
             fixed = true;
@@ -223,7 +224,7 @@ void journal_file<FilePage, pageCount, File, Cache>::do_before_clear_indexes()
     {
         void *page = base_class::m_cache.get_page(status);
         status_file_page<file_page_type> status_page(page);
-        const typename status_file_page<file_page_type>::status_type status = status_page.get_status();
+        const status_type status = status_page.get_status();
         OUROBOROS_ASSERT(!(status & JS_FIXED));
         status_page.set_status(status | JS_FIXED);
         simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, 0);
@@ -233,7 +234,7 @@ void journal_file<FilePage, pageCount, File, Cache>::do_before_clear_indexes()
         char buffer[base_class::CACHE_PAGE_SIZE];
         simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, 0);
         status_file_page<file_page_type> status_page(buffer);
-        const typename status_file_page<file_page_type>::status_type status = status_page.get_status();
+        const status_type status = status_page.get_status();
         OUROBOROS_ASSERT(!(status & JS_FIXED));
         status_page.set_status(status | JS_FIXED);
         simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, 0);
