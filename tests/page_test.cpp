@@ -303,3 +303,38 @@ BOOST_AUTO_TEST_CASE(file_region_with_service_data_test)
     typedef file_page<12, 4> file_page_type;
     test_file_region<file_page_type>();
 }
+
+//==============================================================================
+//  Check the cache of a file region
+//==============================================================================
+template <typename T>
+inline T make_file_regions(const size_type info_size, const size_type key_size,
+    const size_type table_size)
+{
+    typedef T file_region_type;
+    file_region_type region(1, info_size);
+    file_region_type region_key(1, key_size);
+    file_region_type region_table(1, table_size);
+    typename file_region_type::region_list regions;
+    regions.push_back(region_key);
+    regions.push_back(region_table);
+    file_region_type region_keytable(0, regions);
+    region.add(region_keytable);
+    return region;
+}
+
+BOOST_AUTO_TEST_CASE(cache_file_region_test)
+{
+    typedef file_page<1024> file_page_type;
+    typedef file_region<file_page_type> file_region_type;
+    file_region_type region = make_file_regions<file_region_type>(784, 32, 280000);
+    size_t p[1024] = { 0 };
+    for (size_t i = 0; i < 1024 * 1024; ++i)
+    {
+        if (i > 1024)
+        {
+            BOOST_CHECK_EQUAL(region.convert_offset(i - 1024), p[(i - 1024) % 1024]);
+        }
+        p[i % 1024] = region.convert_offset(i);
+    }
+}

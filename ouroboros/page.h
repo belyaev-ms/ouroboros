@@ -8,6 +8,7 @@
 
 #include "ouroboros/global.h"
 #include <vector>
+#include <map>
 
 namespace ouroboros
 {
@@ -79,16 +80,35 @@ public:
     const range_type operator[] (const pos_type index) const;
     const offset_type convert_offset(const offset_type raw_offset) const;
     const size_type convert_size(const size_type raw_size) const;
+    void make_cache(const size_type size) const;
 private:
+    struct cached_region
+    {
+        cached_region() :
+            offset(0),
+            pregion(NULL)
+        {}
+        cached_region(const offset_type offset_, const file_region *pregion_) :
+            offset(offset_),
+            pregion(pregion_)
+        {}
+        bool valid() const
+        {
+            return pregion != NULL;
+        }
+        offset_type offset;
+        offset_type raw_offset;
+        const file_region *pregion;
+    };
+    typedef std::pair<offset_type, cached_region> result_type;
     const size_type align_size(const size_type size) const;
-    const std::pair<offset_type, bool> get_offset(const pos_type index,
-            count_type& count, offset_type offset) const;
-    const std::pair<offset_type, bool> get_offset(offset_type& raw_offset,
-            offset_type offset) const;
+    const result_type get_offset(const pos_type index, count_type& count, offset_type offset) const;
+    const result_type get_offset(offset_type& raw_offset, offset_type offset) const;
 private:
     count_type m_count;
     size_type m_size;
     region_list m_regions;
+    mutable std::map<offset_type, cached_region> m_cache;
 };
 
 /**
@@ -524,16 +544,16 @@ const typename file_region<FilePage>::range_type file_region<FilePage>::
 {
     range_type range(0, 0);
     count_type count = 0;
-    std::pair<offset_type, bool> result;
+    result_type result;
     if (index > 0)
     {
         result = get_offset(index, count, 0);
-        OUROBOROS_ASSERT(result.second);
+        OUROBOROS_ASSERT(result.second.valid());
         range.first = result.first;
     }
     count = 0;
     result = get_offset(index + 1, count, 0);
-    OUROBOROS_ASSERT(result.second);
+    OUROBOROS_ASSERT(result.second.valid());
     range.second = result.first;
     return range;
 }
@@ -546,7 +566,7 @@ const typename file_region<FilePage>::range_type file_region<FilePage>::
  * @return the offset of the current region and the flag of successful
  */
 template <typename FilePage>
-const std::pair<offset_type, bool> file_region<FilePage>::
+const typename file_region<FilePage>::result_type file_region<FilePage>::
     get_offset(const pos_type index, count_type& count, offset_type offset) const
 {
     if (m_size > 0)
@@ -554,10 +574,10 @@ const std::pair<offset_type, bool> file_region<FilePage>::
         const size_type size = file_page_type::static_align_size(m_size);
         if (m_count + count >= index || m_count == 0)
         {
-            return std::make_pair(size * (index - count) + offset, true);
+            return std::make_pair(size * (index - count) + offset, cached_region(offset, this));
         }
         count += m_count;
-        return std::make_pair(m_count * size + offset, false);
+        return std::make_pair(m_count * size + offset, cached_region());
     }
     else
     {
@@ -566,15 +586,15 @@ const std::pair<offset_type, bool> file_region<FilePage>::
             for (typename region_list::const_iterator it = m_regions.begin();
                     it != m_regions.end(); ++it)
             {
-                const std::pair<offset_type, bool> result = it->get_offset(index, count, offset);
-                if (result.second)
+                const result_type result = it->get_offset(index, count, offset);
+                if (result.second.valid())
                 {
                     return result;
                 }
                 offset = result.first;
             }
         }
-        return std::make_pair(offset, false);
+        return std::make_pair(offset, cached_region());
     }
 }
 
@@ -586,9 +606,31 @@ const std::pair<offset_type, bool> file_region<FilePage>::
 template <typename FilePage>
 const offset_type file_region<FilePage>::convert_offset(const offset_type raw_offset) const
 {
+    auto it = m_cache.lower_bound(raw_offset);
+    if (it != m_cache.end() && (it->first == raw_offset || --it != m_cache.end()))
+    {
+        offset_type offset = raw_offset - it->first;
+        return it->second.pregion->get_offset(offset, it->second.offset).first;
+    }
+    else if (!m_cache.empty())
+    {
+        auto rit = m_cache.rbegin();
+        offset_type offset = raw_offset - rit->first;
+        const result_type result = rit->second.pregion->get_offset(offset, rit->second.offset);
+        if (result.second.valid())
+        {
+            return result.first;
+        }
+    }
     offset_type offset = raw_offset;
-    const std::pair<offset_type, bool> result = get_offset(offset, 0);
-    OUROBOROS_ASSERT(result.second);
+    const result_type result = get_offset(offset, 0);
+    OUROBOROS_ASSERT(result.second.valid());
+    offset = raw_offset - offset;
+    it = m_cache.find(offset);
+    if (it == m_cache.end())
+    {
+        m_cache.insert(it, std::make_pair(offset, result.second));
+    }
     return result.first;
 }
 
@@ -601,8 +643,8 @@ template <typename FilePage>
 const size_type file_region<FilePage>::convert_size(const size_type raw_size) const
 {
     offset_type offset = raw_size;
-    const std::pair<offset_type, bool> result = get_offset(offset, 0);
-    OUROBOROS_ASSERT(offset == 0 || result.second);
+    const result_type result = get_offset(offset, 0);
+    OUROBOROS_ASSERT(offset == 0 || result.second.valid());
     return result.first;
 }
 
@@ -613,7 +655,7 @@ const size_type file_region<FilePage>::convert_size(const size_type raw_size) co
  * @return the real offset in the file
  */
 template <typename FilePage>
-const std::pair<offset_type, bool> file_region<FilePage>::
+const typename file_region<FilePage>::result_type file_region<FilePage>::
     get_offset(offset_type& raw_offset, offset_type offset) const
 {
     if (m_size > 0)
@@ -623,10 +665,11 @@ const std::pair<offset_type, bool> file_region<FilePage>::
         {
             const count_type count = raw_offset / m_size;
             return std::make_pair(count * size +
-                file_page_type::static_convert(raw_offset % m_size) + offset, true);
+                file_page_type::static_convert(raw_offset % m_size) + offset,
+                cached_region(offset, this));
         }
         raw_offset -= m_count * m_size;
-        return std::make_pair(m_count * size + offset, false);
+        return std::make_pair(m_count * size + offset, cached_region());
     }
     else
     {
@@ -635,15 +678,29 @@ const std::pair<offset_type, bool> file_region<FilePage>::
             for (typename region_list::const_iterator it = m_regions.begin();
                     it != m_regions.end(); ++it)
             {
-                const std::pair<offset_type, bool> result = it->get_offset(raw_offset, offset);
-                if (result.second)
+                const result_type result = it->get_offset(raw_offset, offset);
+                if (result.second.valid())
                 {
                     return result;
                 }
                 offset = result.first;
             }
         }
-        return std::make_pair(offset, false);
+        return std::make_pair(offset, cached_region());
+    }
+}
+
+/**
+ * Make a cache
+ * @param size the size of the file region
+ */
+template <typename FilePage>
+void file_region<FilePage>::make_cache(const size_type size) const
+{
+    m_cache.clear();
+    for (offset_type offset = 0; offset < size; ++offset)
+    {
+        convert_offset(offset);
     }
 }
 

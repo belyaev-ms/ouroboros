@@ -224,6 +224,7 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name) :
     m_file_region(make_file_regions<file_region_type>(m_info_source.size(),
         skey_type::static_size(), 0))
 {
+    m_file_region.make_cache(m_info_source.size());
 }
 
 /**
@@ -284,6 +285,8 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name, const
         m_source.m_tbl_count = m_info.tbl_count;
         m_key_source.m_rec_count = m_info.tbl_count;
     }
+    m_file_region.make_cache(m_info_source.size() + (skey_type::static_size() +
+        (raw_record_type::static_size() + table_type::REC_SPACE) * m_info.rec_count) * m_info.tbl_count);
     // initialize the dataset
     init(m_info);
     // update the information about the dataset
@@ -400,6 +403,8 @@ void data_set<Key, Record, Index, Interface>::open()
     m_file_region = make_file_regions<file_region_type>(m_info_source.size(),
         skey_type::static_size(),
         (raw_record_type::static_size() + table_type::REC_SPACE) * info.rec_count);
+    m_file_region.make_cache(m_info_source.size() + (skey_type::static_size() +
+        (raw_record_type::static_size() + table_type::REC_SPACE) * m_info.rec_count) * m_info.tbl_count);
     init(info);
 }
 
