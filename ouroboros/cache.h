@@ -66,8 +66,8 @@ public:
     inline void next(cache_page *page); ///< set the next page
     inline cache_page* prev() const; ///< get the previous page
     inline cache_page* next() const; ///< get the next page
-    inline void* Data(); ///< get data of the page
-    inline void* Data() const; ///< get data of the page
+    inline void* data(); ///< get data of the page
+    inline void* data() const; ///< get data of the page
     inline void free(); ///< release the page from the pool
     inline void attach(cache_type& cache, const pos_type index); ///< attach the page to the cache
     inline void detach(); ///< detach the page from the cache
@@ -337,7 +337,7 @@ inline cache_page<Cache, pageSize>* cache_page<Cache, pageSize>::next() const
  * @return data of the page
  */
 template <typename Cache, int pageSize>
-inline void* cache_page<Cache, pageSize>::Data()
+inline void* cache_page<Cache, pageSize>::data()
 {
     return m_data;
 }
@@ -347,7 +347,7 @@ inline void* cache_page<Cache, pageSize>::Data()
  * @return data of the page
  */
 template <typename Cache, int pageSize>
-inline void* cache_page<Cache, pageSize>::Data() const
+inline void* cache_page<Cache, pageSize>::data() const
 {
     return const_cast<char *>(m_data);
 }
@@ -704,7 +704,7 @@ inline void* cache<Saver, pageSize, pageCount>::get_page(const pos_type index)
 {
     page_type *page = do_get_page(index);
     page->dirty();
-    return page->Data();
+    return page->data();
 }
 
 /**
@@ -717,7 +717,7 @@ inline void* cache<Saver, pageSize, pageCount>::get_page(const page_status_type&
 {
     page_type *page = do_get_page(status);
     page->dirty();
-    return page->Data();
+    return page->data();
 }
 
 /**
@@ -728,7 +728,7 @@ inline void* cache<Saver, pageSize, pageCount>::get_page(const page_status_type&
 template <typename Saver, int pageSize, int pageCount>
 inline void* cache<Saver, pageSize, pageCount>::get_page(const pos_type index) const
 {
-    return do_get_page(index)->Data();
+    return do_get_page(index)->data();
 }
 
 /**
@@ -739,7 +739,7 @@ inline void* cache<Saver, pageSize, pageCount>::get_page(const pos_type index) c
 template <typename Saver, int pageSize, int pageCount>
 inline void* cache<Saver, pageSize, pageCount>::get_page(const page_status_type& status) const
 {
-    return do_get_page(status)->Data();
+    return do_get_page(status)->data();
 }
 
 /**
@@ -886,7 +886,7 @@ void cache<Saver, pageSize, pageCount>::save_page(const page_type *page)
 {
     if (m_saver != NULL)
     {
-        m_saver->save_page(page->index(), page->Data());
+        m_saver->save_page(page->index(), page->data());
     }
 }
 
