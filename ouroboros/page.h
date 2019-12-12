@@ -607,7 +607,7 @@ const typename file_region<FilePage>::result_type file_region<FilePage>::
 template <typename FilePage>
 const offset_type file_region<FilePage>::convert_offset(const offset_type raw_offset) const
 {
-    typename cache_type::const_iterator it = m_cache.lower_bound(raw_offset);
+    typename cache_type::iterator it = m_cache.lower_bound(raw_offset);
     if (it != m_cache.end() && (it->first == raw_offset || --it != m_cache.end()))
     {
         offset_type offset = raw_offset - it->first;
