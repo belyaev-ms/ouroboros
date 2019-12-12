@@ -101,6 +101,7 @@ private:
         const file_region *pregion;
     };
     typedef std::pair<offset_type, cached_region> result_type;
+    typedef std::map<offset_type, cached_region> cache_type;
     const size_type align_size(const size_type size) const;
     const result_type get_offset(const pos_type index, count_type& count, offset_type offset) const;
     const result_type get_offset(offset_type& raw_offset, offset_type offset) const;
@@ -108,7 +109,7 @@ private:
     count_type m_count;
     size_type m_size;
     region_list m_regions;
-    mutable std::map<offset_type, cached_region> m_cache;
+    mutable cache_type m_cache;
 };
 
 /**
@@ -606,7 +607,7 @@ const typename file_region<FilePage>::result_type file_region<FilePage>::
 template <typename FilePage>
 const offset_type file_region<FilePage>::convert_offset(const offset_type raw_offset) const
 {
-    auto it = m_cache.lower_bound(raw_offset);
+    typename cache_type::const_iterator it = m_cache.lower_bound(raw_offset);
     if (it != m_cache.end() && (it->first == raw_offset || --it != m_cache.end()))
     {
         offset_type offset = raw_offset - it->first;
@@ -614,7 +615,7 @@ const offset_type file_region<FilePage>::convert_offset(const offset_type raw_of
     }
     else if (!m_cache.empty())
     {
-        auto rit = m_cache.rbegin();
+        typename cache_type::const_reverse_iterator rit = m_cache.rbegin();
         offset_type offset = raw_offset - rit->first;
         const result_type result = rit->second.pregion->get_offset(offset, rit->second.offset);
         if (result.second.valid())
