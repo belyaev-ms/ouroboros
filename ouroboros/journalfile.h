@@ -267,6 +267,7 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes()
         status_page.set_status(JS_CLEAN);
         simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, 0);
     }
+    base_class::clean();
 }
 
 }    //namespace ouroboros
