@@ -152,7 +152,6 @@ public:
     base_sharable_session();
     base_sharable_session(const base_sharable_session& session);
     explicit base_sharable_session(base_table_type *table);
-    virtual ~base_sharable_session();
 
     inline void operator= (const base_sharable_session& session);
 protected:
@@ -182,14 +181,8 @@ public:
     inline void operator= (const base_scoped_session& session);
 protected:
     typedef typename base_class::unsafe_table unsafe_table;
-
     virtual void lock(); ///< lock the table
     virtual void unlock(); ///< unlock the table
-    virtual const bool do_start();  ///< start the transation
-    virtual const bool do_stop();   ///< stop the transation
-    virtual const bool do_cancel(); ///< cancel the transation
-private:
-    virtual void update_key() = 0; ///< update a key of the table
 };
 
 /**
@@ -239,7 +232,9 @@ public:
 
     inline void operator= (const scoped_session& session);
 private:
-    virtual void update_key(); ///< update a key of the table
+    virtual const bool do_start();  ///< start the transation
+    virtual const bool do_stop();   ///< stop the transation
+    virtual const bool do_cancel(); ///< cancel the transation
 private:
     mutable dataset_type *m_dataset; ///< the supported dataset
 };
@@ -268,7 +263,9 @@ public:
 
     inline void operator= (const scoped_key_session& session);
 private:
-    virtual void update_key(); ///< update a key of the table
+    virtual const bool do_start();  ///< start the transation
+    virtual const bool do_stop();   ///< stop the transation
+    virtual const bool do_cancel(); ///< cancel the transation
 private:
     mutable dataset_type *m_dataset; ///< the supported dataset
 };
@@ -745,27 +742,7 @@ template <typename Table, typename GlobalLock>
 base_sharable_session<Table, GlobalLock>::base_sharable_session(base_table_type *table) :
     base_class(table)
 {
-    if (base_class::valid())
-    {
-        base_class::start();
-    }
-}
 
-/**
- * Destructor
- */
-//virtual
-template <typename Table, typename GlobalLock>
-base_sharable_session<Table, GlobalLock>::~base_sharable_session()
-{
-    if (std::uncaught_exception())
-    {
-        base_class::cancel();
-    }
-    else
-    {
-        base_class::stop();
-    }
 }
 
 /**
@@ -852,10 +829,6 @@ template <typename Table, typename GlobalLock>
 base_scoped_session<Table, GlobalLock>::base_scoped_session(base_table_type *table) :
     base_class(table)
 {
-    if (base_class::valid())
-    {
-        base_class::start();
-    }
 }
 
 /**
@@ -883,55 +856,6 @@ void base_scoped_session<Table, GlobalLock>::unlock()
         raw_class::table().unlock_scoped();
         base_class::unlock();
     }
-}
-
-/**
- * Start the transaction
- * @return the result of the starting
- */
-//virtual
-template <typename Table, typename GlobalLock>
-const bool base_scoped_session<Table, GlobalLock>::do_start()
-{
-    const bool result = base_class::do_start();
-    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
-    {
-        raw_class::table().refresh();
-    }
-    return result;
-}
-
-/**
- * Stop the transaction
- * @return the result of the stopping
- */
-//virtual
-template <typename Table, typename GlobalLock>
-const bool base_scoped_session<Table, GlobalLock>::do_stop()
-{
-    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
-    {
-        ///@todo unsafe_table execute lock!!! why?
-        raw_class::table().update();
-        update_key();
-    }
-    return base_class::do_stop();
-}
-
-/**
- * Cancel the transaction
- * @return the result of the canceling
- */
-//virtual
-template <typename Table, typename GlobalLock>
-const bool base_scoped_session<Table, GlobalLock>::do_cancel()
-{
-    const bool result = base_class::do_cancel();
-    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
-    {
-        raw_class::table().recovery();
-    }
-    return result;
 }
 
 /**
@@ -975,6 +899,10 @@ template <typename Dataset>
 sharable_session<Dataset>::sharable_session(dataset_type& dataset, const key_type& key) :
     base_class(dataset.table(key))
 {
+    if (base_class::valid())
+    {
+        base_class::start();
+    }
 }
 
 /**
@@ -1041,6 +969,7 @@ scoped_session<Dataset>::scoped_session(dataset_type& dataset, const key_type& k
 {
     if (base_class::valid())
     {
+        base_class::start();
         m_dataset->store_session(*this);
     }
 }
@@ -1075,14 +1004,53 @@ inline void scoped_session<Dataset>::operator= (const scoped_session& session)
 }
 
 /**
- * Update a key of the table
+ * Start the transaction
+ * @return the result of the starting
+ */
+template <typename Dataset>
+const bool scoped_session<Dataset>::do_start()
+{
+    const bool result = base_class::do_start();
+    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
+    {
+        raw_class::table().refresh();
+    }
+    return result;
+}
+
+/**
+ * Stop the transaction
+ * @return the result of the stopping
  */
 //virtual
 template <typename Dataset>
-void scoped_session<Dataset>::update_key()
+const bool scoped_session<Dataset>::do_stop()
 {
-    m_dataset->update_key(raw_class::table());
+    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
+    {
+        ///@todo unsafe_table execute lock!!! why?
+        raw_class::table().update();
+        m_dataset->update_key(raw_class::table());
+    }
+    return base_class::do_stop();
 }
+
+/**
+ * Cancel the transaction
+ * @return the result of the canceling
+ */
+//virtual
+template <typename Dataset>
+const bool scoped_session<Dataset>::do_cancel()
+{
+    const bool result = base_class::do_cancel();
+    if (base_class::m_lock && 1 == raw_class::table().scoped_count())
+    {
+        raw_class::table().recovery();
+    }
+    return result;
+}
+
 
 //==============================================================================
 //  scoped_key_session
@@ -1118,6 +1086,10 @@ scoped_key_session<Dataset>::scoped_key_session(dataset_type& dataset) :
     base_class(&dataset.m_key_table),
     m_dataset(&dataset)
 {
+    if (base_class::valid())
+    {
+        base_class::start();
+    }
 }
 
 /**
@@ -1150,14 +1122,54 @@ inline void scoped_key_session<Dataset>::operator= (const scoped_key_session& se
 }
 
 /**
- * Update a key of the table
+ * Start the transaction
+ * @return the result of the starting
  */
 //virtual
 template <typename Dataset>
-void scoped_key_session<Dataset>::update_key()
+const bool scoped_key_session<Dataset>::do_start()
 {
-    m_dataset->update_info();
+    const bool result = base_class::do_start();
+    if (base_class::m_lock)
+    {
+        raw_class::table().refresh();
+    }
+    return result;
 }
+
+/**
+ * Stop the transaction
+ * @return the result of the stopping
+ */
+//virtual
+template <typename Dataset>
+const bool scoped_key_session<Dataset>::do_stop()
+{
+    if (base_class::m_lock)
+    {
+        ///@todo unsafe_table execute lock!!! why?
+        raw_class::table().update();
+        m_dataset->update_info();
+    }
+    return base_class::do_stop();
+}
+
+/**
+ * Cancel the transaction
+ * @return the result of the canceling
+ */
+//virtual
+template <typename Dataset>
+const bool scoped_key_session<Dataset>::do_cancel()
+{
+    const bool result = base_class::do_cancel();
+    if (base_class::m_lock)
+    {
+        raw_class::table().recovery();
+    }
+    return result;
+}
+
 
 }   //namespace ouroboros
 
