@@ -152,6 +152,7 @@ public:
     inline const size_type aligned_size(const size_type size); ///< change the size of the cache object
     inline const size_type size() const; ///< get the size of the cache
     inline const bool empty() const; ///< chech the cache is empty
+    inline const bool dirty() const; ///< chech the cache is dirty
 #ifdef OUROBOROS_TEST_ENABLED
     const count_type test_pool_page_count() const; ///< test the count of the page in the cache pool
 #endif
@@ -804,6 +805,16 @@ template <typename Saver, int pageSize, int pageCount>
 inline const bool cache<Saver, pageSize, pageCount>::empty() const
 {
     return m_pages.empty();
+}
+
+/**
+ * Check the cache is dirty
+ * @return the result of the checking
+ */
+template <typename Saver, int pageSize, int pageCount>
+inline const bool cache<Saver, pageSize, pageCount>::dirty() const
+{
+    return !m_dirty_pages.empty();
 }
 
 #ifdef OUROBOROS_TEST_ENABLED

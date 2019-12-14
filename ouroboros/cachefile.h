@@ -52,10 +52,11 @@ public:
     void stop();   ///< stop the transaction
     void cancel(); ///< cancel the transaction
     const transaction_state state() const; ///< get the state of the transaction
-    void reset(); ///< reset all caches
+    void reset(); ///< reset the cache
 
     virtual void save_page(const pos_type index, void *data); ///< save data of the cache page
 protected:
+    void clean(); ///< clean dirty pages of a cache
     virtual void do_read(void *buffer, size_type size, const offset_type offset) const; ///< read data
     virtual void do_write(const void *buffer, size_type size, const offset_type offset); ///< write data
     virtual void do_refresh(size_type size, const offset_type pos); ///< refresh data
@@ -299,7 +300,7 @@ void cache_file<FilePage, pageCount, File, Cache>::save_page(const file_page_typ
 }
 
 /**
- * Reset all caches
+ * Reset the cache
  */
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
@@ -308,6 +309,16 @@ void cache_file<FilePage, pageCount, File, Cache>::reset()
     m_trans = TR_CANCELED;
     m_cache.free();
     m_trans = TR_STOPPED;
+}
+
+/**
+ * Clean dirty pages of a cache
+ */
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void cache_file<FilePage, pageCount, File, Cache>::clean()
+{
+    m_cache.clean();
 }
 
 /**
@@ -320,7 +331,7 @@ template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 void cache_file<FilePage, pageCount, File, Cache>::do_refresh(size_type size, const pos_type pos)
 {
-    OUROBOROS_ASSERT(m_trans != TR_STARTED || m_cache.empty());
+    OUROBOROS_ASSERT(m_trans != TR_STARTED || !m_cache.dirty());
     const pos_type beg = pos / CACHE_PAGE_SIZE;
     const pos_type end = (pos + size) / CACHE_PAGE_SIZE + 1;
     for (pos_type i = beg; i < end; ++i)
