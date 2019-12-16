@@ -17,8 +17,7 @@ namespace ouroboros
 enum journal_status_type
 {
     JS_CLEAN    = 0,
-    JS_DIRTY    = 1,
-    JS_FIXED    = 2
+    JS_DIRTY    = 1
 };
 
 /**
@@ -42,13 +41,12 @@ public:
     typedef typename status_file_page<file_page_type>::status_type status_type;
     explicit journal_file(const std::string& name);
     journal_file(const std::string& name, const file_region_type& region);
-    const bool init(); ///< ititialize
+    const bool init(); ///< initialize
 protected:
     const bool init_indexes(); ///< initialize the indexes of backup pages
     virtual void do_before_add_index(const pos_type index, void *page); ///< perform an action before add the index
     virtual void do_after_add_index(const pos_type index, void *page); ///< perform an action after add the index
     virtual void do_after_remove_index(const pos_type index); ///< perform an action after remove the index
-    virtual void do_before_clear_indexes(); ///< perform an action before remove all indexes
     virtual void do_after_clear_indexes(); ///< perform an action after remove all indexes
 };
 
@@ -101,44 +99,17 @@ const bool journal_file<FilePage, pageCount, File, Cache>::init_indexes()
 {
     // check the last transaction was successful
     bool success = true;
-    bool fixed = false;
     char buffer[base_class::CACHE_PAGE_SIZE];
     status_file_page<file_page_type> status_page(buffer);
     const count_type count = base_class::size() / base_class::CACHE_PAGE_SIZE;
     for (pos_type index = 0; index < count; ++index)
     {
         simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
-        const status_type status = status_page.get_status();
-        if (0 == index && (status & JS_FIXED))
+        if (status_page.get_status() != JS_CLEAN)
         {
-            fixed = true;
-            OUROBOROS_INFO("commit the file " << base_class::name());
-            continue;
+            success = false;
+            base_class::do_add_index(index);
         }
-        if (status != JS_CLEAN)
-        {
-            if (!fixed)
-            {
-                success = false;
-                base_class::do_add_index(index);
-            }
-            else
-            {
-                OUROBOROS_INFO("commit the page  " << index);
-                status_page.set_status(JS_CLEAN);
-                simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
-            }
-        }
-    }
-    // the last transactio wasn't finished
-    if (fixed)
-    {
-        OUROBOROS_INFO("commit the main page");
-        simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, 0);
-        status_page.set_status(JS_CLEAN);
-        simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, 0);
-        OUROBOROS_INFO("transaction completed");
-        return true;
     }
     // the last transaction wasn't successful
     if (!success)
@@ -198,7 +169,7 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const
     {
         void *page = base_class::m_cache.get_page(status);
         status_file_page<file_page_type> status_page(page);
-        status_page.set_status(0 == index ? JS_FIXED : JS_CLEAN);
+        status_page.set_status(JS_CLEAN);
         simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
     }
     else
@@ -206,38 +177,8 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const
         char buffer[base_class::CACHE_PAGE_SIZE];
         simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
         status_file_page<file_page_type> status_page(buffer);
-        status_page.set_status(0 == index ? JS_FIXED : JS_CLEAN);
+        status_page.set_status(JS_CLEAN);
         simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
-    }
-}
-
-/**
- * Perform an action before remove all indexes
- */
-//virtual
-template <typename FilePage, int pageCount, typename File,
-    template <typename, int, int> class Cache>
-void journal_file<FilePage, pageCount, File, Cache>::do_before_clear_indexes()
-{
-    const page_status_type status = base_class::m_cache.page_exists(0);
-    if (status.state() != PG_DETACHED)
-    {
-        void *page = base_class::m_cache.get_page(status);
-        status_file_page<file_page_type> status_page(page);
-        const status_type status = status_page.get_status();
-        OUROBOROS_ASSERT(!(status & JS_FIXED));
-        status_page.set_status(status | JS_FIXED);
-        simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, 0);
-    }
-    else
-    {
-        char buffer[base_class::CACHE_PAGE_SIZE];
-        simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, 0);
-        status_file_page<file_page_type> status_page(buffer);
-        const status_type status = status_page.get_status();
-        OUROBOROS_ASSERT(!(status & JS_FIXED));
-        status_page.set_status(status | JS_FIXED);
-        simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, 0);
     }
 }
 
@@ -249,24 +190,6 @@ template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 void journal_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes()
 {
-    const page_status_type status = base_class::m_cache.page_exists(0);
-    if (status.state() != PG_DETACHED)
-    {
-        void *page = base_class::m_cache.get_page(status);
-        status_file_page<file_page_type> status_page(page);
-        OUROBOROS_ASSERT(status_page.get_status() == JS_FIXED);
-        status_page.set_status(JS_CLEAN);
-        simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, 0);
-    }
-    else
-    {
-        char buffer[base_class::CACHE_PAGE_SIZE];
-        simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, 0);
-        status_file_page<file_page_type> status_page(buffer);
-        OUROBOROS_ASSERT(status_page.get_status() == JS_FIXED);
-        status_page.set_status(JS_CLEAN);
-        simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, 0);
-    }
     base_class::clean();
 }
 
