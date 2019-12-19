@@ -124,7 +124,7 @@ public:
     typedef Status status_type;
     explicit status_file_page(void *ptr);
     const bool verify() const;
-    void set_status(const status_type status);
+    void set_status(const status_type& status);
     const status_type get_status() const;
 };
 
@@ -733,7 +733,7 @@ const bool status_file_page<FilePage, Status>::verify() const
  * @param status the status of the page
  */
 template <typename FilePage, typename Status>
-void status_file_page<FilePage, Status>::set_status(const status_type status)
+void status_file_page<FilePage, Status>::set_status(const status_type& status)
 {
     char *p = static_cast<char *>(base_class::get());
     memcpy(p + base_class::DATA_SIZE, &status, sizeof(status));
