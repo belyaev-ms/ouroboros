@@ -120,7 +120,7 @@ public:
 protected:
     inline void lock(); ///< lock the transaction
     inline void unlock(); ///< unlock the transaction
-    inline const bool Locked() const; ///< check the the transaction is locked
+    inline const bool locked() const; ///< check the the transaction is locked
 private:
     bool m_lock;
 };
@@ -440,7 +440,7 @@ inline void locked_transaction<Lock>::unlock()
  * @return the result of the checking
  */
 template <typename Lock>
-inline const bool locked_transaction<Lock>::Locked() const
+inline const bool locked_transaction<Lock>::locked() const
 {
     return m_lock;
 }

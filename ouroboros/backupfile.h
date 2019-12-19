@@ -212,7 +212,7 @@ inline void backup_file<FilePage, pageCount, File, Cache>::recovery()
     for (index_list::const_iterator it = m_indexes.begin(); it != end; ++it)
     {
         const pos_type index = *it;
-        OUROBOROS_INFO("restore the page " << index);
+        OUROBOROS_INFO("\trestore the page " << index);
         m_backup.read(page, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
         simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
         base_class::m_cache.free_page(index);
