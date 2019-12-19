@@ -213,25 +213,29 @@ const bool journal_file<FilePage, pageCount, File, Cache>::init_indexes()
                 break;
         }
     }
-    // pocessing found transactions
-    OUROBOROS_INFO("restore the file " << base_class::name());
-    for (transaction_list_type::iterator transaction = transaction_list.begin();
-            transaction != transaction_list.end(); ++transaction)
+    if (!transaction_list.empty())
     {
-        if (NIL == transaction->second.first)
+        // pocessing found transactions
+        OUROBOROS_INFO("restore the file " << base_class::name());
+        for (transaction_list_type::iterator transaction = transaction_list.begin();
+                transaction != transaction_list.end(); ++transaction)
         {
-            OUROBOROS_INFO("\trestore the transaction " << transaction->first);
-            restore_transaction(transaction->second.second);
+            if (NIL == transaction->second.first)
+            {
+                OUROBOROS_INFO("\trestore the transaction " << transaction->first);
+                restore_transaction(transaction->second.second);
+            }
+            else
+            {
+                transaction->second.second.push_back(transaction->second.first);
+                OUROBOROS_INFO("\tcommit the transaction " << transaction->first);
+                commit_transaction(transaction->second.second);
+            }
         }
-        else
-        {
-            transaction->second.second.push_back(transaction->second.first);
-            OUROBOROS_INFO("\tcommit the transaction " << transaction->first);
-            commit_transaction(transaction->second.second);
-        }
+        OUROBOROS_INFO("recovery completed");
+        return false;
     }
-    OUROBOROS_INFO("recovery completed");
-    return transaction_list.empty();
+    return true;
 }
 
 /**
