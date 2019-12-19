@@ -68,6 +68,10 @@ protected:
     virtual void do_after_add_index(const pos_type index, void *page); ///< perform an action after add the index
     virtual void do_after_remove_index(const pos_type index); ///< perform an action after remove the index
     virtual void do_after_clear_indexes(); ///< perform an action after remove all indexes
+private:
+    typedef std::vector<pos_type> page_list_type;
+    void restore_transaction(const page_list_type& page_list); ///< restore a transaction
+    void commit_transaction(const page_list_type& page_list); ///< commit a transaction
 protected:
     static pos_type s_transaction_id;
     pos_type m_reference_index;
@@ -120,6 +124,46 @@ const bool journal_file<FilePage, pageCount, File, Cache>::init()
 }
 
 /**
+ * Restore a transaction
+ */
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void journal_file<FilePage, pageCount, File, Cache>::
+    restore_transaction(const page_list_type& page_list)
+{
+    char buffer[base_class::CACHE_PAGE_SIZE];
+    page_list_type::const_iterator end = page_list.end();
+    for (page_list_type::const_iterator it = page_list.begin(); it != end; ++it)
+    {
+        const pos_type index = *it;
+        OUROBOROS_INFO("\t\trestore the page " << index);
+        base_class::m_backup.read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
+        simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
+    }
+}
+
+/**
+ * Commit a transaction
+ */
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void journal_file<FilePage, pageCount, File, Cache>::
+    commit_transaction(const page_list_type& page_list)
+{
+    char buffer[base_class::CACHE_PAGE_SIZE];
+    status_file_page_type status_page(buffer);
+    page_list_type::const_iterator end = page_list.end();
+    for (page_list_type::const_iterator it = page_list.begin(); it != end; ++it)
+    {
+        const pos_type index = *it;
+        OUROBOROS_INFO("\t\tcommit the page " << index);
+        simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
+        status_page.set_status(journal_status_type());
+        simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
+    }
+}
+
+/**
  * Initialize the indexes of backup pages
  * @return the result of the initialization
  */
@@ -127,7 +171,6 @@ template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 const bool journal_file<FilePage, pageCount, File, Cache>::init_indexes()
 {
-    typedef std::vector<pos_type> page_list_type;
     typedef std::pair<pos_type, page_list_type> transaction_state_type;
     typedef std::map<pos_type, transaction_state_type> transaction_list_type;
     transaction_list_type transaction_list;
@@ -172,41 +215,19 @@ const bool journal_file<FilePage, pageCount, File, Cache>::init_indexes()
     }
     // pocessing found transactions
     OUROBOROS_INFO("restore the file " << base_class::name());
-    for (transaction_list_type::const_iterator transaction = transaction_list.begin();
+    for (transaction_list_type::iterator transaction = transaction_list.begin();
             transaction != transaction_list.end(); ++transaction)
     {
         if (NIL == transaction->second.first)
         {
             OUROBOROS_INFO("\trestore the transaction " << transaction->first);
-            page_list_type::const_iterator end = transaction->second.second.end();
-            for (page_list_type::const_iterator it = transaction->second.second.begin();
-                it != end; ++it)
-            {
-                const pos_type index = *it;
-                OUROBOROS_INFO("\t\trestore the page " << index);
-                base_class::m_backup.read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
-                simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
-            }
+            restore_transaction(transaction->second.second);
         }
         else
         {
+            transaction->second.second.push_back(transaction->second.first);
             OUROBOROS_INFO("\tcommit the transaction " << transaction->first);
-            page_list_type::const_iterator end = transaction->second.second.end();
-            pos_type index;
-            for (page_list_type::const_iterator it = transaction->second.second.begin();
-                it != end; ++it)
-            {
-                index = *it;
-                OUROBOROS_INFO("\t\tcommit the page " << index);
-                simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
-                status_page.set_status(journal_status_type());
-                simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
-            }
-            index = transaction->second.first;
-            OUROBOROS_INFO("\t\tcommit the page " << index);
-            simple_file::do_read(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
-            status_page.set_status(journal_status_type());
-            simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
+            commit_transaction(transaction->second.second);
         }
     }
     OUROBOROS_INFO("recovery completed");
