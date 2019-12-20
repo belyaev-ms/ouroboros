@@ -52,48 +52,48 @@ public:
     tree_data_table(source_type& source, skey_type& skey);
     tree_data_table(source_type& source, skey_type& skey, const guard_type& guard);
 
-    const pos_type read(record_type& record, const pos_type pos) const; ///< read a record
-    const pos_type read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
-    const pos_type rread(record_type& record, const pos_type pos) const; ///< reverse read a record
-    const pos_type write(const record_type& record, const pos_type pos); ///< write a record
-    const pos_type write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
-    const pos_type rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
-    const pos_type add(const record_type& record); ///< add a record
-    const pos_type add(const record_list& records); ///< add records
-    const pos_type read_front(record_type& record) const; ///< read the first record
-    const pos_type read_back(record_type& record) const; ///< read the last record
+    pos_type read(record_type& record, const pos_type pos) const; ///< read a record
+    pos_type read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
+    pos_type rread(record_type& record, const pos_type pos) const; ///< reverse read a record
+    pos_type write(const record_type& record, const pos_type pos); ///< write a record
+    pos_type write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
+    pos_type rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
+    pos_type add(const record_type& record); ///< add a record
+    pos_type add(const record_list& records); ///< add records
+    pos_type read_front(record_type& record) const; ///< read the first record
+    pos_type read_back(record_type& record) const; ///< read the last record
 
-    const count_type remove_by_index(const field_type& beg, const field_type& end); ///< delete records by index [beg, end)
-    const pos_type read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const; ///< read the first record by index
-    const pos_type read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const; ///< read the last record by index
+    count_type remove_by_index(const field_type& beg, const field_type& end); ///< delete records by index [beg, end)
+    pos_type read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const; ///< read the first record by index
+    pos_type read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const; ///< read the last record by index
 
-    const count_type read_index(pos_list& dest, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read indexes of the records
-    const count_type rread_index(pos_list& dest, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read indexes of the records
-    const count_type read_by_index(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read records by index [beg, end)
-    const count_type rread_by_index(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read records by index [beg, end)
-    const count_type read(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read records that have an index in range [beg, end)
-    const count_type rread(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read records that have an index in range [beg, end)
+    count_type read_index(pos_list& dest, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read indexes of the records
+    count_type rread_index(pos_list& dest, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read indexes of the records
+    count_type read_by_index(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read records by index [beg, end)
+    count_type rread_by_index(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read records by index [beg, end)
+    count_type read(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read records that have an index in range [beg, end)
+    count_type rread(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read records that have an index in range [beg, end)
 
     template <typename Finder>
-    const pos_type find_by_index(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record by index [beg, end)
+    pos_type find_by_index(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record by index [beg, end)
     template <typename Finder>
-    const pos_type rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record by index [beg, end)
+    pos_type rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record by index [beg, end)
     template <typename Finder>
-    const pos_type find(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record that has index in range [beg, end)
+    pos_type find(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record that has index in range [beg, end)
     template <typename Finder>
-    const pos_type rfind(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record that has index in range [beg, end)
+    pos_type rfind(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record that has index in range [beg, end)
     template <typename Finder>
-    const pos_type find(Finder& finder, const pos_type beg, const count_type count) const; ///< find a record [beg, end)
+    pos_type find(Finder& finder, const pos_type beg, const count_type count) const; ///< find a record [beg, end)
     template <typename Finder>
-    const pos_type rfind(Finder& finder, const pos_type end, const count_type count) const; ///< reverse find a record [beg, end)
+    pos_type rfind(Finder& finder, const pos_type end, const count_type count) const; ///< reverse find a record [beg, end)
 
-    inline const bool refresh(); ///< refresh the metadata of the table by the key
+    inline bool refresh(); ///< refresh the metadata of the table by the key
     inline void update(); ///< update the key by the metadata of the table
     inline void recovery(); ///< recovery the metadata of the table by the key
 
 #ifdef OUROBOROS_TEST_TOOLS_ENABLED
     void test() const; ///< test the table
-    const pos_type get_root() const; ///< get the postiorion of the root
+    pos_type get_root() const; ///< get the postiorion of the root
 #endif
 protected:
     virtual void do_before_remove(const pos_type pos); ///< perform an action before deleting record
@@ -101,30 +101,30 @@ protected:
     void do_get_pos_list(pos_list& dest, const field_type& beg, const field_type& end) const; ///< get positions of the records that have an index in range [beg, end)
     void do_clear(); ///< clear the table
     /* the methods don't use any locking */
-    inline const pos_type unsafe_read(record_type& record, const pos_type pos) const; ///< read a record
-    inline const pos_type unsafe_read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
-    inline const pos_type unsafe_rread(record_type& record, const pos_type pos) const; ///< reverse read a record
-    inline const pos_type unsafe_write(const record_type& record, const pos_type pos); ///< write a record
-    inline const pos_type unsafe_write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
-    inline const pos_type unsafe_rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
-    inline const pos_type do_add(const record_type& record); ///< add a record
-    inline const pos_type unsafe_add(const record_type& record); ///< add a record
-    inline const pos_type unsafe_add(const record_list& records); ///< add records
-    inline const pos_type rawReadFirstRecord(record_type& record) const; ///< read the first record
-    inline const pos_type rawReadLastRecord(record_type& record) const; ///< read the last record
+    inline pos_type unsafe_read(record_type& record, const pos_type pos) const; ///< read a record
+    inline pos_type unsafe_read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
+    inline pos_type unsafe_rread(record_type& record, const pos_type pos) const; ///< reverse read a record
+    inline pos_type unsafe_write(const record_type& record, const pos_type pos); ///< write a record
+    inline pos_type unsafe_write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
+    inline pos_type unsafe_rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
+    inline pos_type do_add(const record_type& record); ///< add a record
+    inline pos_type unsafe_add(const record_type& record); ///< add a record
+    inline pos_type unsafe_add(const record_list& records); ///< add records
+    inline pos_type rawReadFirstRecord(record_type& record) const; ///< read the first record
+    inline pos_type rawReadLastRecord(record_type& record) const; ///< read the last record
 protected:
     /** hide the parents methods */
-    const pos_type read(indexed_record_type& record, const pos_type pos) const;
-    const pos_type read(indexed_record_list& records, const pos_type pos) const;
-    const pos_type rread(indexed_record_type& record, const pos_type pos) const;
-    const pos_type write(const indexed_record_type& record, const pos_type pos);
-    const pos_type write(const indexed_record_list& records, const pos_type pos);
-    const pos_type rwrite(const indexed_record_type& record, const pos_type pos);
-    const pos_type add(const indexed_record_type& record);
-    const pos_type add(const indexed_record_list& records);
-    const pos_type read_front(indexed_record_type& record) const;
-    const pos_type read_front_by_index(indexed_record_type& record, const field_type& beg, const field_type& end) const;
-    const pos_type read_back_by_index(indexed_record_type& record, const field_type& beg, const field_type& end) const;
+    pos_type read(indexed_record_type& record, const pos_type pos) const;
+    pos_type read(indexed_record_list& records, const pos_type pos) const;
+    pos_type rread(indexed_record_type& record, const pos_type pos) const;
+    pos_type write(const indexed_record_type& record, const pos_type pos);
+    pos_type write(const indexed_record_list& records, const pos_type pos);
+    pos_type rwrite(const indexed_record_type& record, const pos_type pos);
+    pos_type add(const indexed_record_type& record);
+    pos_type add(const indexed_record_list& records);
+    pos_type read_front(indexed_record_type& record) const;
+    pos_type read_front_by_index(indexed_record_type& record, const field_type& beg, const field_type& end) const;
+    pos_type read_back_by_index(indexed_record_type& record, const field_type& beg, const field_type& end) const;
 private:
 #ifdef OUROBOROS_FASTRBTREE_ENABLED
     typedef node_cache<node_type, base_class> cache_type;
@@ -195,7 +195,7 @@ tree_data_table<Table, IndexedRecord, Key, Interface>::tree_data_table(source_ty
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read(record_type& record, const pos_type pos) const
+inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read(record_type& record, const pos_type pos) const
 {
     indexed_record_type indexed_record;
     const pos_type result = base_class::unsafe_read(indexed_record, pos);
@@ -210,7 +210,7 @@ inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::uns
  * @return the position of the previous record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_rread(record_type& record, const pos_type pos) const
+inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_rread(record_type& record, const pos_type pos) const
 {
     indexed_record_type indexed_record;
     const pos_type result = base_class::unsafe_rread(indexed_record, pos);
@@ -225,7 +225,7 @@ inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::uns
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read(record_list& records, const pos_type pos) const
+inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read(record_list& records, const pos_type pos) const
 {
     pos_type result = pos;
     const typename record_list::iterator end = records.end();
@@ -243,7 +243,7 @@ inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::uns
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_write(const record_type& record, const pos_type pos)
+inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_write(const record_type& record, const pos_type pos)
 {
     pnode_type pnode(*this, pos);
     typename tree_type::iterator it(pnode);
@@ -258,7 +258,7 @@ inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::uns
  * @return the position of the previous record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_rwrite(const record_type& record, const pos_type pos)
+inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_rwrite(const record_type& record, const pos_type pos)
 {
     unsafe_write(record, pos);
     return unsafe_table::DecRecNum(pos);
@@ -271,7 +271,7 @@ inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::uns
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_write(const record_list& records, const pos_type pos)
+inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_write(const record_list& records, const pos_type pos)
 {
     pos_type result = pos;
     const typename record_list::iterator end = records.end();
@@ -288,7 +288,7 @@ inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::uns
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::do_add(const record_type& record)
+inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::do_add(const record_type& record)
 {
     if (unsafe_table::count() < unsafe_table::limit())
     {
@@ -310,7 +310,7 @@ inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::do_
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_add(const record_type& record)
+inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_add(const record_type& record)
 {
 #ifdef OUROBOROS_NODECACHE_ENABLED
     cache_type::static_begin(this);
@@ -328,7 +328,7 @@ inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::uns
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_add(const record_list& records)
+inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_add(const record_list& records)
 {
 #ifdef OUROBOROS_NODECACHE_ENABLED
     ///@todo guard???
@@ -352,7 +352,7 @@ inline const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::uns
  * @return the position of the first record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::rawReadFirstRecord(record_type& record) const
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::rawReadFirstRecord(record_type& record) const
 {
     indexed_record_type indexed_record;
     const pos_type pos = base_class::read_front(&indexed_record);
@@ -366,7 +366,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::rawReadFir
  * @return the position of the last record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::rawReadLastRecord(record_type& record) const
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::rawReadLastRecord(record_type& record) const
 {
     indexed_record_type indexed_record;
     const pos_type pos = base_class::read_back(&indexed_record);
@@ -381,7 +381,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::rawReadLas
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_type& record, const pos_type pos) const
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_type& record, const pos_type pos) const
 {
     typename base_class::lock_read lock(*this);
     return unsafe_read(record, pos);
@@ -394,7 +394,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(recor
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_list& records, const pos_type pos) const
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_list& records, const pos_type pos) const
 {
     typename base_class::lock_read lock(*this);
     return unsafe_read(records, pos);
@@ -407,7 +407,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(recor
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::write(const record_type& record, const pos_type pos)
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::write(const record_type& record, const pos_type pos)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_write(record, pos);
@@ -420,7 +420,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::write(cons
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::write(const record_list& records, const pos_type pos)
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::write(const record_list& records, const pos_type pos)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_write(records, pos);
@@ -432,7 +432,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::write(cons
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::add(const record_type& record)
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::add(const record_type& record)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_add(record);
@@ -444,7 +444,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::add(const 
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::add(const record_list& records)
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::add(const record_list& records)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_add(records);
@@ -483,7 +483,7 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_before_move(const
  * @return the count of the deleted records
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_by_index(const field_type& beg, const field_type& end)
+count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_by_index(const field_type& beg, const field_type& end)
 {
     typename base_class::lock_write lock(*this);
 
@@ -520,7 +520,7 @@ const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_b
  * @return the position of the first record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_front(record_type& record) const
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_front(record_type& record) const
 {
     typename base_class::lock_read lock(*this);
     return rawReadFirstRecord(record);
@@ -532,7 +532,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_front
  * @return the position of the last record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_back(record_type& record) const
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_back(record_type& record) const
 {
     typename base_class::lock_read lock(*this);
     return rawReadLastRecord(record);
@@ -546,7 +546,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_back(
  * @return the position of the first record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -574,7 +574,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  * @return the position of the last record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -638,7 +638,7 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_get_pos_list(pos_
  * @return the count of indexes
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_index(pos_list& dest,
+count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -664,7 +664,7 @@ const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_ind
  * @return the count of indexes
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_index(pos_list& dest,
+count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -690,7 +690,7 @@ const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_in
  * @return the count of records
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_list& records,
+count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -715,7 +715,7 @@ const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(rec
  * @return the count of records
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread(record_list& records,
+count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -740,7 +740,7 @@ const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread(re
  * @return the count of records
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_by_index(record_list& records,
+count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -771,7 +771,7 @@ const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_by_
  * @return the count of records
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_by_index(record_list& records,
+count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -805,7 +805,7 @@ const count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_by
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 template <typename Finder>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     find_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -834,7 +834,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 template <typename Finder>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -866,7 +866,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 template <typename Finder>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     find(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -898,7 +898,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 template <typename Finder>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     rfind(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -930,7 +930,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 template <typename Finder>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     find(Finder& finder, const pos_type beg, const count_type count) const
 {
     typename base_class::lock_read lock(*this);
@@ -959,7 +959,7 @@ const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 template <typename Finder>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     rfind(Finder& finder, const pos_type end, const count_type count) const
 {
     typename base_class::lock_read lock(*this);
@@ -991,7 +991,7 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_clear()
  * @return the result of the checking
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline const bool tree_data_table<Table, IndexedRecord, Key, Interface>::refresh()
+inline bool tree_data_table<Table, IndexedRecord, Key, Interface>::refresh()
 {
     typename base_class::lock_read lock(*this);
     if (unsafe_table::refresh())
@@ -1040,7 +1040,7 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::test() const
  * @return the position of the table
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-const pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::get_root() const
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::get_root() const
 {
     return m_tree.get_root();
 }

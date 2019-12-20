@@ -79,9 +79,9 @@ public:
     void open(); ///< open the dataset
     inline const std::string& name() const; ///< get the name of the dataset
 
-    const pos_type add_table(const key_type key); ///< add the table to the dataset
-    const count_type remove_table(const key_type key); ///< remove the table from the dataset
-    const bool table_exists(const key_type key); ///< check the table exists in the dataset
+    pos_type add_table(const key_type key); ///< add the table to the dataset
+    count_type remove_table(const key_type key); ///< remove the table from the dataset
+    bool table_exists(const key_type key); ///< check the table exists in the dataset
 
     inline session_read session_rd(const key_type key); ///< open the session to read data from the table
     inline session_write session_wr(const key_type key); ///< open the session to write data to the table
@@ -91,16 +91,16 @@ public:
     inline void lazy_start();  ///< start the lazy transaction
     inline void lazy_stop();   ///< stop the lazy transaction
     inline void lazy_cancel(); ///< cancel the lazy transaction
-    inline const transaction_state state() const; ///< get the state of the transaction
-    inline const bool lazy_transaction_exists() const; ///< check the lazy transaction exists
+    inline transaction_state state() const; ///< get the state of the transaction
+    inline bool lazy_transaction_exists() const; ///< check the lazy transaction exists
 
     void get_key_list(key_list& list) const; ///< get the list of the keys
 
-    const count_type rec_count(); ///< get the count of the records in each table of the dataset
-    const count_type table_count(); ///< get the count of the table
-    const revision_type version(); ///< get the version of the dataset
-    const size_type get_user_data(void *buffer, const size_type size); ///< get the region of the users data
-    const size_type set_user_data(const void *buffer, const size_type size); ///< set the region of the users data
+    count_type rec_count(); ///< get the count of the records in each table of the dataset
+    count_type table_count(); ///< get the count of the table
+    revision_type version(); ///< get the version of the dataset
+    size_type get_user_data(void *buffer, const size_type size); ///< get the region of the users data
+    size_type set_user_data(const void *buffer, const size_type size); ///< set the region of the users data
 
     static void remove(const std::string& name); ///< remove the dataset
 protected:
@@ -124,11 +124,11 @@ protected:
 
     void init(const info_type& info); ///< initialize the dataset
     inline table_type* table(const key_type key); ///< get the table by the key
-    const bool check_table(const key_type key); ///< check the table is not removed
+    bool check_table(const key_type key); ///< check the table is not removed
 
     void recovery(); ///< recovery the dataset
     inline void update_info(); ///< update the information about the dataset
-    inline const bool do_key_exists(const key_type key) const; ///< check the key exists
+    inline bool do_key_exists(const key_type key) const; ///< check the key exists
     inline skey_type& load_key(const pos_type pos); ///< load the key
     inline void update_key(table_type& table); ///< update the key of the table
     inline void lazy_transaction(lazy_transaction_type *transact); ///< set current lazy transaction
@@ -424,7 +424,7 @@ inline const std::string& data_set<Key, Record, Index, Interface>::name() const
  * @return the postion of the table
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
+pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
 {
     session_write_key session_key(*this);
     if (do_key_exists(key))
@@ -480,7 +480,7 @@ const pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type
  * @return the count of the tables
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const count_type data_set<Key, Record, Index, Interface>::remove_table(const key_type key)
+count_type data_set<Key, Record, Index, Interface>::remove_table(const key_type key)
 {
     session_write_key session_key(*this);
     if (!do_key_exists(key))
@@ -518,7 +518,7 @@ const count_type data_set<Key, Record, Index, Interface>::remove_table(const key
  * @return the table is not removed
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const bool data_set<Key, Record, Index, Interface>::check_table(const key_type key)
+bool data_set<Key, Record, Index, Interface>::check_table(const key_type key)
 {
     bool result = true;
     if (!m_key_table.relevant())
@@ -591,7 +591,7 @@ inline typename data_set<Key, Record, Index, Interface>::table_type*
  * @return the result of the checking
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const bool data_set<Key, Record, Index, Interface>::table_exists(const key_type key)
+bool data_set<Key, Record, Index, Interface>::table_exists(const key_type key)
 {
     lock_read lock(m_key_table);
     // check the table is removed
@@ -609,7 +609,7 @@ const bool data_set<Key, Record, Index, Interface>::table_exists(const key_type 
  * @return the result of the checking
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-inline const bool data_set<Key, Record, Index, Interface>::do_key_exists(const key_type key) const
+inline bool data_set<Key, Record, Index, Interface>::do_key_exists(const key_type key) const
 {
     if (m_skeys->empty())
     {
@@ -760,7 +760,7 @@ inline void data_set<Key, Record, Index, Interface>::lazy_cancel()
  * @return the state of the transaction
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-inline const transaction_state data_set<Key, Record, Index, Interface>::state() const
+inline transaction_state data_set<Key, Record, Index, Interface>::state() const
 {
     return m_file.state();
 }
@@ -903,7 +903,7 @@ void data_set<Key, Record, Index, Interface>::get_key_list(key_list& list) const
  * @return the count of the records
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const count_type data_set<Key, Record, Index, Interface>::rec_count()
+count_type data_set<Key, Record, Index, Interface>::rec_count()
 {
     count_type count = m_source.rec_count();
     if (0 == count)
@@ -920,7 +920,7 @@ const count_type data_set<Key, Record, Index, Interface>::rec_count()
  * @return the count of the tables
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const count_type data_set<Key, Record, Index, Interface>::table_count()
+count_type data_set<Key, Record, Index, Interface>::table_count()
 {
     count_type count = m_key_source.rec_count();
     if (0 == count)
@@ -937,7 +937,7 @@ const count_type data_set<Key, Record, Index, Interface>::table_count()
  * @return the version of the dataset
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const revision_type data_set<Key, Record, Index, Interface>::version()
+revision_type data_set<Key, Record, Index, Interface>::version()
 {
     revision_type ver = m_info.version;
     if (0 == ver)
@@ -956,7 +956,7 @@ const revision_type data_set<Key, Record, Index, Interface>::version()
  * @return the size of getting data
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const size_type data_set<Key, Record, Index, Interface>::get_user_data(void *buffer, const size_type size)
+size_type data_set<Key, Record, Index, Interface>::get_user_data(void *buffer, const size_type size)
 {
     info_type info;
     if (!info.compare_data(m_info))
@@ -977,7 +977,7 @@ const size_type data_set<Key, Record, Index, Interface>::get_user_data(void *buf
  * @return the size of the setting data
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const size_type data_set<Key, Record, Index, Interface>::set_user_data(const void *buffer, const size_type size)
+size_type data_set<Key, Record, Index, Interface>::set_user_data(const void *buffer, const size_type size)
 {
     const size_type count = m_info.set_data(buffer, size);
     if (count > 0)
@@ -992,7 +992,7 @@ const size_type data_set<Key, Record, Index, Interface>::set_user_data(const voi
  * @return the result of the checking
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-inline const bool data_set<Key, Record, Index, Interface>::lazy_transaction_exists() const
+bool data_set<Key, Record, Index, Interface>::lazy_transaction_exists() const
 {
     return m_lazy_transaction != NULL;
 }

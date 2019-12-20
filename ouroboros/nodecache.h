@@ -25,8 +25,8 @@ public:
 
     static void static_begin(table_type *table = NULL);
     static void static_end();
-    static const bool static_read(const pos_type pos, node_type& node);
-    static const bool static_write(const pos_type pos, const node_type& node);
+    static bool static_read(const pos_type pos, node_type& node);
+    static bool static_write(const pos_type pos, const node_type& node);
     static void static_keep(const pos_type pos, const node_type& node);
 protected:
     enum state_type
@@ -46,8 +46,8 @@ protected:
 
     void begin(table_type *table = NULL);
     void end();
-    const bool read(const pos_type pos, node_type& node) const;
-    const bool write(const pos_type pos, const node_type& node);
+    bool read(const pos_type pos, node_type& node) const;
+    bool write(const pos_type pos, const node_type& node);
     void keep(const pos_type pos, const node_type& node);
 private:
     node_cache();
@@ -101,7 +101,7 @@ void node_cache<Node, Table>::static_end()
  */
 //static
 template <typename Node, typename Table>
-const bool node_cache<Node, Table>::static_read(const pos_type pos, node_type& node)
+bool node_cache<Node, Table>::static_read(const pos_type pos, node_type& node)
 {
     return instance().read(pos, node);
 }
@@ -114,7 +114,7 @@ const bool node_cache<Node, Table>::static_read(const pos_type pos, node_type& n
  */
 //static
 template <typename Node, typename Table>
-const bool node_cache<Node, Table>::static_write(const pos_type pos, const node_type& node)
+bool node_cache<Node, Table>::static_write(const pos_type pos, const node_type& node)
 {
     return instance().write(pos, node);
 }
@@ -184,7 +184,7 @@ void node_cache<Node, Table>::end()
  * @return the result of reading
  */
 template <typename Node, typename Table>
-const bool node_cache<Node, Table>::read(const pos_type pos, node_type& node) const
+bool node_cache<Node, Table>::read(const pos_type pos, node_type& node) const
 {
     if (m_enabled)
     {
@@ -219,7 +219,7 @@ void node_cache<Node, Table>::keep(const pos_type pos, const node_type& node)
  * @return if the result is true then need to write the node to the table
  */
 template <typename Node, typename Table>
-const bool node_cache<Node, Table>::write(const pos_type pos, const node_type& node)
+bool node_cache<Node, Table>::write(const pos_type pos, const node_type& node)
 {
     if (m_enabled)
     {

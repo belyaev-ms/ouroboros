@@ -45,35 +45,35 @@ public:
     indexed_table(source_type& source, skey_type& skey);
     indexed_table(source_type& source, skey_type& skey, const guard_type& guard);
 
-    inline const pos_type read(record_type& record, const pos_type pos) const; ///< read a record
-    inline const pos_type read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
-    inline const pos_type rread(record_type& record, const pos_type pos) const; ///< reverse read a record
-    const pos_type write(const record_type& record, const pos_type pos); ///< write a record
-    const pos_type write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
-    const pos_type rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
-    const pos_type add(const record_type& record); ///< add a record
-    const pos_type add(const record_list& records); ///< add records
+    inline pos_type read(record_type& record, const pos_type pos) const; ///< read a record
+    inline pos_type read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
+    inline pos_type rread(record_type& record, const pos_type pos) const; ///< reverse read a record
+    pos_type write(const record_type& record, const pos_type pos); ///< write a record
+    pos_type write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
+    pos_type rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
+    pos_type add(const record_type& record); ///< add a record
+    pos_type add(const record_list& records); ///< add records
 
-    const count_type remove_by_index(const field_type& beg, const field_type& end); ///< delete records by index [beg, end)
+    count_type remove_by_index(const field_type& beg, const field_type& end); ///< delete records by index [beg, end)
 
-    const pos_type read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const; ///< read the first record by index
-    const pos_type read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const; ///< read the last record by index
+    pos_type read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const; ///< read the first record by index
+    pos_type read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const; ///< read the last record by index
 
-    const count_type read_index(pos_list& dest, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read indexes of the records
-    const count_type rread_index(pos_list& dest, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read indexes of the records
-    const count_type read_by_index(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read records by index [beg, end)
-    const count_type rread_by_index(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read records by index [beg, end)
-    const count_type read(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read records that have an index in range [beg, end)
-    const count_type rread(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read records that have an index in range [beg, end)
+    count_type read_index(pos_list& dest, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read indexes of the records
+    count_type rread_index(pos_list& dest, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read indexes of the records
+    count_type read_by_index(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read records by index [beg, end)
+    count_type rread_by_index(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read records by index [beg, end)
+    count_type read(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read records that have an index in range [beg, end)
+    count_type rread(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read records that have an index in range [beg, end)
 
     template <typename Finder>
-    const pos_type find_by_index(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record by index [beg, end)
+    pos_type find_by_index(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record by index [beg, end)
     template <typename Finder>
-    const pos_type rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record by index [beg, end)
+    pos_type rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record by index [beg, end)
     template <typename Finder>
-    const pos_type find(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record that has index in range [beg, end)
+    pos_type find(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record that has index in range [beg, end)
     template <typename Finder>
-    const pos_type rfind(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record that has index in range [beg, end)
+    pos_type rfind(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record that has index in range [beg, end)
 
     inline void build_indexes(); ///< build the indexes of the records
 protected:
@@ -85,8 +85,8 @@ protected:
     inline void do_build_indexes(const pos_type beg, const pos_type end); ///< build the indexes of the records
     void do_get_pos_list(pos_list& dest, const field_type& beg, const field_type& end) const; ///< get positions of the records that have an index in range [beg, end)
     /* the methods don't use any locking */
-    inline const pos_type unsafe_write(const record_type& record, const pos_type pos); ///< write a record
-    inline const pos_type unsafe_add(const record_type& record); ///< add a record
+    inline pos_type unsafe_write(const record_type& record, const pos_type pos); ///< write a record
+    inline pos_type unsafe_add(const record_type& record); ///< add a record
 private:
     typedef std::multimap<field_type, pos_type> index_list;
     index_list m_indexes;
@@ -164,7 +164,7 @@ indexed_table<Table, Record, Index, Key, Interface>::indexed_table(source_type& 
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::read(record_type& record, const pos_type pos) const
+pos_type indexed_table<Table, Record, Index, Key, Interface>::read(record_type& record, const pos_type pos) const
 {
     return base_class::read(record, pos);
 }
@@ -177,7 +177,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::read(record_
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::read(record_list& records, const pos_type pos) const
+pos_type indexed_table<Table, Record, Index, Key, Interface>::read(record_list& records, const pos_type pos) const
 {
     return base_class::read(records, pos);
 }
@@ -190,7 +190,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::read(record_
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::rread(record_type& record, const pos_type pos) const
+pos_type indexed_table<Table, Record, Index, Key, Interface>::rread(record_type& record, const pos_type pos) const
 {
     return base_class::rread(record, pos);
 }
@@ -203,7 +203,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::rread(record
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_write(const record_type& record, const pos_type pos)
+pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_write(const record_type& record, const pos_type pos)
 {
     record_type replaced_record;
     base_class::unsafe_read(replaced_record, pos);
@@ -221,7 +221,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_write
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::write(const record_type& record, const pos_type pos)
+pos_type indexed_table<Table, Record, Index, Key, Interface>::write(const record_type& record, const pos_type pos)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_write(record, pos);
@@ -235,7 +235,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::write(const 
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::write(const record_list& records, const pos_type pos)
+pos_type indexed_table<Table, Record, Index, Key, Interface>::write(const record_list& records, const pos_type pos)
 {
     typename base_class::lock_write lock(*this);
     pos_type num = pos;
@@ -254,7 +254,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::write(const 
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_add(const record_type& record)
+pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_add(const record_type& record)
 {
     const pos_type beg = unsafe_table::beg_pos();
     const pos_type end = unsafe_table::end_pos();
@@ -279,7 +279,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_add(c
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::add(const record_type& record)
+pos_type indexed_table<Table, Record, Index, Key, Interface>::add(const record_type& record)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_add(record);
@@ -292,7 +292,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::add(const re
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::add(const record_list& records)
+pos_type indexed_table<Table, Record, Index, Key, Interface>::add(const record_list& records)
 {
     typename base_class::lock_write lock(*this);
     pos_type pos = unsafe_table::end_pos();
@@ -342,7 +342,7 @@ void indexed_table<Table, Record, Index, Key, Interface>::do_before_move(const p
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const count_type indexed_table<Table, Record, Index, Key, Interface>::remove_by_index(const field_type& beg, const field_type& end)
+count_type indexed_table<Table, Record, Index, Key, Interface>::remove_by_index(const field_type& beg, const field_type& end)
 {
     typename base_class::lock_write lock(*this);
 
@@ -417,7 +417,7 @@ inline void indexed_table<Table, Record, Index, Key, Interface>::remove_index(co
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const
+pos_type indexed_table<Table, Record, Index, Key, Interface>::read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
 
@@ -445,7 +445,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::read_front_b
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const
+pos_type indexed_table<Table, Record, Index, Key, Interface>::read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
 
@@ -510,7 +510,7 @@ void indexed_table<Table, Record, Index, Key, Interface>::do_get_pos_list(pos_li
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const count_type indexed_table<Table, Record, Index, Key, Interface>::read(record_list& records,
+count_type indexed_table<Table, Record, Index, Key, Interface>::read(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -536,7 +536,7 @@ const count_type indexed_table<Table, Record, Index, Key, Interface>::read(recor
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const count_type indexed_table<Table, Record, Index, Key, Interface>::rread(record_list& records,
+count_type indexed_table<Table, Record, Index, Key, Interface>::rread(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     ///@todo why is size here???
@@ -563,7 +563,7 @@ const count_type indexed_table<Table, Record, Index, Key, Interface>::rread(reco
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const count_type indexed_table<Table, Record, Index, Key, Interface>::read_index(pos_list& dest,
+count_type indexed_table<Table, Record, Index, Key, Interface>::read_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -591,7 +591,7 @@ const count_type indexed_table<Table, Record, Index, Key, Interface>::read_index
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const count_type indexed_table<Table, Record, Index, Key, Interface>::rread_index(pos_list& dest,
+count_type indexed_table<Table, Record, Index, Key, Interface>::rread_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -619,7 +619,7 @@ const count_type indexed_table<Table, Record, Index, Key, Interface>::rread_inde
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const count_type indexed_table<Table, Record, Index, Key, Interface>::read_by_index(record_list& records,
+count_type indexed_table<Table, Record, Index, Key, Interface>::read_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -652,7 +652,7 @@ const count_type indexed_table<Table, Record, Index, Key, Interface>::read_by_in
  */
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
-const count_type indexed_table<Table, Record, Index, Key, Interface>::rread_by_index(record_list& records,
+count_type indexed_table<Table, Record, Index, Key, Interface>::rread_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -688,7 +688,7 @@ const count_type indexed_table<Table, Record, Index, Key, Interface>::rread_by_i
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
 template <typename Finder>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::
+pos_type indexed_table<Table, Record, Index, Key, Interface>::
     find_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -719,7 +719,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
 template <typename Finder>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::
+pos_type indexed_table<Table, Record, Index, Key, Interface>::
     rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -753,7 +753,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
 template <typename Finder>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::
+pos_type indexed_table<Table, Record, Index, Key, Interface>::
     find(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -787,7 +787,7 @@ const pos_type indexed_table<Table, Record, Index, Key, Interface>::
 template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
 template <typename Finder>
-const pos_type indexed_table<Table, Record, Index, Key, Interface>::
+pos_type indexed_table<Table, Record, Index, Key, Interface>::
     rfind(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);

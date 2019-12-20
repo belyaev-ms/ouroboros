@@ -107,45 +107,45 @@ public:
     locked_table(source_type& source, skey_type& skey);
     locked_table(source_type& source, skey_type& skey, const guard_type& guard);
 
-    inline const pos_type read(void *data, const pos_type pos) const; ///< read a record
-    inline const pos_type read(void *data, const pos_type beg, const count_type count) const; ///< read records [beg, beg + count)
-    inline const pos_type rread(void *data, const pos_type pos) const; ///< reverse read a record
-    inline const pos_type write(const void *data, const pos_type pos); ///< write a record
-    inline const pos_type write(const void *data, const pos_type beg, const count_type count); ///< write records [beg, beg + count)
-    inline const pos_type rwrite(const void *data, const pos_type pos); ///< reverse write a record
-    inline const pos_type add(const void *data); ///< add a record
-    inline const pos_type add(const void *data, const count_type count); ///< add records
-    inline const pos_type remove(const pos_type pos); ///< delete a record
-    inline const pos_type remove(const pos_type beg, const count_type count); ///< delete records [beg, beg + count)
-    inline const count_type remove_back(const count_type count); ///< delete records from the back
-    inline const pos_type read_front(void *data) const; ///< read the first record
-    inline const pos_type read_back(void *data) const; ///< read the last record
-    inline const pos_type find(const void *data, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
-    inline const pos_type rfind(const void *data, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
+    inline pos_type read(void *data, const pos_type pos) const; ///< read a record
+    inline pos_type read(void *data, const pos_type beg, const count_type count) const; ///< read records [beg, beg + count)
+    inline pos_type rread(void *data, const pos_type pos) const; ///< reverse read a record
+    inline pos_type write(const void *data, const pos_type pos); ///< write a record
+    inline pos_type write(const void *data, const pos_type beg, const count_type count); ///< write records [beg, beg + count)
+    inline pos_type rwrite(const void *data, const pos_type pos); ///< reverse write a record
+    inline pos_type add(const void *data); ///< add a record
+    inline pos_type add(const void *data, const count_type count); ///< add records
+    inline pos_type remove(const pos_type pos); ///< delete a record
+    inline pos_type remove(const pos_type beg, const count_type count); ///< delete records [beg, beg + count)
+    inline count_type remove_back(const count_type count); ///< delete records from the back
+    inline pos_type read_front(void *data) const; ///< read the first record
+    inline pos_type read_back(void *data) const; ///< read the last record
+    inline pos_type find(const void *data, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
+    inline pos_type rfind(const void *data, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
 
-    inline const pos_type beg_pos() const; ///< get the begin position of records
+    inline pos_type beg_pos() const; ///< get the begin position of records
     inline void set_beg_pos(const pos_type pos); ///< set the begin position of records
-    inline const pos_type inc_beg_pos(const count_type count = 1); ///< increment the begin position of records
-    inline const pos_type dec_beg_pos(const count_type count = 1); ///< decrement the begin position of records
-    inline const pos_type end_pos() const; ///< get the end position of records
+    inline pos_type inc_beg_pos(const count_type count = 1); ///< increment the begin position of records
+    inline pos_type dec_beg_pos(const count_type count = 1); ///< decrement the begin position of records
+    inline pos_type end_pos() const; ///< get the end position of records
     inline void set_end_pos(const pos_type pos); ///< set the end position of records
-    inline const pos_type inc_end_pos(const count_type count = 1); ///< increment the end position of records
-    inline const pos_type dec_end_pos(const count_type count = 1); ///< decrement the end position of records
-    inline const count_type distance(const pos_type beg, const pos_type end) const; ///< calculate the count of pages in the range [beg, end)
-    inline const pos_type front_pos() const; ///< get the position of the first record
-    inline const pos_type back_pos() const; ///< get the position of the last record
+    inline pos_type inc_end_pos(const count_type count = 1); ///< increment the end position of records
+    inline pos_type dec_end_pos(const count_type count = 1); ///< decrement the end position of records
+    inline count_type distance(const pos_type beg, const pos_type end) const; ///< calculate the count of pages in the range [beg, end)
+    inline pos_type front_pos() const; ///< get the position of the first record
+    inline pos_type back_pos() const; ///< get the position of the last record
 
-    inline const count_type count() const; ///< get the count of records
+    inline count_type count() const; ///< get the count of records
     inline void set_count(const count_type count); ///< set the count of records
-    inline const bool empty() const; ///< check the table is empty
+    inline bool empty() const; ///< check the table is empty
 
     inline void clear(); ///< clear the table
 
-    inline const revision_type revision() const; ///< get the revision of modifying the table
+    inline revision_type revision() const; ///< get the revision of modifying the table
     inline void set_revision(const revision_type rev); ///< set the revision of modifying the table
-    inline const revision_type inc_revision(); ///< increment the revision of modifying the table
-    inline const bool relevant() const; ///< check the table is relevant
-    inline const bool refresh(); ///< refresh the metadata of the table by the key
+    inline revision_type inc_revision(); ///< increment the revision of modifying the table
+    inline bool relevant() const; ///< check the table is relevant
+    inline bool refresh(); ///< refresh the metadata of the table by the key
     inline void update(); ///< update the key by the metadata of the table
     inline void recovery(); ///< recovery the metadata of the table by the key
 
@@ -154,8 +154,8 @@ public:
     inline void lock_scoped() const; ///< lock the table for writing
     inline void unlock_scoped() const; ///< unlock the table for writing
 
-    inline const count_type sharable_count() const; ///< get the count of the reading lock
-    inline const count_type scoped_count() const; ///< get the count of the writing lock
+    inline count_type sharable_count() const; ///< get the count of the reading lock
+    inline count_type scoped_count() const; ///< get the count of the writing lock
 
     inline void start();  ///< start the transaction
     inline void stop();   ///< stop the transaction
@@ -503,7 +503,7 @@ locked_table<Table, Source, Key, Interface, Locker>::locked_table(source_type& s
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::read(void *data, const pos_type pos) const
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read(void *data, const pos_type pos) const
 {
     lock_read lock(*this);
     return base_class::read(data, pos);
@@ -517,7 +517,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::read(
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-const pos_type locked_table<Table, Source, Key, Interface, Locker>::read(void *data, const pos_type beg, const count_type count) const
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read(void *data, const pos_type beg, const count_type count) const
 {
     lock_read lock(*this);
     return base_class::read(data, beg, count);
@@ -530,7 +530,7 @@ const pos_type locked_table<Table, Source, Key, Interface, Locker>::read(void *d
  * @return the position of the previous record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::rread(void *data, const pos_type pos) const
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::rread(void *data, const pos_type pos) const
 {
     lock_read lock(*this);
     return base_class::rread(data, pos);
@@ -543,7 +543,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::rread
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::write(const void *data, const pos_type pos)
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::write(const void *data, const pos_type pos)
 {
     lock_write lock(*this);
     return base_class::write(data, pos);
@@ -557,7 +557,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::write
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::write(const void *data, const pos_type beg, const count_type count)
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::write(const void *data, const pos_type beg, const count_type count)
 {
     lock_write lock(*this);
     return base_class::write(data, beg, count);
@@ -570,7 +570,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::write
  * @return the position of the previous record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::rwrite(const void *data, const pos_type pos)
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::rwrite(const void *data, const pos_type pos)
 {
     lock_write lock(*this);
     return base_class::rwrite(data, pos);
@@ -582,7 +582,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::rwrit
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::add(const void *data)
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::add(const void *data)
 {
     lock_write lock(*this);
     return base_class::add(data);
@@ -595,7 +595,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::add(c
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::add(const void *data, const count_type count)
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::add(const void *data, const count_type count)
 {
     lock_write lock(*this);
     return base_class::add(data, count);
@@ -607,7 +607,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::add(c
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const count_type locked_table<Table, Source, Key, Interface, Locker>::remove(const pos_type pos)
+inline count_type locked_table<Table, Source, Key, Interface, Locker>::remove(const pos_type pos)
 {
     lock_write lock(*this);
     return base_class::remove(pos);
@@ -620,7 +620,7 @@ inline const count_type locked_table<Table, Source, Key, Interface, Locker>::rem
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const count_type locked_table<Table, Source, Key, Interface, Locker>::remove(const pos_type beg, const count_type count)
+inline count_type locked_table<Table, Source, Key, Interface, Locker>::remove(const pos_type beg, const count_type count)
 {
     lock_write lock(*this);
     return base_class::remove(beg, count);
@@ -632,7 +632,7 @@ inline const count_type locked_table<Table, Source, Key, Interface, Locker>::rem
  * @return the count of remaining records
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const count_type locked_table<Table, Source, Key, Interface, Locker>::remove_back(const count_type count)
+inline count_type locked_table<Table, Source, Key, Interface, Locker>::remove_back(const count_type count)
 {
     lock_write lock(*this);
     return base_class::remove_back(count);
@@ -644,7 +644,7 @@ inline const count_type locked_table<Table, Source, Key, Interface, Locker>::rem
  * @return the position of the first record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::read_front(void* data) const
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_front(void* data) const
 {
     lock_read lock(*this);
     return base_class::read_front(data);
@@ -656,7 +656,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::read_
  * @return the position of the last record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::read_back(void* data) const
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_back(void* data) const
 {
     lock_read lock(*this);
     return base_class::read_back(data);
@@ -670,7 +670,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::read_
  * @return the position of the found record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::find(const void *data, const pos_type beg, const count_type count) const
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::find(const void *data, const pos_type beg, const count_type count) const
 {
     lock_read lock(*this);
     return base_class::find(data, beg, count);
@@ -684,7 +684,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::find(
  * @return the position of the found record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::rfind(const void *data, const pos_type end, const count_type count) const
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::rfind(const void *data, const pos_type end, const count_type count) const
 {
     lock_read lock(*this);
     return base_class::rfind(data, end, count);
@@ -695,7 +695,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::rfind
  * @return the begin position of records
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::beg_pos() const
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::beg_pos() const
 {
     lock_read lock(*this);
     return base_class::beg_pos();
@@ -718,7 +718,7 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::set_beg_pos(con
  * @return new begin position of records
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::inc_beg_pos(const count_type count)
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::inc_beg_pos(const count_type count)
 {
     lock_write lock(*this);
     return base_class::inc_beg_pos(count);
@@ -730,7 +730,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::inc_b
  * @return new begin position of records
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::dec_beg_pos(const count_type count)
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::dec_beg_pos(const count_type count)
 {
     lock_write lock(*this);
     return base_class::dec_beg_pos(count);
@@ -741,7 +741,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::dec_b
  * @return the end position of records
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::end_pos() const
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::end_pos() const
 {
     lock_read lock(*this);
     return base_class::end_pos();
@@ -764,7 +764,7 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::set_end_pos(con
  * @return new end position of records
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::inc_end_pos(const count_type count)
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::inc_end_pos(const count_type count)
 {
     lock_write lock(*this);
     return base_class::inc_end_pos(count);
@@ -776,7 +776,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::inc_e
  * @return new end position of records
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::dec_end_pos(const count_type count)
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::dec_end_pos(const count_type count)
 {
     lock_write lock(*this);
     return base_class::dec_end_pos(count);
@@ -789,7 +789,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::dec_e
  * @return the count of pages in the range
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const count_type locked_table<Table, Source, Key, Interface, Locker>::distance(const pos_type beg, const pos_type end) const
+inline count_type locked_table<Table, Source, Key, Interface, Locker>::distance(const pos_type beg, const pos_type end) const
 {
     lock_read lock(*this);
     return base_class::distance(beg, end);
@@ -800,7 +800,7 @@ inline const count_type locked_table<Table, Source, Key, Interface, Locker>::dis
  * @return the count of records
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const count_type locked_table<Table, Source, Key, Interface, Locker>::count() const
+inline count_type locked_table<Table, Source, Key, Interface, Locker>::count() const
 {
     lock_read lock(*this);
     return base_class::count();
@@ -822,7 +822,7 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::set_count(const
  * @return the result of the checking
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const bool locked_table<Table, Source, Key, Interface, Locker>::empty() const
+inline bool locked_table<Table, Source, Key, Interface, Locker>::empty() const
 {
     lock_read lock(*this);
     return base_class::empty();
@@ -833,7 +833,7 @@ inline const bool locked_table<Table, Source, Key, Interface, Locker>::empty() c
  * @return the position of the first record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::front_pos() const
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::front_pos() const
 {
     lock_read lock(*this);
     return base_class::front_pos();
@@ -844,7 +844,7 @@ inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::front
  * @return the position of the last record
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const pos_type locked_table<Table, Source, Key, Interface, Locker>::back_pos() const
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::back_pos() const
 {
     lock_read lock(*this);
     return base_class::back_pos();
@@ -912,7 +912,7 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::unlock_scoped()
  * @return the count of the reading lock
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const count_type locked_table<Table, Source, Key, Interface, Locker>::sharable_count() const
+inline count_type locked_table<Table, Source, Key, Interface, Locker>::sharable_count() const
 {
     return m_sharable_count;
 }
@@ -922,7 +922,7 @@ inline const count_type locked_table<Table, Source, Key, Interface, Locker>::sha
  * @return the count of the writing lock
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const count_type locked_table<Table, Source, Key, Interface, Locker>::scoped_count() const
+inline count_type locked_table<Table, Source, Key, Interface, Locker>::scoped_count() const
 {
     return m_scoped_count;
 }
@@ -932,7 +932,7 @@ inline const count_type locked_table<Table, Source, Key, Interface, Locker>::sco
  * @return the revision of modifying the table
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const revision_type locked_table<Table, Source, Key, Interface, Locker>::revision() const
+inline revision_type locked_table<Table, Source, Key, Interface, Locker>::revision() const
 {
     lock_read lock(*this);
     return base_class::revision();
@@ -954,7 +954,7 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::set_revision(co
  * @return new revision of modifying the table
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const revision_type locked_table<Table, Source, Key, Interface, Locker>::inc_revision()
+inline revision_type locked_table<Table, Source, Key, Interface, Locker>::inc_revision()
 {
     lock_write lock(*this);
     return base_class::inc_revision();
@@ -965,7 +965,7 @@ inline const revision_type locked_table<Table, Source, Key, Interface, Locker>::
  * @return the result of the checking
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const bool locked_table<Table, Source, Key, Interface, Locker>::relevant() const
+inline bool locked_table<Table, Source, Key, Interface, Locker>::relevant() const
 {
     lock_read lock(*this);
     return base_class::relevant();
@@ -976,7 +976,7 @@ inline const bool locked_table<Table, Source, Key, Interface, Locker>::relevant(
  * @return the result of the checking
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline const bool locked_table<Table, Source, Key, Interface, Locker>::refresh()
+inline bool locked_table<Table, Source, Key, Interface, Locker>::refresh()
 {
     lock_read lock(*this);
     return base_class::refresh();

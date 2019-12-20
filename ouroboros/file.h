@@ -40,29 +40,29 @@ public:
     virtual ~base_file();
 
     const std::string& name() const; ///< get the name of the file
-    const bool init(); ///< ititialize
+    bool init(); ///< ititialize
     void read(void *buffer, size_type size, const pos_type pos) const; ///< read data
     void write(const void *buffer, size_type size, const pos_type pos); ///< write data
-    const size_type resize(const size_type size); ///< change the size of the file
-    const size_type sizeup(const size_type size); ///< size up the file
-    const size_type size() const; ///< get the size of the file
+    size_type resize(const size_type size); ///< change the size of the file
+    size_type sizeup(const size_type size); ///< size up the file
+    size_type size() const; ///< get the size of the file
     void refresh(size_type size, const pos_type pos); ///< refresh data
     void flush() const; ///< forced synchronization data of the file
 
     void start();  ///< start the transaction
     void stop();   ///< stop the transaction
     void cancel(); ///< cancel the transaction
-    const transaction_state state() const; ///< get the state of the transaction
+    transaction_state state() const; ///< get the state of the transaction
 
     static void remove(const std::string& name); ///< remove a file by the name
 protected:
     virtual void do_read(void *buffer, size_type size, const pos_type pos) const; ///< read data
     virtual void do_write(const void *buffer, size_type size, const pos_type pos); ///< write data
-    virtual const size_type do_resize(const size_type size); ///< change the size of the file
-    virtual const size_type do_sizeup(const size_type size); ///< size up the file
-    virtual const size_type do_size() const; ///< get the size of the file
+    virtual size_type do_resize(const size_type size); ///< change the size of the file
+    virtual size_type do_sizeup(const size_type size); ///< size up the file
+    virtual size_type do_size() const; ///< get the size of the file
     virtual void do_refresh(size_type size, const pos_type pos); ///< refresh data
-    const int fd() const; ///< get the file descriptor
+    int fd() const; ///< get the file descriptor
 private:
     const std::string m_name; ///< the file name
     const int m_fd; ///< the file descriptor
@@ -83,12 +83,12 @@ public:
     void set_region(const file_region_type& region); ///< the region of the file
     void read(void *buffer, size_type size, const pos_type pos) const; ///< read data
     void write(const void *buffer, size_type size, const pos_type pos); ///< write data
-    const size_type resize(const size_type size); ///< change the size of the file
-    const size_type sizeup(const size_type size); ///< size up the file
+    size_type resize(const size_type size); ///< change the size of the file
+    size_type sizeup(const size_type size); ///< size up the file
     void refresh(size_type size, const pos_type pos); ///< refresh data
 protected:
-    inline const offset_type convert_offset(const offset_type raw_offset) const; ///< convert the raw offset to the real offset in the file
-    inline const size_type convert_size(const offset_type raw_size) const; ///< convert the raw size to the real size in the file
+    inline offset_type convert_offset(const offset_type raw_offset) const; ///< convert the raw offset to the real offset in the file
+    inline size_type convert_size(const offset_type raw_size) const; ///< convert the raw size to the real size in the file
 private:
     const file_region_type *m_region; ///< the file region
 };
@@ -133,7 +133,7 @@ void file<FilePage>::set_region(const file_region_type& region)
  * @return the real offset in the file
  */
 template <typename FilePage>
-inline const offset_type file<FilePage>::convert_offset(const offset_type raw_offset) const
+inline offset_type file<FilePage>::convert_offset(const offset_type raw_offset) const
 {
     return NULL == m_region ? raw_offset : m_region->convert_offset(raw_offset);
 }
@@ -144,7 +144,7 @@ inline const offset_type file<FilePage>::convert_offset(const offset_type raw_of
  * @return the real size in the file
  */
 template <typename FilePage>
-inline const size_type file<FilePage>::convert_size(const size_type raw_size) const
+inline size_type file<FilePage>::convert_size(const size_type raw_size) const
 {
     return NULL == m_region ? raw_size : m_region->convert_size(raw_size);
 }
@@ -178,7 +178,7 @@ void file<FilePage>::write(const void *buffer, size_type size, const pos_type po
  * @param size the size of the base_file
  */
 template <typename FilePage>
-const size_type file<FilePage>::resize(const size_type size)
+size_type file<FilePage>::resize(const size_type size)
 {
     return do_resize(convert_size(size));
 }
@@ -189,7 +189,7 @@ const size_type file<FilePage>::resize(const size_type size)
  * @return the size of the file
  */
 template <typename FilePage>
-const size_type file<FilePage>::sizeup(const size_type size)
+size_type file<FilePage>::sizeup(const size_type size)
 {
     return do_sizeup(convert_size(size));
 }

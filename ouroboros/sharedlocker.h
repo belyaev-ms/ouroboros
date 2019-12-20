@@ -1,4 +1,4 @@
-/** 
+/**
  * @file   sharedlocker.h
  * The classes for interprocess locking data
  */
@@ -35,12 +35,12 @@ class base_mutex_lock
 public:
     inline base_mutex_lock(const std::string& name);
 
-    inline const bool lock(); ///< set the exclusive lock
-    inline const bool lock(const size_t timeout); ///< set the exclusive lock with a timeout
-    inline const bool unlock(); ///< remove the exclusive lock
-    inline const bool lock_sharable(); ///< set the shared lock
-    inline const bool lock_sharable(const size_t timeout); ///< set the shared lock with a timeout
-    inline const bool unlock_sharable(); ///< remove the shared lock
+    inline bool lock(); ///< set the exclusive lock
+    inline bool lock(const size_t timeout); ///< set the exclusive lock with a timeout
+    inline bool unlock(); ///< remove the exclusive lock
+    inline bool lock_sharable(); ///< set the shared lock
+    inline bool lock_sharable(const size_t timeout); ///< set the shared lock with a timeout
+    inline bool unlock_sharable(); ///< remove the shared lock
     inline const char* name() const; ///< get the name of the locker
 private:
     enum lock_state
@@ -94,7 +94,7 @@ inline base_mutex_lock<TMutex>::base_mutex_lock(const std::string& name) :
  * @return the result of the setting
  */
 template <typename TMutex>
-inline const bool base_mutex_lock<TMutex>::lock()
+inline bool base_mutex_lock<TMutex>::lock()
 {
     return lock(OUROBOROS_LOCK_TIMEOUT);
 }
@@ -105,7 +105,7 @@ inline const bool base_mutex_lock<TMutex>::lock()
  * @return the result of the setting
  */
 template <typename TMutex>
-inline const bool base_mutex_lock<TMutex>::lock(const size_t timeout)
+inline bool base_mutex_lock<TMutex>::lock(const size_t timeout)
 {
     assert(LS_NONE == m_locked);
     m_locked = m_lock->timed_lock(boost::get_system_time() + boost::posix_time::millisec(timeout)) ? LS_SCOPED : LS_NONE;
@@ -117,7 +117,7 @@ inline const bool base_mutex_lock<TMutex>::lock(const size_t timeout)
  * @return the result of the removing
  */
 template <typename TMutex>
-inline const bool base_mutex_lock<TMutex>::unlock()
+inline bool base_mutex_lock<TMutex>::unlock()
 {
     assert(LS_SCOPED == m_locked);
     m_lock->unlock();
@@ -130,7 +130,7 @@ inline const bool base_mutex_lock<TMutex>::unlock()
  * @return the result
  */
 template <typename TMutex>
-inline const bool base_mutex_lock<TMutex>::lock_sharable()
+inline bool base_mutex_lock<TMutex>::lock_sharable()
 {
     return lock_sharable(OUROBOROS_LOCK_TIMEOUT);
 }
@@ -141,7 +141,7 @@ inline const bool base_mutex_lock<TMutex>::lock_sharable()
  * @return the result
  */
 template <typename TMutex>
-inline const bool base_mutex_lock<TMutex>::lock_sharable(const size_t timeout)
+inline bool base_mutex_lock<TMutex>::lock_sharable(const size_t timeout)
 {
     assert(LS_NONE == m_locked);
     m_locked = m_lock->timed_lock_sharable(boost::get_system_time() + boost::posix_time::millisec(timeout)) ? LS_SHARABLE : LS_NONE;
@@ -153,7 +153,7 @@ inline const bool base_mutex_lock<TMutex>::lock_sharable(const size_t timeout)
  * @return the result
  */
 template <typename TMutex>
-inline const bool base_mutex_lock<TMutex>::unlock_sharable()
+inline bool base_mutex_lock<TMutex>::unlock_sharable()
 {
     assert(LS_SHARABLE == m_locked);
     m_lock->unlock_sharable();

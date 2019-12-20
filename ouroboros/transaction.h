@@ -23,8 +23,8 @@ namespace ouroboros
 class base_global_locker
 {
 public:
-    static const count_type sharable_count(); ///< get the count of the locks for read data
-    static const count_type scoped_count(); ///< get the count of the locks for write data
+    static count_type sharable_count(); ///< get the count of the locks for read data
+    static count_type scoped_count(); ///< get the count of the locks for write data
 protected:
     inline base_global_locker() {}
 private:
@@ -63,9 +63,9 @@ public:
     explicit global_lock(const size_t timeout);
     ~global_lock();
 
-    static const bool lock(); ///< set the global lock
-    static const bool lock(const size_t timeout); ///< set the global lock with a timeout
-    static const bool unlock(); ///< remove the global lock
+    static bool lock(); ///< set the global lock
+    static bool lock(const size_t timeout); ///< set the global lock with a timeout
+    static bool unlock(); ///< remove the global lock
 };
 
 /**
@@ -81,9 +81,9 @@ public:
     explicit global_lazy_lock(const size_t timeout);
     ~global_lazy_lock();
 
-    static const bool lock(); ///< set the global lazy lock
-    static const bool lock(const size_t timeout); ///< set the global lazy lock with a timeout
-    static const bool unlock(); ///< remove the global lazy lock
+    static bool lock(); ///< set the global lazy lock
+    static bool lock(const size_t timeout); ///< set the global lazy lock with a timeout
+    static bool unlock(); ///< remove the global lazy lock
 };
 
 /**
@@ -99,7 +99,7 @@ public:
     virtual void start(); ///< start the transaction
     virtual void stop(); ///< stop the transaction
     virtual void cancel(); ///< cancel the transaction
-    const bool enabled() const; ///< check the transaction is enabled
+    bool enabled() const; ///< check the transaction is enabled
 private:
     base_transaction(const base_transaction& );
     base_transaction& operator= (const base_transaction& );
@@ -120,7 +120,7 @@ public:
 protected:
     inline void lock(); ///< lock the transaction
     inline void unlock(); ///< unlock the transaction
-    inline const bool locked() const; ///< check the the transaction is locked
+    inline bool locked() const; ///< check the the transaction is locked
 private:
     bool m_lock;
 };
@@ -294,7 +294,7 @@ global_lock<Interface>::~global_lock()
  */
 //static
 template <typename Interface>
-const bool global_lock<Interface>::lock()
+bool global_lock<Interface>::lock()
 {
     return locker_type::instance().lock();
 }
@@ -306,7 +306,7 @@ const bool global_lock<Interface>::lock()
  */
 //static
 template <typename Interface>
-const bool global_lock<Interface>::lock(const size_t timeout)
+bool global_lock<Interface>::lock(const size_t timeout)
 {
     return locker_type::instance().lock(timeout);
 }
@@ -316,7 +316,7 @@ const bool global_lock<Interface>::lock(const size_t timeout)
  */
 //static
 template <typename Interface>
-const bool global_lock<Interface>::unlock()
+bool global_lock<Interface>::unlock()
 {
     return locker_type::instance().unlock();
 }
@@ -358,7 +358,7 @@ global_lazy_lock<Interface>::~global_lazy_lock()
  */
 //static
 template <typename Interface>
-const bool global_lazy_lock<Interface>::lock()
+bool global_lazy_lock<Interface>::lock()
 {
     return locker_type::instance().lock_sharable();
 }
@@ -370,7 +370,7 @@ const bool global_lazy_lock<Interface>::lock()
  */
 //static
 template <typename Interface>
-const bool global_lazy_lock<Interface>::lock(const size_t timeout)
+bool global_lazy_lock<Interface>::lock(const size_t timeout)
 {
     return locker_type::instance().lock_sharable(timeout);
 }
@@ -381,7 +381,7 @@ const bool global_lazy_lock<Interface>::lock(const size_t timeout)
  */
 //static
 template <typename Interface>
-const bool global_lazy_lock<Interface>::unlock()
+bool global_lazy_lock<Interface>::unlock()
 {
     return locker_type::instance().unlock_sharable();
 }
@@ -440,7 +440,7 @@ inline void locked_transaction<Lock>::unlock()
  * @return the result of the checking
  */
 template <typename Lock>
-inline const bool locked_transaction<Lock>::locked() const
+inline bool locked_transaction<Lock>::locked() const
 {
     return m_lock;
 }

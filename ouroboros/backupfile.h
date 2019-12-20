@@ -39,7 +39,7 @@ public:
 
     static void remove(const std::string& name); ///< remove a file by the name
 protected:
-    virtual const size_type do_resize(const size_type size); ///< change the size of the file
+    virtual size_type do_resize(const size_type size); ///< change the size of the file
     virtual void *get_page(const pos_type index); ///< get the buffer of the cache page
     virtual void *get_page(const pos_type index) const; ///< get the buffer of the cache page
     void add_index(const pos_type index, void *page); ///< add the index of the page to the backup set
@@ -113,7 +113,7 @@ backup_file<FilePage, pageCount, File, Cache>::backup_file(const std::string& na
 //virtual
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-const size_type backup_file<FilePage, pageCount, File, Cache>::do_resize(const size_type size)
+size_type backup_file<FilePage, pageCount, File, Cache>::do_resize(const size_type size)
 {
     return m_backup.resize(base_class::do_resize(size));
 }

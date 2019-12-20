@@ -51,7 +51,7 @@ public:
     void start();  ///< start the transaction
     void stop();   ///< stop the transaction
     void cancel(); ///< cancel the transaction
-    const transaction_state state() const; ///< get the state of the transaction
+    transaction_state state() const; ///< get the state of the transaction
     void reset(); ///< reset the cache
 
     virtual void save_page(const pos_type index, void *data); ///< save data of the cache page
@@ -262,7 +262,7 @@ void cache_file<FilePage, pageCount, File, Cache>::cancel()
  */
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-inline const transaction_state cache_file<FilePage, pageCount, File, Cache>::state() const
+inline transaction_state cache_file<FilePage, pageCount, File, Cache>::state() const
 {
     return m_trans;
 }

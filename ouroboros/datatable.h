@@ -81,62 +81,62 @@ public:
     cursor begin(); ///< get the begin writing cursor
     cursor end(); ///< get the end writing cursor
 
-    const pos_type read(record_type& record, const pos_type pos) const; ///< read a record
-    const pos_type read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
-    const pos_type rread(record_type& record, const pos_type pos) const; ///< reverse read a record
-    const pos_type write(const record_type& record, const pos_type pos); ///< write a record
-    const pos_type write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
-    const pos_type rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
-    const pos_type add(const record_type& record); ///< add a record
-    const pos_type add(const record_list& records); ///< add records
-    const pos_type read_front(record_type& record) const; ///< read the first record
-    const pos_type read_back(record_type& record) const; ///< read the last record
-    const pos_type find(const record_type& record, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
-    inline const pos_type rfind(const record_type& record, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
+    pos_type read(record_type& record, const pos_type pos) const; ///< read a record
+    pos_type read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
+    pos_type rread(record_type& record, const pos_type pos) const; ///< reverse read a record
+    pos_type write(const record_type& record, const pos_type pos); ///< write a record
+    pos_type write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
+    pos_type rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
+    pos_type add(const record_type& record); ///< add a record
+    pos_type add(const record_list& records); ///< add records
+    pos_type read_front(record_type& record) const; ///< read the first record
+    pos_type read_back(record_type& record) const; ///< read the last record
+    pos_type find(const record_type& record, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
+    inline pos_type rfind(const record_type& record, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
     template <typename Finder>
-    const pos_type find(Finder& finder, const pos_type beg, const count_type count) const; ///< find a record [beg, end)
+    pos_type find(Finder& finder, const pos_type beg, const count_type count) const; ///< find a record [beg, end)
     template <typename Finder>
-    const pos_type rfind(Finder& finder, const pos_type end, const count_type count) const; ///< reverse find a record [beg, end)
+    pos_type rfind(Finder& finder, const pos_type end, const count_type count) const; ///< reverse find a record [beg, end)
 protected:
     template <typename T>
-    inline const pos_type do_read(record_type& record, const pos_type pos) const; ///< read a record
+    inline pos_type do_read(record_type& record, const pos_type pos) const; ///< read a record
     template <typename T>
-    inline const pos_type do_read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
+    inline pos_type do_read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
     template <typename T>
-    inline const pos_type do_rread(record_type& record, const pos_type pos) const; ///< reverse read a record
+    inline pos_type do_rread(record_type& record, const pos_type pos) const; ///< reverse read a record
     template <typename T>
-    inline const pos_type do_write(const record_type& record, const pos_type pos); ///< write a record
+    inline pos_type do_write(const record_type& record, const pos_type pos); ///< write a record
     template <typename T>
-    inline const pos_type do_write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
+    inline pos_type do_write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
     template <typename T>
-    inline const pos_type do_rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
+    inline pos_type do_rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
     template <typename T>
-    inline const pos_type do_add(const record_type& record); ///< add a record
+    inline pos_type do_add(const record_type& record); ///< add a record
     template <typename T>
-    inline const pos_type do_add(const record_list& records); ///< add records
+    inline pos_type do_add(const record_list& records); ///< add records
     /* the methods don't use any locking */
-    const pos_type unsafe_read(record_type& record, const pos_type pos) const; ///< read a record
-    const pos_type unsafe_read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
-    const pos_type unsafe_rread(record_type& record, const pos_type pos) const; ///< reverse read a record
-    const pos_type unsafe_write(const record_type& record, const pos_type pos); ///< write a record
-    const pos_type unsafe_write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
-    const pos_type unsafe_rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
-    const pos_type unsafe_add(const record_type& record); ///< add a record
-    const pos_type unsafe_add(const record_list& records); ///< add records
+    pos_type unsafe_read(record_type& record, const pos_type pos) const; ///< read a record
+    pos_type unsafe_read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
+    pos_type unsafe_rread(record_type& record, const pos_type pos) const; ///< reverse read a record
+    pos_type unsafe_write(const record_type& record, const pos_type pos); ///< write a record
+    pos_type unsafe_write(const record_list& records, const pos_type pos); ///< write records [pos, pos + count)
+    pos_type unsafe_rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
+    pos_type unsafe_add(const record_type& record); ///< add a record
+    pos_type unsafe_add(const record_list& records); ///< add records
 protected:
     /** hide the parents methods */
-    const pos_type read(void *data, const pos_type pos) const; ///< read a record
-    const pos_type read(void *data, const pos_type beg, const count_type count) const; ///< read records [beg, beg + count)
-    const pos_type rread(void *data, const pos_type pos) const; ///< reverse read a record
-    const pos_type write(const void *data, const pos_type pos); ///< write a record
-    const pos_type write(const void *data, const pos_type beg, const count_type count); ///< write records [beg, beg + count)
-    const pos_type rwrite(const void *data, const pos_type pos); ///< reverse write a record
-    const pos_type add(const void *data); ///< add a record
-    const pos_type add(const void *data, const count_type count); ///< add records
-    const pos_type read_front(void *data) const; ///< read the first record
-    const pos_type read_back(void *data) const; ///< read the last record
-    const pos_type find(const void *data, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
-    const pos_type rfind(const void *data, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
+    pos_type read(void *data, const pos_type pos) const; ///< read a record
+    pos_type read(void *data, const pos_type beg, const count_type count) const; ///< read records [beg, beg + count)
+    pos_type rread(void *data, const pos_type pos) const; ///< reverse read a record
+    pos_type write(const void *data, const pos_type pos); ///< write a record
+    pos_type write(const void *data, const pos_type beg, const count_type count); ///< write records [beg, beg + count)
+    pos_type rwrite(const void *data, const pos_type pos); ///< reverse write a record
+    pos_type add(const void *data); ///< add a record
+    pos_type add(const void *data, const count_type count); ///< add records
+    pos_type read_front(void *data) const; ///< read the first record
+    pos_type read_back(void *data) const; ///< read the last record
+    pos_type find(const void *data, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
+    pos_type rfind(const void *data, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
 private:
     scoped_buffer<void> m_buffer; ///< the buffer for a record
 };
@@ -315,7 +315,7 @@ typename data_table<Table, Record, Key, Interface>::cursor
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::read(record_type& record, const pos_type pos) const
+pos_type data_table<Table, Record, Key, Interface>::read(record_type& record, const pos_type pos) const
 {
     return do_read<base_class>(record, pos);
 }
@@ -327,7 +327,7 @@ const pos_type data_table<Table, Record, Key, Interface>::read(record_type& reco
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::read(record_list& records, const pos_type pos) const
+pos_type data_table<Table, Record, Key, Interface>::read(record_list& records, const pos_type pos) const
 {
     return do_read<base_class>(records, pos);
 }
@@ -339,7 +339,7 @@ const pos_type data_table<Table, Record, Key, Interface>::read(record_list& reco
  * @return the position of the previous record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::rread(record_type& record, const pos_type pos) const
+pos_type data_table<Table, Record, Key, Interface>::rread(record_type& record, const pos_type pos) const
 {
     return do_rread<base_class>(record, pos);
 }
@@ -351,7 +351,7 @@ const pos_type data_table<Table, Record, Key, Interface>::rread(record_type& rec
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::write(const record_type& record, const pos_type pos)
+pos_type data_table<Table, Record, Key, Interface>::write(const record_type& record, const pos_type pos)
 {
     return do_write<base_class>(record, pos);
 }
@@ -363,7 +363,7 @@ const pos_type data_table<Table, Record, Key, Interface>::write(const record_typ
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::write(const record_list& records, const pos_type pos)
+pos_type data_table<Table, Record, Key, Interface>::write(const record_list& records, const pos_type pos)
 {
     return do_write<base_class>(records, pos);
 }
@@ -375,7 +375,7 @@ const pos_type data_table<Table, Record, Key, Interface>::write(const record_lis
  * @return the position of the previous record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::rwrite(const record_type& record, const pos_type pos)
+pos_type data_table<Table, Record, Key, Interface>::rwrite(const record_type& record, const pos_type pos)
 {
     return do_rwrite<base_class>(record, pos);
 }
@@ -386,7 +386,7 @@ const pos_type data_table<Table, Record, Key, Interface>::rwrite(const record_ty
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::add(const record_type& record)
+pos_type data_table<Table, Record, Key, Interface>::add(const record_type& record)
 {
     return do_add<base_class>(record);
 }
@@ -397,7 +397,7 @@ const pos_type data_table<Table, Record, Key, Interface>::add(const record_type&
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::add(const record_list& records)
+pos_type data_table<Table, Record, Key, Interface>::add(const record_list& records)
 {
     return do_add<base_class>(records);
 }
@@ -408,7 +408,7 @@ const pos_type data_table<Table, Record, Key, Interface>::add(const record_list&
  * @return the position of the first record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::read_front(record_type& record) const
+pos_type data_table<Table, Record, Key, Interface>::read_front(record_type& record) const
 {
     const pos_type pos = base_class::read_front(m_buffer.get());
     if (pos != NIL)
@@ -424,7 +424,7 @@ const pos_type data_table<Table, Record, Key, Interface>::read_front(record_type
  * @return the position of the last record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::read_back(record_type& record) const
+pos_type data_table<Table, Record, Key, Interface>::read_back(record_type& record) const
 {
     const pos_type pos = base_class::read_back(m_buffer.get());
     if (pos != NIL)
@@ -442,7 +442,7 @@ const pos_type data_table<Table, Record, Key, Interface>::read_back(record_type&
  * @return the position of the found record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::find(const record_type& record, const pos_type beg, const count_type count) const
+pos_type data_table<Table, Record, Key, Interface>::find(const record_type& record, const pos_type beg, const count_type count) const
 {
     record.pack(m_buffer.get());
     return base_class::find(m_buffer.get(), beg, count);
@@ -456,7 +456,7 @@ const pos_type data_table<Table, Record, Key, Interface>::find(const record_type
  * @return the position of the found record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::rfind(const record_type& record, const pos_type end, const count_type count) const
+pos_type data_table<Table, Record, Key, Interface>::rfind(const record_type& record, const pos_type end, const count_type count) const
 {
     record.pack(m_buffer.get());
     return base_class::rfind(m_buffer.get(), end, count);
@@ -471,7 +471,7 @@ const pos_type data_table<Table, Record, Key, Interface>::rfind(const record_typ
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 template <typename Finder>
-const pos_type data_table<Table, Record, Key, Interface>::find(Finder& finder, const pos_type beg, const count_type count) const
+pos_type data_table<Table, Record, Key, Interface>::find(Finder& finder, const pos_type beg, const count_type count) const
 {
     typename base_class::lock_read lock(*this);
     if (!unsafe_table::empty())
@@ -500,7 +500,7 @@ const pos_type data_table<Table, Record, Key, Interface>::find(Finder& finder, c
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 template <typename Finder>
-const pos_type data_table<Table, Record, Key, Interface>::rfind(Finder& finder, const pos_type end, const count_type count) const
+pos_type data_table<Table, Record, Key, Interface>::rfind(Finder& finder, const pos_type end, const count_type count) const
 {
     typename base_class::lock_read lock(*this);
     if (!unsafe_table::empty())
@@ -528,7 +528,7 @@ const pos_type data_table<Table, Record, Key, Interface>::rfind(Finder& finder, 
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 template <typename T>
-inline const pos_type data_table<Table, Record, Key, Interface>::do_read(record_type& record, const pos_type pos) const
+inline pos_type data_table<Table, Record, Key, Interface>::do_read(record_type& record, const pos_type pos) const
 {
     const pos_type result = T::read(m_buffer.get(), pos);
     record.unpack(m_buffer.get());
@@ -543,7 +543,7 @@ inline const pos_type data_table<Table, Record, Key, Interface>::do_read(record_
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 template <typename T>
-inline const pos_type data_table<Table, Record, Key, Interface>::do_rread(record_type& record, const pos_type pos) const
+inline pos_type data_table<Table, Record, Key, Interface>::do_rread(record_type& record, const pos_type pos) const
 {
     const pos_type result = T::rread(m_buffer.get(), pos);
     record.unpack(m_buffer.get());
@@ -558,7 +558,7 @@ inline const pos_type data_table<Table, Record, Key, Interface>::do_rread(record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 template <typename T>
-inline const pos_type data_table<Table, Record, Key, Interface>::do_read(record_list& records, const pos_type pos) const
+inline pos_type data_table<Table, Record, Key, Interface>::do_read(record_list& records, const pos_type pos) const
 {
     const count_type count = records.size();
     scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
@@ -580,7 +580,7 @@ inline const pos_type data_table<Table, Record, Key, Interface>::do_read(record_
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 template <typename T>
-inline const pos_type data_table<Table, Record, Key, Interface>::do_write(const record_type& record, const pos_type pos)
+inline pos_type data_table<Table, Record, Key, Interface>::do_write(const record_type& record, const pos_type pos)
 {
     record.pack(m_buffer.get());
     return T::write(m_buffer.get(), pos);
@@ -594,7 +594,7 @@ inline const pos_type data_table<Table, Record, Key, Interface>::do_write(const 
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 template <typename T>
-inline const pos_type data_table<Table, Record, Key, Interface>::do_rwrite(const record_type& record, const pos_type pos)
+inline pos_type data_table<Table, Record, Key, Interface>::do_rwrite(const record_type& record, const pos_type pos)
 {
     record.pack(m_buffer.get());
     return T::rwrite(m_buffer.get(), pos);
@@ -608,7 +608,7 @@ inline const pos_type data_table<Table, Record, Key, Interface>::do_rwrite(const
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 template <typename T>
-inline const pos_type data_table<Table, Record, Key, Interface>::do_write(const record_list& records, const pos_type pos)
+inline pos_type data_table<Table, Record, Key, Interface>::do_write(const record_list& records, const pos_type pos)
 {
     const count_type count = records.size();
     scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
@@ -627,7 +627,7 @@ inline const pos_type data_table<Table, Record, Key, Interface>::do_write(const 
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 template <typename T>
-inline const pos_type data_table<Table, Record, Key, Interface>::do_add(const record_type& record)
+inline pos_type data_table<Table, Record, Key, Interface>::do_add(const record_type& record)
 {
     record.pack(m_buffer.get());
     return T::add(m_buffer.get());
@@ -640,7 +640,7 @@ inline const pos_type data_table<Table, Record, Key, Interface>::do_add(const re
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 template <typename T>
-inline const pos_type data_table<Table, Record, Key, Interface>::do_add(const record_list& records)
+inline pos_type data_table<Table, Record, Key, Interface>::do_add(const record_list& records)
 {
     const count_type count = records.size();
     scoped_buffer<void> buffer(base_class::rec_size() * count);
@@ -659,7 +659,7 @@ inline const pos_type data_table<Table, Record, Key, Interface>::do_add(const re
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::unsafe_read(record_type& record, const pos_type pos) const
+pos_type data_table<Table, Record, Key, Interface>::unsafe_read(record_type& record, const pos_type pos) const
 {
     return do_read<unsafe_table>(record, pos);
 }
@@ -671,7 +671,7 @@ const pos_type data_table<Table, Record, Key, Interface>::unsafe_read(record_typ
  * @return the position of the previous record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::unsafe_rread(record_type& record, const pos_type pos) const
+pos_type data_table<Table, Record, Key, Interface>::unsafe_rread(record_type& record, const pos_type pos) const
 {
     return do_rread<unsafe_table>(record, pos);
 }
@@ -683,7 +683,7 @@ const pos_type data_table<Table, Record, Key, Interface>::unsafe_rread(record_ty
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::unsafe_read(record_list& records, const pos_type pos) const
+pos_type data_table<Table, Record, Key, Interface>::unsafe_read(record_list& records, const pos_type pos) const
 {
     return do_read<unsafe_table>(records, pos);
 }
@@ -695,7 +695,7 @@ const pos_type data_table<Table, Record, Key, Interface>::unsafe_read(record_lis
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::unsafe_write(const record_type& record, const pos_type pos)
+pos_type data_table<Table, Record, Key, Interface>::unsafe_write(const record_type& record, const pos_type pos)
 {
     return do_write<unsafe_table>(record, pos);
 }
@@ -707,7 +707,7 @@ const pos_type data_table<Table, Record, Key, Interface>::unsafe_write(const rec
  * @return the position of the previous record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::unsafe_rwrite(const record_type& record, const pos_type pos)
+pos_type data_table<Table, Record, Key, Interface>::unsafe_rwrite(const record_type& record, const pos_type pos)
 {
     return do_rwrite<unsafe_table>(record, pos);
 }
@@ -719,7 +719,7 @@ const pos_type data_table<Table, Record, Key, Interface>::unsafe_rwrite(const re
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::unsafe_write(const record_list& records, const pos_type pos)
+pos_type data_table<Table, Record, Key, Interface>::unsafe_write(const record_list& records, const pos_type pos)
 {
     return do_write<unsafe_table>(records, pos);
 }
@@ -730,7 +730,7 @@ const pos_type data_table<Table, Record, Key, Interface>::unsafe_write(const rec
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::unsafe_add(const record_type& record)
+pos_type data_table<Table, Record, Key, Interface>::unsafe_add(const record_type& record)
 {
     return do_add<unsafe_table>(record);
 }
@@ -741,7 +741,7 @@ const pos_type data_table<Table, Record, Key, Interface>::unsafe_add(const recor
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-const pos_type data_table<Table, Record, Key, Interface>::unsafe_add(const record_list& records)
+pos_type data_table<Table, Record, Key, Interface>::unsafe_add(const record_list& records)
 {
     return do_add<unsafe_table>(records);
 }

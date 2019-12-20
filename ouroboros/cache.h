@@ -34,8 +34,8 @@ class page_status
 public:
     typedef PPage page_pointer;
     page_status(const pos_type index, page_pointer page);
-    inline const page_state state() const; ///< get the state of the page
-    inline const pos_type index() const; ///< get the index of the page
+    inline page_state state() const; ///< get the state of the page
+    inline pos_type index() const; ///< get the index of the page
 protected:
     inline page_pointer page() const; ///< get the pointer to the page
 private:
@@ -71,9 +71,9 @@ public:
     inline void free(); ///< release the page from the pool
     inline void attach(cache_type& cache, const pos_type index); ///< attach the page to the cache
     inline void detach(); ///< detach the page from the cache
-    inline const bool attached(const cache_type& cache) const; ///< check the page is attached to the cache
-    inline const pos_type index() const; /// get the index of the page
-    inline const page_state state() const; ///< get the state of the page
+    inline bool attached(const cache_type& cache) const; ///< check the page is attached to the cache
+    inline pos_type index() const; /// get the index of the page
+    inline page_state state() const; ///< get the state of the page
     inline const page_status_type status(); ///< get the status of the page
     inline void dirty(); ///< dirty the page
     inline void clean(); ///< clean the page
@@ -109,8 +109,8 @@ public:
     inline void up_page(page_type *page); ///< increment the raiting of the page
     inline void init(); ///< initialize the pool
 #ifdef OUROBOROS_TEST_ENABLED
-    const count_type test_page_count() const; ///< test the count of the cache page
-    const pos_type test_page_index(page_type *page) const; ///< test the index of the cache page
+    count_type test_page_count() const; ///< test the count of the cache page
+    pos_type test_page_index(page_type *page) const; ///< test the index of the cache page
 #endif
 private:
     page_type m_pages[pageCount];
@@ -149,12 +149,12 @@ public:
     inline void* get_page(const page_status_type& status); ///< get data of the page
     inline void* get_page(const pos_type index) const; ///< get data of the page
     inline void* get_page(const page_status_type& status) const; ///< get data of the page
-    inline const size_type aligned_size(const size_type size); ///< change the size of the cache object
-    inline const size_type size() const; ///< get the size of the cache
-    inline const bool empty() const; ///< chech the cache is empty
-    inline const bool dirty() const; ///< chech the cache is dirty
+    inline size_type aligned_size(const size_type size); ///< change the size of the cache object
+    inline size_type size() const; ///< get the size of the cache
+    inline bool empty() const; ///< chech the cache is empty
+    inline bool dirty() const; ///< chech the cache is dirty
 #ifdef OUROBOROS_TEST_ENABLED
-    const count_type test_pool_page_count() const; ///< test the count of the page in the cache pool
+    count_type test_pool_page_count() const; ///< test the count of the page in the cache pool
 #endif
     inline void clean(); ///< clean all dirty pages
     inline void free(); ///< release the cache
@@ -165,8 +165,8 @@ protected:
     inline page_type* do_page_exists(const pos_type index) const; ///< check the page exists
     inline page_type* do_get_page(const pos_type index) const; ///< get the page
     inline page_type* do_get_page(const page_status_type& status) const; ///< get the page
-    inline const count_type calc_page_count(const size_type size) const; ///< calculate the count of pages required for the full object
-    inline const count_type get_page_count() const; ///< get the count of the pages
+    inline count_type calc_page_count(const size_type size) const; ///< calculate the count of pages required for the full object
+    inline count_type get_page_count() const; ///< get the count of the pages
     inline void detach(const pos_type index); ///< detach the page from the cache
     inline void detach(const iterator& it); ///< detach the page from the cache
     inline void dirty(page_type *page); ///< dirty the page
@@ -187,7 +187,7 @@ private:
  * @param pageSize size of the cache page
  * @return the count of pages
  */
-inline const count_type calc_cache_page_count(const size_type size, const size_type pageSize)
+inline count_type calc_cache_page_count(const size_type size, const size_type pageSize)
 {
     count_type count = size / pageSize;
     if (size % pageSize != 0)
@@ -203,7 +203,7 @@ inline const count_type calc_cache_page_count(const size_type size, const size_t
  * @param pageSize size of the cache page
  * @return the size of the cache required for the full object
  */
-inline const size_type calc_cache_size(const size_type size, const size_type pageSize)
+inline size_type calc_cache_size(const size_type size, const size_type pageSize)
 {
     const count_type count = calc_cache_page_count(size, pageSize);
     return pageSize * count;
@@ -229,7 +229,7 @@ page_status<PPage>::page_status(const pos_type index, page_pointer page) :
  * @return the state of the page
  */
 template <typename PPage>
-inline const page_state page_status<PPage>::state() const
+inline page_state page_status<PPage>::state() const
 {
     return NULL == m_page ? PG_DETACHED : m_page->state();
 }
@@ -249,7 +249,7 @@ inline typename page_status<PPage>::page_pointer page_status<PPage>::page() cons
  * @return the index to the page
  */
 template <typename PPage>
-inline const pos_type page_status<PPage>::index() const
+inline pos_type page_status<PPage>::index() const
 {
     return m_index;
 }
@@ -408,7 +408,7 @@ inline void cache_page<Cache, pageSize>::detach(const iterator& it)
  * @return the result of the checking
  */
 template <typename Cache, int pageSize>
-inline const bool cache_page<Cache, pageSize>::attached(const cache_type& cache) const
+inline bool cache_page<Cache, pageSize>::attached(const cache_type& cache) const
 {
     return m_cache == &cache;
 }
@@ -418,7 +418,7 @@ inline const bool cache_page<Cache, pageSize>::attached(const cache_type& cache)
  * @return the index of the page
  */
 template <typename Cache, int pageSize>
-inline const pos_type cache_page<Cache, pageSize>::index() const
+inline pos_type cache_page<Cache, pageSize>::index() const
 {
     return m_index;
 }
@@ -428,7 +428,7 @@ inline const pos_type cache_page<Cache, pageSize>::index() const
  * @return the state of the page
  */
 template <typename Cache, int pageSize>
-inline const page_state cache_page<Cache, pageSize>::state() const
+inline page_state cache_page<Cache, pageSize>::state() const
 {
     return NULL == m_cache ? PG_DETACHED : m_dirty ? PG_DIRTY : PG_ATTACHED;
 }
@@ -577,7 +577,7 @@ inline void cache_pool<Cache, pageSize, pageCount>::up_page(page_type *page)
  * @return the count of the cache pages
  */
 template <typename Cache, int pageSize, int pageCount>
-const count_type cache_pool<Cache, pageSize, pageCount>::test_page_count() const
+count_type cache_pool<Cache, pageSize, pageCount>::test_page_count() const
 {
     page_type *page = m_beg;
     count_type count = 0;
@@ -605,7 +605,7 @@ const count_type cache_pool<Cache, pageSize, pageCount>::test_page_count() const
  * @return the index of the page
  */
 template <typename Cache, int pageSize, int pageCount>
-const pos_type cache_pool<Cache, pageSize, pageCount>::test_page_index(page_type *page) const
+pos_type cache_pool<Cache, pageSize, pageCount>::test_page_index(page_type *page) const
 {
     return pos_type(page - m_pages);
 }
@@ -781,7 +781,7 @@ inline void cache<Saver, pageSize, pageCount>::clean(const iterator& it)
  * @return the aligned size of object
  */
 template <typename Saver, int pageSize, int pageCount>
-inline const size_type cache<Saver, pageSize, pageCount>::aligned_size(const size_type size)
+inline size_type cache<Saver, pageSize, pageCount>::aligned_size(const size_type size)
 {
     const count_type count = calc_page_count(size);
     return pageSize * count;
@@ -792,7 +792,7 @@ inline const size_type cache<Saver, pageSize, pageCount>::aligned_size(const siz
  * @return the size of the cache
  */
 template <typename Saver, int pageSize, int pageCount>
-inline const size_type cache<Saver, pageSize, pageCount>::size() const
+inline size_type cache<Saver, pageSize, pageCount>::size() const
 {
     return pageSize * get_page_count();
 }
@@ -802,7 +802,7 @@ inline const size_type cache<Saver, pageSize, pageCount>::size() const
  * @return the result of the checking
  */
 template <typename Saver, int pageSize, int pageCount>
-inline const bool cache<Saver, pageSize, pageCount>::empty() const
+inline bool cache<Saver, pageSize, pageCount>::empty() const
 {
     return m_pages.empty();
 }
@@ -812,7 +812,7 @@ inline const bool cache<Saver, pageSize, pageCount>::empty() const
  * @return the result of the checking
  */
 template <typename Saver, int pageSize, int pageCount>
-inline const bool cache<Saver, pageSize, pageCount>::dirty() const
+inline bool cache<Saver, pageSize, pageCount>::dirty() const
 {
     return !m_dirty_pages.empty();
 }
@@ -823,7 +823,7 @@ inline const bool cache<Saver, pageSize, pageCount>::dirty() const
  * @return the count of the pages in the cache pool
  */
 template <typename Saver, int pageSize, int pageCount>
-const count_type cache<Saver, pageSize, pageCount>::test_pool_page_count() const
+count_type cache<Saver, pageSize, pageCount>::test_pool_page_count() const
 {
     return m_pool.test_page_count();
 }
@@ -835,7 +835,7 @@ const count_type cache<Saver, pageSize, pageCount>::test_pool_page_count() const
  * @return the count of pages
  */
 template <typename Saver, int pageSize, int pageCount>
-inline const count_type cache<Saver, pageSize, pageCount>::calc_page_count(const size_type size) const
+inline count_type cache<Saver, pageSize, pageCount>::calc_page_count(const size_type size) const
 {
     return calc_cache_page_count(size, pageSize);
 }
@@ -845,7 +845,7 @@ inline const count_type cache<Saver, pageSize, pageCount>::calc_page_count(const
  * @return the count of the pages
  */
 template <typename Saver, int pageSize, int pageCount>
-inline const count_type cache<Saver, pageSize, pageCount>::get_page_count() const
+inline count_type cache<Saver, pageSize, pageCount>::get_page_count() const
 {
     return m_pages.size();
 }

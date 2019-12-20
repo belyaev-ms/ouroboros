@@ -80,22 +80,22 @@ public:
     void start();  ///< start the transaction
     void stop();   ///< stop the transaction
     void cancel(); ///< cancel the transaction
-    inline const transaction_state state() const; ///< get the state of the transaction
+    inline transaction_state state() const; ///< get the state of the transaction
 
     inline table_type& operator() (); ///< get the table
     inline const table_type& operator() () const; ///< get the table
     inline table_type* operator-> (); ///< get the pointer to the table
     inline const table_type* operator-> () const; ///< get the pointer to the table
 
-    inline const bool valid() const; ///< check the session is valid
+    inline bool valid() const; ///< check the session is valid
     void operator= (const base_session& session);
 protected:
     typedef typename table_type::unsafe_table unsafe_table; ///< the table without lock
     virtual void lock(); ///< lock the table
     virtual void unlock(); ///< unlock the table
-    virtual const bool do_start();  ///< start the transaction
-    virtual const bool do_stop();   ///< stop the transaction
-    virtual const bool do_cancel(); ///< cancel the transaction
+    virtual bool do_start();  ///< start the transaction
+    virtual bool do_stop();   ///< stop the transaction
+    virtual bool do_cancel(); ///< cancel the transaction
 protected:
     mutable bool m_glock; ///< the sign that the global lock is set
     mutable bool m_primary; ///< the sign that the session is primary
@@ -129,9 +129,9 @@ public:
     void operator= (const table_session& session);
 protected:
     typedef typename base_class::unsafe_table unsafe_table;
-    virtual const bool do_start();  ///< start the transaction
-    virtual const bool do_stop();   ///< stop the transaction
-    virtual const bool do_cancel(); ///< cancel the transaction
+    virtual bool do_start();  ///< start the transaction
+    virtual bool do_stop();   ///< stop the transaction
+    virtual bool do_cancel(); ///< cancel the transaction
 protected:
     mutable bool m_lock;
 };
@@ -158,7 +158,7 @@ protected:
     typedef typename base_class::unsafe_table unsafe_table;
     virtual void lock(); ///< lock the table
     virtual void unlock(); ///< unlock the table
-    virtual const bool do_start();  ///< start the transaction
+    virtual bool do_start();  ///< start the transaction
 };
 
 /**
@@ -232,9 +232,9 @@ public:
 
     inline void operator= (const scoped_session& session);
 private:
-    virtual const bool do_start();  ///< start the transation
-    virtual const bool do_stop();   ///< stop the transation
-    virtual const bool do_cancel(); ///< cancel the transation
+    virtual bool do_start();  ///< start the transation
+    virtual bool do_stop();   ///< stop the transation
+    virtual bool do_cancel(); ///< cancel the transation
 private:
     mutable dataset_type *m_dataset; ///< the supported dataset
 };
@@ -263,9 +263,9 @@ public:
 
     inline void operator= (const scoped_key_session& session);
 private:
-    virtual const bool do_start();  ///< start the transation
-    virtual const bool do_stop();   ///< stop the transation
-    virtual const bool do_cancel(); ///< cancel the transation
+    virtual bool do_start();  ///< start the transation
+    virtual bool do_stop();   ///< stop the transation
+    virtual bool do_cancel(); ///< cancel the transation
 private:
     mutable dataset_type *m_dataset; ///< the supported dataset
 };
@@ -408,7 +408,7 @@ void base_session<Table, GlobalLock>::cancel()
  */
 //virtual
 template <typename Table, typename GlobalLock>
-const bool base_session<Table, GlobalLock>::do_start()
+bool base_session<Table, GlobalLock>::do_start()
 {
     m_primary = TR_STARTED != state();
     return m_primary;
@@ -420,7 +420,7 @@ const bool base_session<Table, GlobalLock>::do_start()
  */
 //virtual
 template <typename Table, typename GlobalLock>
-const bool base_session<Table, GlobalLock>::do_stop()
+bool base_session<Table, GlobalLock>::do_stop()
 {
     if (m_primary)
     {
@@ -436,7 +436,7 @@ const bool base_session<Table, GlobalLock>::do_stop()
  */
 //virtual
 template <typename Table, typename GlobalLock>
-const bool base_session<Table, GlobalLock>::do_cancel()
+bool base_session<Table, GlobalLock>::do_cancel()
 {
     if (m_primary)
     {
@@ -451,7 +451,7 @@ const bool base_session<Table, GlobalLock>::do_cancel()
  * @return the state of the transaction
  */
 template <typename Table, typename GlobalLock>
-inline const transaction_state base_session<Table, GlobalLock>::state() const
+inline transaction_state base_session<Table, GlobalLock>::state() const
 {
     return table().state();
 }
@@ -519,7 +519,7 @@ void base_session<Table, GlobalLock>::operator= (const base_session& session)
  * @return the result of the checking
  */
 template <typename Table, typename GlobalLock>
-inline const bool base_session<Table, GlobalLock>::valid() const
+inline bool base_session<Table, GlobalLock>::valid() const
 {
     return m_table != NULL;
 }
@@ -670,7 +670,7 @@ void table_session<Table, TableInterface, GlobalLock>::operator= (const table_se
  */
 //virtual
 template <typename Table, template <typename> class TableInterface, typename GlobalLock>
-const bool table_session<Table, TableInterface, GlobalLock>::do_start()
+bool table_session<Table, TableInterface, GlobalLock>::do_start()
 {
     if (base_class::do_start())
     {
@@ -686,7 +686,7 @@ const bool table_session<Table, TableInterface, GlobalLock>::do_start()
  */
 //virtual
 template <typename Table, template <typename> class TableInterface, typename GlobalLock>
-const bool table_session<Table, TableInterface, GlobalLock>::do_stop()
+bool table_session<Table, TableInterface, GlobalLock>::do_stop()
 {
     if (base_class::do_stop())
     {
@@ -702,7 +702,7 @@ const bool table_session<Table, TableInterface, GlobalLock>::do_stop()
  */
 //virtual
 template <typename Table, template <typename> class TableInterface, typename GlobalLock>
-const bool table_session<Table, TableInterface, GlobalLock>::do_cancel()
+bool table_session<Table, TableInterface, GlobalLock>::do_cancel()
 {
     if (base_class::do_cancel())
     {
@@ -778,7 +778,7 @@ void base_sharable_session<Table, GlobalLock>::unlock()
  */
 //virtual
 template <typename Table, typename GlobalLock>
-const bool base_sharable_session<Table, GlobalLock>::do_start()
+bool base_sharable_session<Table, GlobalLock>::do_start()
 {
     const bool result = base_class::do_start();
     if (base_class::m_lock && 1 == raw_class::table().sharable_count())
@@ -1008,7 +1008,7 @@ inline void scoped_session<Dataset>::operator= (const scoped_session& session)
  * @return the result of the starting
  */
 template <typename Dataset>
-const bool scoped_session<Dataset>::do_start()
+bool scoped_session<Dataset>::do_start()
 {
     const bool result = base_class::do_start();
     if (base_class::m_lock && 1 == raw_class::table().scoped_count())
@@ -1024,7 +1024,7 @@ const bool scoped_session<Dataset>::do_start()
  */
 //virtual
 template <typename Dataset>
-const bool scoped_session<Dataset>::do_stop()
+bool scoped_session<Dataset>::do_stop()
 {
     if (base_class::m_lock && 1 == raw_class::table().scoped_count())
     {
@@ -1041,7 +1041,7 @@ const bool scoped_session<Dataset>::do_stop()
  */
 //virtual
 template <typename Dataset>
-const bool scoped_session<Dataset>::do_cancel()
+bool scoped_session<Dataset>::do_cancel()
 {
     const bool result = base_class::do_cancel();
     if (base_class::m_lock && 1 == raw_class::table().scoped_count())
@@ -1127,7 +1127,7 @@ inline void scoped_key_session<Dataset>::operator= (const scoped_key_session& se
  */
 //virtual
 template <typename Dataset>
-const bool scoped_key_session<Dataset>::do_start()
+bool scoped_key_session<Dataset>::do_start()
 {
     const bool result = base_class::do_start();
     if (base_class::m_lock)
@@ -1143,7 +1143,7 @@ const bool scoped_key_session<Dataset>::do_start()
  */
 //virtual
 template <typename Dataset>
-const bool scoped_key_session<Dataset>::do_stop()
+bool scoped_key_session<Dataset>::do_stop()
 {
     if (base_class::m_lock)
     {
@@ -1160,7 +1160,7 @@ const bool scoped_key_session<Dataset>::do_stop()
  */
 //virtual
 template <typename Dataset>
-const bool scoped_key_session<Dataset>::do_cancel()
+bool scoped_key_session<Dataset>::do_cancel()
 {
     const bool result = base_class::do_cancel();
     if (base_class::m_lock)
@@ -1169,7 +1169,6 @@ const bool scoped_key_session<Dataset>::do_cancel()
     }
     return result;
 }
-
 
 }   //namespace ouroboros
 

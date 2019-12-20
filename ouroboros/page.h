@@ -32,8 +32,8 @@ public:
     explicit file_page(const pos_type pos);
     file_page(const pos_type pos, const offset_type offset);
     file_page(const file_page& page);
-    const pos_type pos() const;
-    const pos_type index() const;
+    pos_type pos() const;
+    pos_type index() const;
     void assign(void *ptr);
     void *read(void *buffer) const;
     void *read(void *buffer, const size_type size) const;
@@ -41,17 +41,17 @@ public:
     const void *write(const void *buffer);
     const void *write(const void *buffer, const size_type size);
     const void *write_rest(const void *buffer);
-    const bool valid() const;
+    bool valid() const;
     const void *get() const;
     void *get();
-    const bool operator== (const file_page& page) const;
-    const bool operator< (const file_page& page) const;
+    bool operator== (const file_page& page) const;
+    bool operator< (const file_page& page) const;
     file_page& operator++ ();
     file_page& operator= (const file_page& page);
-    static const size_type static_size();
-    static const size_type static_data_size();
-    static const size_type static_align_size(const size_type size);
-    static const pos_type static_convert(const pos_type pos);
+    static size_type static_size();
+    static size_type static_data_size();
+    static size_type static_align_size(const size_type size);
+    static pos_type static_convert(const pos_type pos);
 private:
     void *do_read(void *buffer, const pos_type offset, const size_type size) const;
     const void *do_write(const void *buffer, const pos_type offset, const size_type size);
@@ -78,8 +78,8 @@ public:
     file_region(const count_type count, const region_list& regions);
     file_region& add(const file_region& region);
     const range_type operator[] (const pos_type index) const;
-    const offset_type convert_offset(const offset_type raw_offset) const;
-    const size_type convert_size(const size_type raw_size) const;
+    offset_type convert_offset(const offset_type raw_offset) const;
+    size_type convert_size(const size_type raw_size) const;
     void make_cache(const size_type size) const;
 private:
     struct cached_region
@@ -102,7 +102,7 @@ private:
     };
     typedef std::pair<offset_type, cached_region> result_type;
     typedef std::map<offset_type, cached_region> cache_type;
-    const size_type align_size(const size_type size) const;
+    size_type align_size(const size_type size) const;
     const result_type get_offset(const pos_type index, count_type& count, offset_type offset) const;
     const result_type get_offset(offset_type& raw_offset, offset_type offset) const;
 private:
@@ -123,7 +123,7 @@ class status_file_page : public FilePage
 public:
     typedef Status status_type;
     explicit status_file_page(void *ptr);
-    const bool verify() const;
+    bool verify() const;
     void set_status(const status_type& status);
     const status_type get_status() const;
 };
@@ -137,7 +137,7 @@ public:
  */
 //static
 template <int pageSize, int serviceSize>
-const size_type file_page<pageSize, serviceSize>::static_size()
+size_type file_page<pageSize, serviceSize>::static_size()
 {
     return TOTAL_SIZE;
 }
@@ -148,7 +148,7 @@ const size_type file_page<pageSize, serviceSize>::static_size()
  */
 //static
 template <int pageSize, int serviceSize>
-const size_type file_page<pageSize, serviceSize>::static_data_size()
+size_type file_page<pageSize, serviceSize>::static_data_size()
 {
     return DATA_SIZE;
 }
@@ -160,7 +160,7 @@ const size_type file_page<pageSize, serviceSize>::static_data_size()
  */
 //static
 template <int pageSize, int serviceSize>
-const size_type file_page<pageSize, serviceSize>::static_align_size(const size_type size)
+size_type file_page<pageSize, serviceSize>::static_align_size(const size_type size)
 {
     count_type count = size / DATA_SIZE;
     if (size % DATA_SIZE != 0)
@@ -177,7 +177,7 @@ const size_type file_page<pageSize, serviceSize>::static_align_size(const size_t
  */
 //static
 template <int pageSize, int serviceSize>
-const pos_type file_page<pageSize, serviceSize>::static_convert(const pos_type pos)
+pos_type file_page<pageSize, serviceSize>::static_convert(const pos_type pos)
 {
     if (SERVICE_SIZE == 0)
     {
@@ -253,7 +253,7 @@ file_page<pageSize, serviceSize>::file_page(const file_page& page) :
  * @return the position in the data file
  */
 template <int pageSize, int serviceSize>
-const pos_type file_page<pageSize, serviceSize>::pos() const
+pos_type file_page<pageSize, serviceSize>::pos() const
 {
     return m_pos;
 }
@@ -263,7 +263,7 @@ const pos_type file_page<pageSize, serviceSize>::pos() const
  * @return the index of the file page
  */
 template <int pageSize, int serviceSize>
-const pos_type file_page<pageSize, serviceSize>::index() const
+pos_type file_page<pageSize, serviceSize>::index() const
 {
     return m_index;
 }
@@ -389,7 +389,7 @@ const void *file_page<pageSize, serviceSize>::do_write(const void *buffer, const
  * @return the result of the checking
  */
 template <int pageSize, int serviceSize>
-const bool file_page<pageSize, serviceSize>::valid() const
+bool file_page<pageSize, serviceSize>::valid() const
 {
     return m_ptr != NULL && m_pos != NIL && m_index != NIL;
 }
@@ -400,7 +400,7 @@ const bool file_page<pageSize, serviceSize>::valid() const
  * @return the result of the checking
  */
 template <int pageSize, int serviceSize>
-const bool file_page<pageSize, serviceSize>::operator== (const file_page& page) const
+bool file_page<pageSize, serviceSize>::operator== (const file_page& page) const
 {
     return m_index == page.m_index;
 }
@@ -411,7 +411,7 @@ const bool file_page<pageSize, serviceSize>::operator== (const file_page& page) 
  * @return the result of the checking
  */
 template <int pageSize, int serviceSize>
-const bool file_page<pageSize, serviceSize>::operator< (const file_page& page) const
+bool file_page<pageSize, serviceSize>::operator< (const file_page& page) const
 {
     return m_index < page.m_index;
 }
@@ -605,7 +605,7 @@ const typename file_region<FilePage>::result_type file_region<FilePage>::
  * @return the real offset in the file
  */
 template <typename FilePage>
-const offset_type file_region<FilePage>::convert_offset(const offset_type raw_offset) const
+offset_type file_region<FilePage>::convert_offset(const offset_type raw_offset) const
 {
     typename cache_type::iterator it = m_cache.lower_bound(raw_offset);
     if (it != m_cache.end() && (it->first == raw_offset || --it != m_cache.end()))
@@ -641,7 +641,7 @@ const offset_type file_region<FilePage>::convert_offset(const offset_type raw_of
  * @return the real size in the file
  */
 template <typename FilePage>
-const size_type file_region<FilePage>::convert_size(const size_type raw_size) const
+size_type file_region<FilePage>::convert_size(const size_type raw_size) const
 {
     offset_type offset = raw_size;
     const result_type result = get_offset(offset, 0);
@@ -723,7 +723,7 @@ status_file_page<FilePage, Status>::status_file_page(void *ptr)
  * @return the result of the checking
  */
 template <typename FilePage, typename Status>
-const bool status_file_page<FilePage, Status>::verify() const
+bool status_file_page<FilePage, Status>::verify() const
 {
     return true;
 }

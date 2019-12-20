@@ -26,17 +26,17 @@ public:
     inline info(const count_type tc, const count_type rc, const count_type kc = 0,
         const count_type ver = 0, const void *user_data = NULL, const size_type user_size = 0);
 
-    inline const bool operator == (const info& o) const;
-    inline const bool operator != (const info& o) const;
+    inline bool operator == (const info& o) const;
+    inline bool operator != (const info& o) const;
 
     inline void *pack(void *out) const;
     inline const void *unpack(const void *in);
-    inline const size_type size() const;
-    inline const size_type get_data(void *buffer, const size_type size) const;
-    inline const size_type set_data(const void *buffer, const size_type size);
-    inline const bool compare_data(const info& o) const;
+    inline size_type size() const;
+    inline size_type get_data(void *buffer, const size_type size) const;
+    inline size_type set_data(const void *buffer, const size_type size);
+    inline bool compare_data(const info& o) const;
 
-    static const size_type static_size()
+    static size_type static_size()
     {
         return sizeof(count_type) + sizeof(count_type) + sizeof(count_type) +
             sizeof(count_type) + RESERVE_SIZE + DATA_SIZE;
@@ -110,7 +110,7 @@ inline info::info(const count_type tc, const count_type rc, const count_type kc,
  * @param o another information
  * @return the result of the checking
  */
-inline const bool info::operator == (const info& o) const
+inline bool info::operator == (const info& o) const
 {
     return version == o.version &&
         tbl_count == o.tbl_count &&
@@ -125,7 +125,7 @@ inline const bool info::operator == (const info& o) const
  * @param o another information
  * @return the result of the checking
  */
-inline const bool info::operator != (const info& o) const
+inline bool info::operator != (const info& o) const
 {
     return !(*this == o);
 }
@@ -158,7 +158,7 @@ inline void * info::pack(void *out) const
  * @param in the pointer to data of the information
  * @return the pointer to data of the next information
  */
-inline const void * info::unpack(const void *in)
+inline const void* info::unpack(const void *in)
 {
     const char *buf = static_cast<const char *>(in);
     memcpy(&version, buf, sizeof(version));
@@ -180,7 +180,7 @@ inline const void * info::unpack(const void *in)
  * Get the size of the information
  * @return the size of the information
  */
-inline const size_type info::size() const
+inline size_type info::size() const
 {
     return sizeof(version) + sizeof(tbl_count) + sizeof(rec_count) + sizeof(key_count) +
         sizeof(reserve) + sizeof(data);
@@ -192,7 +192,7 @@ inline const size_type info::size() const
  * @param size the size of the buffer
  * @return the size of getting data
  */
-inline const size_type info::get_data(void *buffer, const size_type size) const
+inline size_type info::get_data(void *buffer, const size_type size) const
 {
     const size_type count = size < sizeof(data) ? size : sizeof(data);
     memcpy(buffer, data, count);
@@ -205,7 +205,7 @@ inline const size_type info::get_data(void *buffer, const size_type size) const
  * @param size the size of the buffer
  * @return the size of setting data
  */
-inline const size_type info::set_data(const void *buffer, const size_type size)
+inline size_type info::set_data(const void *buffer, const size_type size)
 {
     const size_type count = size < sizeof(data) ? size : sizeof(data);
     memcpy(data, buffer, count);
@@ -217,7 +217,7 @@ inline const size_type info::set_data(const void *buffer, const size_type size)
  * @param o the another information
  * @return the result of the comparing (true - the user data is equal)
  */
-inline const bool info::compare_data(const info& o) const
+inline bool info::compare_data(const info& o) const
 {
     return 0 == memcmp(data, o.data, sizeof(data));
 }

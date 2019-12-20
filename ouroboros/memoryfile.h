@@ -29,18 +29,18 @@ public:
     virtual ~memory_file();
 
     const std::string& name() const; ///< get the name of the file
-    const bool init(); ///< ititialize
+    bool init(); ///< ititialize
     void read(void *buffer, size_type size, const pos_type pos) const; ///< read data
     void write(const void *buffer, size_type size, const pos_type pos); ///< write data
-    const size_type resize(const size_type size); ///< change the size of the file
-    const size_type size() const; ///< get the size of the file
+    size_type resize(const size_type size); ///< change the size of the file
+    size_type size() const; ///< get the size of the file
     void refresh(size_type size, const pos_type pos); ///< refresh data
     void flush() const; ///< forced synchronization data of the file
 
     void start();  ///< start the transaction
     void stop();   ///< stop the transaction
     void cancel(); ///< cancel the transaction
-    const transaction_state state() const; ///< get the state of the transaction
+    transaction_state state() const; ///< get the state of the transaction
 
     static void remove(const std::string& name); ///< remove a file by the name
 private:

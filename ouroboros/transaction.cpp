@@ -17,7 +17,7 @@ count_type base_global_locker::s_sharable_count = 0;
  * @return the count of the locks for read data
  */
 //static
-const count_type base_global_locker::sharable_count()
+count_type base_global_locker::sharable_count()
 {
     return s_sharable_count;
 }
@@ -27,7 +27,7 @@ const count_type base_global_locker::sharable_count()
  * @return the count of the locks for write data
  */
 //static
-const count_type base_global_locker::scoped_count()
+count_type base_global_locker::scoped_count()
 {
     return s_scoped_count;
 }
@@ -84,7 +84,7 @@ void base_transaction::cancel()
  * Check the transaction is enabled
  * @return the result is checking
  */
-const bool base_transaction::enabled() const
+bool base_transaction::enabled() const
 {
     return m_enabled;
 }

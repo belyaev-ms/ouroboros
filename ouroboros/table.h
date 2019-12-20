@@ -27,33 +27,33 @@ public:
 
     table(source_type& source, skey_type& skey);
 
-    const pos_type read(void *data, const pos_type pos) const; ///< read a record
-    const pos_type read(void *data, const pos_type beg, const count_type count) const; ///< read records [beg, beg + count)
-    const pos_type rread(void *data, const pos_type pos) const; ///< reverse read a record
-    const pos_type write(const void *data, const pos_type pos); ///< write a record
-    const pos_type write(const void *data, const pos_type beg, const count_type count); ///< write records [beg, beg + count)
-    const pos_type rwrite(const void *data, const pos_type pos); ///< reverse write a record
-    const pos_type add(const void *data); ///< add a record
-    const pos_type add(const void *data, const count_type count); ///< add records
-    const pos_type remove(const pos_type pos); ///< remove a record
-    const pos_type remove(const pos_type beg, const count_type count); ///< remove records [beg, beg + count)
-    const count_type remove_back(const count_type count); ///< remove records from the back of the table
-    const pos_type read_front(void *data) const; ///< read the first record
-    const pos_type read_back(void *data) const; ///< read the last record
-    const pos_type find(const void *data, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
-    const pos_type rfind(const void *data, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
+    pos_type read(void *data, const pos_type pos) const; ///< read a record
+    pos_type read(void *data, const pos_type beg, const count_type count) const; ///< read records [beg, beg + count)
+    pos_type rread(void *data, const pos_type pos) const; ///< reverse read a record
+    pos_type write(const void *data, const pos_type pos); ///< write a record
+    pos_type write(const void *data, const pos_type beg, const count_type count); ///< write records [beg, beg + count)
+    pos_type rwrite(const void *data, const pos_type pos); ///< reverse write a record
+    pos_type add(const void *data); ///< add a record
+    pos_type add(const void *data, const count_type count); ///< add records
+    pos_type remove(const pos_type pos); ///< remove a record
+    pos_type remove(const pos_type beg, const count_type count); ///< remove records [beg, beg + count)
+    count_type remove_back(const count_type count); ///< remove records from the back of the table
+    pos_type read_front(void *data) const; ///< read the first record
+    pos_type read_back(void *data) const; ///< read the last record
+    pos_type find(const void *data, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
+    pos_type rfind(const void *data, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
 
-    inline const count_type distance(const pos_type beg, const pos_type end) const; ///< calculate the count of pages in the range [beg, end)
+    inline count_type distance(const pos_type beg, const pos_type end) const; ///< calculate the count of pages in the range [beg, end)
 protected:
     inline void do_remove(const pos_type beg, const pos_type end); ///< remove records [beg, end)
-    inline const pos_type do_find(const void *data, const pos_type beg, const pos_type end) const; ///< find a record [beg, end)
-    inline const pos_type do_rfind(const void *data, const pos_type beg, const pos_type end) const; ///< reverse find a record [beg. end)
+    inline pos_type do_find(const void *data, const pos_type beg, const pos_type end) const; ///< find a record [beg, end)
+    inline pos_type do_rfind(const void *data, const pos_type beg, const pos_type end) const; ///< reverse find a record [beg. end)
 
-    inline const bool valid_pos(const pos_type pos) const; ///< check the position is valid
-    inline const bool valid_range(const pos_type beg, const pos_type end) const; ///< check the range [beg, end) is valid
+    inline bool valid_pos(const pos_type pos) const; ///< check the position is valid
+    inline bool valid_range(const pos_type beg, const pos_type end) const; ///< check the range [beg, end) is valid
 private:
-    virtual const pos_type do_inc_pos(const pos_type pos, const count_type count) const; ///< increment the position
-    virtual const pos_type do_dec_pos(const pos_type pos, const count_type count) const; ///< decrement the position
+    virtual pos_type do_inc_pos(const pos_type pos, const count_type count) const; ///< increment the position
+    virtual pos_type do_dec_pos(const pos_type pos, const count_type count) const; ///< decrement the position
     virtual void do_before_remove(const pos_type pos); ///< perform an action before removing record
     virtual void do_before_move(const pos_type source, const pos_type dest); ///< perform an action before moving record
     void do_read(void *data, const pos_type beg, const pos_type end) const; ///< read records [beg, end)
@@ -107,21 +107,21 @@ public:
     void init(const count_type tbl_count, const count_type rec_count); ///< initialize the source
 
     inline const std::string& name() const; ///< get the name of the source
-    const size_type size() const; ///< get the size of the source
-    const offset_type table_offset(const pos_type index) const; ///< get the offset of the table
-    const pos_type table_index(const offset_type table_offset) const; ///< get the index of the table
-    inline const size_type table_size() const; ///< get the size of a table
-    inline const count_type table_count() const; ///< get the count of tables
-    inline const size_type table_space() const; ///< get the size of a tables separator
-    inline const size_type rec_size() const; ///< get the size of the table by records
-    inline const count_type rec_count() const; ///< get the count of the records in the table
-    inline const size_type rec_space() const; ///< get the size of a records separator
-    inline const offset_type offset() const; ///< get the offset of the source
+    size_type size() const; ///< get the size of the source
+    offset_type table_offset(const pos_type index) const; ///< get the offset of the table
+    pos_type table_index(const offset_type table_offset) const; ///< get the index of the table
+    inline size_type table_size() const; ///< get the size of a table
+    inline count_type table_count() const; ///< get the count of tables
+    inline size_type table_space() const; ///< get the size of a tables separator
+    inline size_type rec_size() const; ///< get the size of the table by records
+    inline count_type rec_count() const; ///< get the count of the records in the table
+    inline size_type rec_space() const; ///< get the size of a records separator
+    inline offset_type offset() const; ///< get the offset of the source
 
     inline void start();  ///< start the transaction
     inline void stop();   ///< stop the transaction
     inline void cancel(); ///< cancel the transaction
-    inline const transaction_state state() const; ///< get the state of the transaction
+    inline transaction_state state() const; ///< get the state of the transaction
 
     inline void read(void *data, const size_type size, const offset_type offset); ///< read raw data
     inline void write(const void *data, const size_type size, const offset_type offset); ///< write raw data
@@ -165,7 +165,7 @@ table<Source, Key>::table(source_type& source, skey_type& skey) :
  * @return the position of the next record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::read(void *data, const pos_type pos) const
+pos_type table<Source, Key>::read(void *data, const pos_type pos) const
 {
     base_class::read(data, base_class::rec_size(), base_class::rec_offset(pos));
     return base_class::inc_pos(pos);
@@ -179,7 +179,7 @@ const pos_type table<Source, Key>::read(void *data, const pos_type pos) const
  * @return the position of the next record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::read(void *data, const pos_type beg, const count_type count) const
+pos_type table<Source, Key>::read(void *data, const pos_type beg, const count_type count) const
 {
     const pos_type end = base_class::inc_pos(beg, count);
     if (0 == base_class::rec_space())
@@ -207,7 +207,7 @@ const pos_type table<Source, Key>::read(void *data, const pos_type beg, const co
  * @return the position of the previous record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::rread(void *data, const pos_type pos) const
+pos_type table<Source, Key>::rread(void *data, const pos_type pos) const
 {
     base_class::read(data, base_class::rec_size(), base_class::rec_offset(pos));
     return base_class::dec_pos(pos);
@@ -250,7 +250,7 @@ void table<Source, Key>::do_read(void *data, const pos_type beg, const pos_type 
  * @return the position of the next record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::write(const void *data, const pos_type pos)
+pos_type table<Source, Key>::write(const void *data, const pos_type pos)
 {
     base_class::write(data, base_class::rec_size(), base_class::rec_offset(pos));
     return base_class::inc_pos(pos);
@@ -264,7 +264,7 @@ const pos_type table<Source, Key>::write(const void *data, const pos_type pos)
  * @return the position of the next record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::write(const void *data, const pos_type beg, const count_type count)
+pos_type table<Source, Key>::write(const void *data, const pos_type beg, const count_type count)
 {
     const pos_type end = base_class::inc_pos(beg, count);
     if (0 == base_class::rec_space())
@@ -292,7 +292,7 @@ const pos_type table<Source, Key>::write(const void *data, const pos_type beg, c
  * @return the position of the previous record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::rwrite(const void *data, const pos_type pos)
+pos_type table<Source, Key>::rwrite(const void *data, const pos_type pos)
 {
     base_class::write(data, base_class::rec_size(), base_class::rec_offset(pos));
     return base_class::dec_pos(pos);
@@ -334,7 +334,7 @@ void table<Source, Key>::do_write(const void *data, const pos_type beg, const po
  * @return the end position of the records
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::add(const void *data)
+pos_type table<Source, Key>::add(const void *data)
 {
     base_class::cast_skey().end = write(data, base_class::cast_skey().end);
     if (base_class::inc_count())
@@ -351,7 +351,7 @@ const pos_type table<Source, Key>::add(const void *data)
  * @return the end position of the records
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::add(const void *data, const count_type count)
+pos_type table<Source, Key>::add(const void *data, const count_type count)
 {
     base_class::cast_skey().end = write(data, base_class::cast_skey().end, count);
     if (base_class::inc_count(count))
@@ -367,7 +367,7 @@ const pos_type table<Source, Key>::add(const void *data, const count_type count)
  * @return the position of the next record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::remove(const pos_type pos)
+pos_type table<Source, Key>::remove(const pos_type pos)
 {
     return remove(pos, 1);
 }
@@ -379,7 +379,7 @@ const pos_type table<Source, Key>::remove(const pos_type pos)
  * @return the position of the next record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::remove(const pos_type beg, const count_type count)
+pos_type table<Source, Key>::remove(const pos_type beg, const count_type count)
 {
     const pos_type end = base_class::inc_pos(beg, count);
     if (valid_range(beg, end))
@@ -421,7 +421,7 @@ const pos_type table<Source, Key>::remove(const pos_type beg, const count_type c
  * @return the count of remaining records
  */
 template <typename Source, typename Key>
-const count_type table<Source, Key>::remove_back(const count_type count)
+count_type table<Source, Key>::remove_back(const count_type count)
 {
     if (count >= base_class::count())
     {
@@ -488,7 +488,7 @@ inline void table<Source, Key>::do_remove(const pos_type beg, const pos_type end
  * @return the position of the first record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::read_front(void* data) const
+pos_type table<Source, Key>::read_front(void* data) const
 {
     const pos_type pos = base_class::front_pos();
     if (pos != NIL)
@@ -504,7 +504,7 @@ const pos_type table<Source, Key>::read_front(void* data) const
  * @return the position of the last record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::read_back(void* data) const
+pos_type table<Source, Key>::read_back(void* data) const
 {
     const pos_type pos = base_class::back_pos();
     if (pos != NIL)
@@ -522,7 +522,7 @@ const pos_type table<Source, Key>::read_back(void* data) const
  * @return the position of the found record
  */
 template <typename Source, typename Key>
-inline const pos_type table<Source, Key>::do_find(const void *data, const pos_type beg, const pos_type end) const
+inline pos_type table<Source, Key>::do_find(const void *data, const pos_type beg, const pos_type end) const
 {
     const size_type rec_size = base_class::rec_size();
     scoped_buffer<void> buffer(rec_size);
@@ -545,7 +545,7 @@ inline const pos_type table<Source, Key>::do_find(const void *data, const pos_ty
  * @return the position of the found record
  */
 template <typename Source, typename Key>
-inline const pos_type table<Source, Key>::do_rfind(const void *data, const pos_type beg, const pos_type end) const
+inline pos_type table<Source, Key>::do_rfind(const void *data, const pos_type beg, const pos_type end) const
 {
     const size_type rec_size = base_class::rec_size();
     scoped_buffer<void> buffer(rec_size);
@@ -569,7 +569,7 @@ inline const pos_type table<Source, Key>::do_rfind(const void *data, const pos_t
  * @return the position of the found record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::find(const void *data, const pos_type beg, const count_type count) const
+pos_type table<Source, Key>::find(const void *data, const pos_type beg, const count_type count) const
 {
     const pos_type end = base_class::inc_pos(beg, count);
     if (end > beg)
@@ -592,7 +592,7 @@ const pos_type table<Source, Key>::find(const void *data, const pos_type beg, co
  * @return the position of the found record
  */
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::rfind(const void *data, const pos_type end, const count_type count) const
+pos_type table<Source, Key>::rfind(const void *data, const pos_type end, const count_type count) const
 {
     const pos_type beg = base_class::dec_pos(end, count);
     if (end > beg)
@@ -615,7 +615,7 @@ const pos_type table<Source, Key>::rfind(const void *data, const pos_type end, c
  */
 //virtual
 template <typename Source, typename Key>
-const pos_type table<Source, Key>::do_inc_pos(const pos_type pos, const count_type count) const
+pos_type table<Source, Key>::do_inc_pos(const pos_type pos, const count_type count) const
 {
     return (pos + count) % base_class::limit();
 }
@@ -628,7 +628,7 @@ const pos_type table<Source, Key>::do_inc_pos(const pos_type pos, const count_ty
  */
 //virtual
 template <typename Source, typename Key>
-inline const pos_type table<Source, Key>::do_dec_pos(const pos_type pos, const count_type count) const
+inline pos_type table<Source, Key>::do_dec_pos(const pos_type pos, const count_type count) const
 {
     return pos >= count ? pos - count : base_class::limit() + pos - count;
 }
@@ -640,7 +640,7 @@ inline const pos_type table<Source, Key>::do_dec_pos(const pos_type pos, const c
  * @return the count of pages in the range
  */
 template <typename Source, typename Key>
-inline const count_type table<Source, Key>::distance(const pos_type beg, const pos_type end) const
+inline count_type table<Source, Key>::distance(const pos_type beg, const pos_type end) const
 {
     return end > beg ? end - beg : base_class::limit() - beg + end;
 }
@@ -651,7 +651,7 @@ inline const count_type table<Source, Key>::distance(const pos_type beg, const p
  * @return the result of the checking
  */
 template <typename Source, typename Key>
-inline const bool table<Source, Key>::valid_pos(const pos_type pos) const
+inline bool table<Source, Key>::valid_pos(const pos_type pos) const
 {
     const count_type max = base_class::limit();
     const pos_type rbeg = base_class::cast_skey().beg;
@@ -667,7 +667,7 @@ inline const bool table<Source, Key>::valid_pos(const pos_type pos) const
  * @return result the checking
  */
 template <typename Source, typename Key>
-inline const bool table<Source, Key>::valid_range(const pos_type beg, const pos_type end) const
+inline bool table<Source, Key>::valid_range(const pos_type beg, const pos_type end) const
 {
     ///@todo not found checking for beg < end end etc.
     const count_type max = base_class::limit();
@@ -872,7 +872,7 @@ inline const std::string& source<File>::name() const
  * @return the size of the data source
  */
 template <typename File>
-const size_type source<File>::size() const
+size_type source<File>::size() const
 {
     return 0 == table_count() ? 0 : table_count() * (table_size() + table_space());
 }
@@ -929,7 +929,7 @@ void source<File>::resize()
  * @return the offset of the table
  */
 template <typename File>
-const offset_type source<File>::table_offset(const pos_type index) const
+offset_type source<File>::table_offset(const pos_type index) const
 {
     if (index < table_count())
     {
@@ -948,7 +948,7 @@ const offset_type source<File>::table_offset(const pos_type index) const
  * @return the index of the table
  */
 template <typename File>
-const pos_type source<File>::table_index(const offset_type table_offset) const
+pos_type source<File>::table_index(const offset_type table_offset) const
 {
     if ((table_offset - offset()) % (table_size() + table_space()) != 0)
     {
@@ -962,7 +962,7 @@ const pos_type source<File>::table_index(const offset_type table_offset) const
  * @return the size of a table
  */
 template <typename File>
-inline const size_type source<File>::table_size() const
+inline size_type source<File>::table_size() const
 {
     return rec_count() * (rec_size() + rec_space());
 }
@@ -972,7 +972,7 @@ inline const size_type source<File>::table_size() const
  * @return the count of tables
  */
 template <typename File>
-inline const count_type source<File>::table_count() const
+inline count_type source<File>::table_count() const
 {
     return m_tbl_count;
 }
@@ -982,7 +982,7 @@ inline const count_type source<File>::table_count() const
  * @return the size of a tables separator
  */
 template <typename File>
-inline const size_type source<File>::table_space() const
+inline size_type source<File>::table_space() const
 {
     return m_options.tbl_space;
 }
@@ -992,7 +992,7 @@ inline const size_type source<File>::table_space() const
  * @return the size of the record
  */
 template <typename File>
-inline const size_type source<File>::rec_size() const
+inline size_type source<File>::rec_size() const
 {
     return m_rec_size;
 }
@@ -1002,7 +1002,7 @@ inline const size_type source<File>::rec_size() const
  * @return the count of the records in the table
  */
 template <typename File>
-inline const size_type source<File>::rec_count() const
+inline size_type source<File>::rec_count() const
 {
     return m_rec_count;
 }
@@ -1012,7 +1012,7 @@ inline const size_type source<File>::rec_count() const
  * @return the size of a records separator
  */
 template <typename File>
-inline const size_type source<File>::rec_space() const
+inline size_type source<File>::rec_space() const
 {
     return m_options.rec_space;
 }
@@ -1022,7 +1022,7 @@ inline const size_type source<File>::rec_space() const
  * @return the offset of the data source
  */
 template <typename File>
-inline const offset_type source<File>::offset() const
+inline offset_type source<File>::offset() const
 {
     return m_options.offset;
 }
@@ -1059,7 +1059,7 @@ inline void source<File>::cancel()
  * @return the state of the transaction
  */
 template <typename File>
-inline const transaction_state source<File>::state() const
+inline transaction_state source<File>::state() const
 {
     return m_file->state();
 }

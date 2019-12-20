@@ -26,12 +26,12 @@ public:
     explicit data_field(const data_type& data);
     inline void *pack(void *out) const; ///< pack the field to the buffer
     inline const void *unpack(const void *in); ///< unpack the field from the buffer
-    inline const size_type size() const; ///< get the size of the field
+    inline size_type size() const; ///< get the size of the field
     inline const data_type data() const; ///< get the data of the field
     inline void data(const data_type& adata); ///< set the data of the field
-    inline const bool operator== (const data_field& o) const;
-    inline const bool operator!= (const data_field& o) const;
-    static const size_type static_size(); ///< get the size of the field
+    inline bool operator== (const data_field& o) const;
+    inline bool operator!= (const data_field& o) const;
+    static size_type static_size(); ///< get the size of the field
 private:
     data_type m_data; ///< the data of the field
 };
@@ -48,12 +48,12 @@ public:
     explicit string_field(const data_type& adata);
     inline void *pack(void *out) const; ///< pack the field to the buffer
     inline const void *unpack(const void *in); ///< unpack the field from the buffer
-    inline const size_type size() const; ///< get the size of the field
+    inline size_type size() const; ///< get the size of the field
     inline const data_type data() const; ///< get the data of the field
     inline void data(const data_type& adata); ///< set the data of the field
-    inline const bool operator== (const string_field& o) const;
-    inline const bool operator!= (const string_field& o) const;
-    static const size_type static_size(); ///< get the size of the field
+    inline bool operator== (const string_field& o) const;
+    inline bool operator!= (const string_field& o) const;
+    static size_type static_size(); ///< get the size of the field
 private:
     char m_data[SIZE]; ///< the data of the field
 };
@@ -113,7 +113,7 @@ inline const void *data_field<T>::unpack(const void *in)
  * @return the size of the field
  */
 template <typename T>
-inline const size_type data_field<T>::size() const
+inline size_type data_field<T>::size() const
 {
     return sizeof(m_data);
 }
@@ -124,7 +124,7 @@ inline const size_type data_field<T>::size() const
  */
 //static
 template <typename T>
-const size_type data_field<T>::static_size()
+size_type data_field<T>::static_size()
 {
     return sizeof(data_type);
 }
@@ -135,7 +135,7 @@ const size_type data_field<T>::static_size()
  * @return the result of the checking
  */
 template <typename T>
-inline const bool data_field<T>::operator== (const data_field& o) const
+inline bool data_field<T>::operator== (const data_field& o) const
 {
     return m_data == o.m_data;
 }
@@ -146,7 +146,7 @@ inline const bool data_field<T>::operator== (const data_field& o) const
  * @return the result of the checking
  */
 template <typename T>
-inline const bool data_field<T>::operator!= (const data_field& o) const
+inline bool data_field<T>::operator!= (const data_field& o) const
 {
     return !(*this == o);
 }
@@ -256,7 +256,7 @@ inline const void *string_field<SIZE>::unpack(const void *in)
  * @return the size of the field
  */
 template <unsigned int SIZE>
-inline const size_type string_field<SIZE>::size() const
+inline size_type string_field<SIZE>::size() const
 {
     return SIZE;
 }
@@ -267,7 +267,7 @@ inline const size_type string_field<SIZE>::size() const
  */
 //static
 template <unsigned int SIZE>
-const size_type string_field<SIZE>::static_size()
+size_type string_field<SIZE>::static_size()
 {
     return SIZE;
 }
@@ -278,7 +278,7 @@ const size_type string_field<SIZE>::static_size()
  * @return the result of the checking
  */
 template <unsigned int SIZE>
-inline const bool string_field<SIZE>::operator== (const string_field& o) const
+inline bool string_field<SIZE>::operator== (const string_field& o) const
 {
     return !strcmp(m_data, o.m_data);
 }
@@ -289,7 +289,7 @@ inline const bool string_field<SIZE>::operator== (const string_field& o) const
  * @return the result of the checking
  */
 template <unsigned int SIZE>
-inline const bool string_field<SIZE>::operator!= (const string_field& o) const
+inline bool string_field<SIZE>::operator!= (const string_field& o) const
 {
     return !(*this == o);
 }

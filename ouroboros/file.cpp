@@ -63,7 +63,7 @@ const std::string& base_file::name() const
  * Initialize
  * @return result of the initialization
  */
-const bool base_file::init()
+bool base_file::init()
 {
     return true;
 }
@@ -165,7 +165,7 @@ void base_file::write(const void *buffer, size_type size, const offset_type pos)
  * @param size the size of the base_file
  */
 //virtual
-const size_type base_file::do_resize(const size_type size)
+size_type base_file::do_resize(const size_type size)
 {
     const size_type current_size = base_file::do_size();
     if (ftruncate(m_fd, size) == -1)
@@ -189,7 +189,7 @@ const size_type base_file::do_resize(const size_type size)
  * Change the size of the base_file
  * @param size the size of the base_file
  */
-const size_type base_file::resize(const size_type size)
+size_type base_file::resize(const size_type size)
 {
     return do_resize(size);
 }
@@ -200,7 +200,7 @@ const size_type base_file::resize(const size_type size)
  * @return the size of the file
  */
 //virtual
-const size_type base_file::do_sizeup(const size_type size)
+size_type base_file::do_sizeup(const size_type size)
 {
     const size_type current_size = do_size();
     return current_size < size ? do_resize(size) : current_size;
@@ -211,7 +211,7 @@ const size_type base_file::do_sizeup(const size_type size)
  * @param size the new size
  * @return the size of the file
  */
-const size_type base_file::sizeup(const size_type size)
+size_type base_file::sizeup(const size_type size)
 {
     return do_sizeup(size);
 }
@@ -221,7 +221,7 @@ const size_type base_file::sizeup(const size_type size)
  * @return the size of the base_file
  */
 //virtual
-const size_type base_file::do_size() const
+size_type base_file::do_size() const
 {
     const off_t result = lseek(m_fd, 0, SEEK_END);
     if (-1 == result)
@@ -235,7 +235,7 @@ const size_type base_file::do_size() const
  * Get the size of the base_file
  * @return the size of the base_file
  */
-const size_type base_file::size() const
+size_type base_file::size() const
 {
     return do_size();
 }
@@ -282,7 +282,7 @@ void base_file::flush() const
  * Get the base_file descriptor
  * @return the base_file descriptor
  */
-const int base_file::fd() const
+int base_file::fd() const
 {
     return m_fd;
 }
@@ -315,7 +315,7 @@ void base_file::cancel()
  * Get the state of the transaction
  * @return the state of the transaction
  */
-const transaction_state base_file::state() const
+transaction_state base_file::state() const
 {
     return TR_UNKNOWN;
 }

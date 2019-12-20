@@ -61,9 +61,9 @@ public:
     typedef typename status_file_page_type::status_type status_type;
     explicit journal_file(const std::string& name);
     journal_file(const std::string& name, const file_region_type& region);
-    const bool init(); ///< initialize
+    bool init(); ///< initialize
 protected:
-    const bool init_indexes(); ///< initialize the indexes of backup pages
+    bool init_indexes(); ///< initialize the indexes of backup pages
     virtual void do_before_add_index(const pos_type index, void *page); ///< perform an action before add the index
     virtual void do_after_add_index(const pos_type index, void *page); ///< perform an action after add the index
     virtual void do_after_remove_index(const pos_type index); ///< perform an action after remove the index
@@ -117,7 +117,7 @@ journal_file<FilePage, pageCount, File, Cache>::journal_file(const std::string& 
  */
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-const bool journal_file<FilePage, pageCount, File, Cache>::init()
+bool journal_file<FilePage, pageCount, File, Cache>::init()
 {
     base_class::init();
     const bool result = init_indexes();
@@ -171,7 +171,7 @@ void journal_file<FilePage, pageCount, File, Cache>::
  */
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-const bool journal_file<FilePage, pageCount, File, Cache>::init_indexes()
+bool journal_file<FilePage, pageCount, File, Cache>::init_indexes()
 {
     typedef std::pair<pos_type, page_list_type> transaction_state_type;
     typedef std::map<pos_type, transaction_state_type> transaction_list_type;

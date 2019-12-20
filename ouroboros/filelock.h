@@ -25,10 +25,10 @@ public:
     explicit file_lock(const std::string& name);
     file_lock(const std::string& name, const file_region_type& region);
 
-    const bool lock(const pos_type pos, const size_type len) const; ///< set the exclusive lock
-    const bool unlock(const pos_type pos, const size_type len) const; ///< remove the exclusive lock
-    const bool lock_sharable(const pos_type pos, const size_type len) const; ///< set the shared lock
-    const bool unlock_sharable(const pos_type pos, const size_type len) const; ///< remove the shared lock
+    bool lock(const pos_type pos, const size_type len) const; ///< set the exclusive lock
+    bool unlock(const pos_type pos, const size_type len) const; ///< remove the exclusive lock
+    bool lock_sharable(const pos_type pos, const size_type len) const; ///< set the shared lock
+    bool unlock_sharable(const pos_type pos, const size_type len) const; ///< remove the shared lock
 };
 
 //==============================================================================
@@ -62,7 +62,7 @@ file_lock<FilePage>::file_lock(const std::string& name, const file_region_type& 
  * @return the result
  */
 template <typename FilePage>
-const bool file_lock<FilePage>::lock(const pos_type pos, const size_type len) const
+bool file_lock<FilePage>::lock(const pos_type pos, const size_type len) const
 {
     struct ::flock lock;
     lock.l_type    = F_WRLCK;
@@ -79,7 +79,7 @@ const bool file_lock<FilePage>::lock(const pos_type pos, const size_type len) co
  * @return the result
  */
 template <typename FilePage>
-const bool file_lock<FilePage>::unlock(const pos_type pos, const size_type len) const
+bool file_lock<FilePage>::unlock(const pos_type pos, const size_type len) const
 {
     struct ::flock lock;
     lock.l_type    = F_UNLCK;
@@ -96,7 +96,7 @@ const bool file_lock<FilePage>::unlock(const pos_type pos, const size_type len) 
  * @return the result
  */
 template <typename FilePage>
-const bool file_lock<FilePage>::lock_sharable(const pos_type pos, const size_type len) const
+bool file_lock<FilePage>::lock_sharable(const pos_type pos, const size_type len) const
 {
     struct ::flock lock;
     lock.l_type    = F_RDLCK;
@@ -113,7 +113,7 @@ const bool file_lock<FilePage>::lock_sharable(const pos_type pos, const size_typ
  * @return the result
  */
 template <typename FilePage>
-const bool file_lock<FilePage>::unlock_sharable(const pos_type pos, const size_type len) const
+bool file_lock<FilePage>::unlock_sharable(const pos_type pos, const size_type len) const
 {
     return unlock(pos, len);
 }

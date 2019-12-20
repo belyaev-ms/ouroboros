@@ -102,8 +102,8 @@ public:
     reverse_iterator rend() const; ///< get the reverse iterator to the end of the tree
     iterator root() const; ///< get the iterator to the root of the tree
 
-    const bool empty() const; ///< check the tree is empty
-    const size_type size() const; ///< get the size of the tree
+    bool empty() const; ///< check the tree is empty
+    size_type size() const; ///< get the size of the tree
 
     virtual iterator maximum() const; ///< get the iterator to the node that has a maximum key
     virtual iterator minimum() const; ///< get the iterator to the node that has a minimum key
@@ -130,7 +130,7 @@ protected:
     inline void destruct(const pnode_type pnode); ///< remove the pointer to the node
     virtual void move(const pnode_type node, const pos_type pos); ///< move node to the new position
     inline void set_root(const pos_type root); ///< set position of the root of the tree
-    inline const pos_type get_root() const; ///< get position of the root of the tree
+    inline pos_type get_root() const; ///< get position of the root of the tree
 private:
     rbtree& operator= (const rbtree& o);
 
@@ -287,7 +287,7 @@ typename rbtree<PNode>::iterator rbtree<PNode>::root() const
  * @return the result of the checking
  */
 template <typename PNode>
-const bool rbtree<PNode>::empty() const
+bool rbtree<PNode>::empty() const
 {
     return m_root.pos() == NIL;
 }
@@ -297,7 +297,7 @@ const bool rbtree<PNode>::empty() const
  * @return the size of the tree
  */
 template <typename PNode>
-const size_type rbtree<PNode>::size() const
+size_type rbtree<PNode>::size() const
 {
     return raw_table().count();
 }
@@ -1027,7 +1027,7 @@ inline void rbtree<PNode>::set_root(const pos_type root)
  * @return the position of the root of the tree
  */
 template <typename PNode>
-inline const pos_type rbtree<PNode>::get_root() const
+inline pos_type rbtree<PNode>::get_root() const
 {
     return m_root.pos();
 }
