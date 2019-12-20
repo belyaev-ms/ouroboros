@@ -120,7 +120,9 @@ template <typename FilePage, int pageCount, typename File,
 const bool journal_file<FilePage, pageCount, File, Cache>::init()
 {
     base_class::init();
-    return init_indexes();
+    const bool result = init_indexes();
+    base_class::reset();
+    return result;
 }
 
 /**
@@ -322,7 +324,6 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes()
             status_file_page_type status_page(page);
             OUROBOROS_ASSERT(status_page.get_status().state == JS_FIXED);
             status_page.set_status(journal_status_type());
-            base_class::clean();
         }
         else
         {
@@ -335,6 +336,7 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes()
             simple_file::do_write(buffer, base_class::CACHE_PAGE_SIZE,
                 m_reference_index * base_class::CACHE_PAGE_SIZE);
         }
+        base_class::clean();
         m_reference_index = NIL;
     }
 }
