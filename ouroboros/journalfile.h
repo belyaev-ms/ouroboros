@@ -294,7 +294,6 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const
         void *page = base_class::m_cache.get_page(status);
         status_file_page_type status_page(page);
         status_page.set_status(index_status);
-        simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
     }
     else
     {
@@ -323,8 +322,6 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes()
             status_file_page_type status_page(page);
             OUROBOROS_ASSERT(status_page.get_status().state == JS_FIXED);
             status_page.set_status(journal_status_type());
-            simple_file::do_write(page, base_class::CACHE_PAGE_SIZE,
-                m_reference_index * base_class::CACHE_PAGE_SIZE);
             base_class::clean();
         }
         else
