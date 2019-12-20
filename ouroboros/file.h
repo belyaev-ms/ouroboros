@@ -202,7 +202,9 @@ const size_type file<FilePage>::sizeup(const size_type size)
 template <typename FilePage>
 void file<FilePage>::refresh(size_type size, const pos_type pos)
 {
-    do_refresh(size, convert_offset(pos));
+    const offset_type offset = convert_offset(pos);
+    const offset_type real_size = convert_offset(pos + size) - offset;
+    do_refresh(real_size, convert_offset(pos));
 }
 
 }   //namespace ouroboros
