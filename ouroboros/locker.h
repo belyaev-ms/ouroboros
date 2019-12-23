@@ -19,12 +19,12 @@ class base_locker
 {
 public:
     inline base_locker(const std::string& name, count_type& scoped_count, count_type& sharable_count);
-    inline const bool lock(); ///< set the exclusive lock
-    inline const bool lock(const size_t timeout); ///< set the exclusive lock with a timeout
-    inline const bool unlock(); ///< remove the exclusive lock
-    inline const bool lock_sharable(); ///< set the shared lock
-    inline const bool lock_sharable(const size_t timeout); ///< set the shared lock with a timeout
-    inline const bool unlock_sharable(); ///< remove the shared lock
+    inline bool lock(); ///< set the exclusive lock
+    inline bool lock(const size_t timeout); ///< set the exclusive lock with a timeout
+    inline bool unlock(); ///< remove the exclusive lock
+    inline bool lock_sharable(); ///< set the shared lock
+    inline bool lock_sharable(const size_t timeout); ///< set the shared lock with a timeout
+    inline bool unlock_sharable(); ///< remove the shared lock
     inline const char* name() const; ///< get the name of the locker
 private:
     count_type& m_scoped_count;
@@ -83,12 +83,12 @@ template <typename Locker>
 struct locker : public Locker, private base_locker
 {
     inline locker(const std::string& name, count_type& scoped_count, count_type& sharable_count);
-    inline const bool lock(); ///< set the exclusive lock
-    inline const bool lock(const size_t timeout); ///< set the exclusive lock with a timeout
-    inline const bool unlock(); ///< remove the exclusive lock
-    inline const bool lock_sharable(); ///< set the shared lock
-    inline const bool lock_sharable(const size_t timeout); ///< set the shared lock with a timeout
-    inline const bool unlock_sharable(); ///< remove the shared lock
+    inline bool lock(); ///< set the exclusive lock
+    inline bool lock(const size_t timeout); ///< set the exclusive lock with a timeout
+    inline bool unlock(); ///< remove the exclusive lock
+    inline bool lock_sharable(); ///< set the shared lock
+    inline bool lock_sharable(const size_t timeout); ///< set the shared lock with a timeout
+    inline bool unlock_sharable(); ///< remove the shared lock
     inline const char* name() const; ///< get the name of the locker
 };
 
@@ -111,7 +111,7 @@ inline base_locker::base_locker(const std::string& name, count_type& scoped_coun
  * Set the exclusive lock
  * @return the result of the setting
  */
-inline const bool base_locker::lock()
+inline bool base_locker::lock()
 {
     return 0 == m_scoped_count++;
 }
@@ -121,7 +121,7 @@ inline const bool base_locker::lock()
  * @param timeout the timeout
  * @return the result of the setting
  */
-inline const bool base_locker::lock(const size_t timeout)
+inline bool base_locker::lock(const size_t timeout)
 {
     return lock();
 }
@@ -130,7 +130,7 @@ inline const bool base_locker::lock(const size_t timeout)
  * Remove the exclusive lock
  * @return the result of the removing
  */
-inline const bool base_locker::unlock()
+inline bool base_locker::unlock()
 {
     assert(m_scoped_count > 0);
     return 0 == --m_scoped_count;
@@ -140,7 +140,7 @@ inline const bool base_locker::unlock()
  * Set the shared lock
  * @return the result of the setting
  */
-inline const bool base_locker::lock_sharable()
+inline bool base_locker::lock_sharable()
 {
     return 0 == m_scoped_count && 0 == m_sharable_count++;
 }
@@ -150,7 +150,7 @@ inline const bool base_locker::lock_sharable()
  * @param timeout the timeout
  * @return the result
  */
-inline const bool base_locker::lock_sharable(const size_t timeout)
+inline bool base_locker::lock_sharable(const size_t timeout)
 {
     return lock_sharable();
 }
@@ -159,7 +159,7 @@ inline const bool base_locker::lock_sharable(const size_t timeout)
  * Remove the shared lock
  * @return the result of the removing
  */
-inline const bool base_locker::unlock_sharable()
+inline bool base_locker::unlock_sharable()
 {
     assert(m_scoped_count > 0 || m_sharable_count > 0);
     return 0 == m_scoped_count && 0 == --m_sharable_count;
@@ -195,7 +195,7 @@ inline locker<Locker>::locker(const std::string& name, count_type& scoped_count,
  * @return the result of the setting
  */
 template <typename Locker>
-inline const bool locker<Locker>::lock()
+inline bool locker<Locker>::lock()
 {
     return lock(OUROBOROS_LOCK_TIMEOUT);
 }
@@ -206,7 +206,7 @@ inline const bool locker<Locker>::lock()
  * @return the result of the setting
  */
 template <typename Locker>
-inline const bool locker<Locker>::lock(const size_t timeout)
+inline bool locker<Locker>::lock(const size_t timeout)
 {
     if (base_locker::lock())
     {
@@ -226,7 +226,7 @@ inline const bool locker<Locker>::lock(const size_t timeout)
  * @return the result of the removing
  */
 template <typename Locker>
-inline const bool locker<Locker>::unlock()
+inline bool locker<Locker>::unlock()
 {
     if (base_locker::unlock())
     {
@@ -246,7 +246,7 @@ inline const bool locker<Locker>::unlock()
  * @return the result of the setting
  */
 template <typename Locker>
-inline const bool locker<Locker>::lock_sharable()
+inline bool locker<Locker>::lock_sharable()
 {
     return lock_sharable(OUROBOROS_LOCK_TIMEOUT);
 }
@@ -257,7 +257,7 @@ inline const bool locker<Locker>::lock_sharable()
  * @return the result of the setting
  */
 template <typename Locker>
-inline const bool locker<Locker>::lock_sharable(const size_t timeout)
+inline bool locker<Locker>::lock_sharable(const size_t timeout)
 {
     if (base_locker::lock_sharable())
     {
@@ -277,7 +277,7 @@ inline const bool locker<Locker>::lock_sharable(const size_t timeout)
  * @return the result of the removing
  */
 template <typename Locker>
-inline const bool locker<Locker>::unlock_sharable()
+inline bool locker<Locker>::unlock_sharable()
 {
     if (base_locker::unlock_sharable())
     {

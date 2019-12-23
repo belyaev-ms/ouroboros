@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(transact_wr_cancel_except)
     }
     catch (...)
     {
-        
+
     }
 
     for (size_t index = 0; index < tbl_count; ++index)

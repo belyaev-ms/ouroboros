@@ -25,7 +25,7 @@ class base_map
 {
 public:
     inline static void update(void *ptr); ///< update data of the container
-    inline static const size_type size(const std::string& name, const count_type count); ///< get the size of the container
+    inline static size_type size(const std::string& name, const count_type count); ///< get the size of the container
 };
 
 /**
@@ -145,7 +145,7 @@ private:
  */
 //static
 template <typename Key, typename Field>
-inline const size_type base_map<Key, Field>::size(const std::string& name, const count_type count)
+inline size_type base_map<Key, Field>::size(const std::string& name, const count_type count)
 {
     return 0;
 }

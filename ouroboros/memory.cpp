@@ -60,7 +60,7 @@ void shared_memory::set_name(const std::string& name)
  * @return the size of the shared memory
  */
 //static
-const size_type shared_memory::get_size()
+size_type shared_memory::get_size()
 {
     return s_size;
 }

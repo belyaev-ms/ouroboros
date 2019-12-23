@@ -45,14 +45,14 @@ public:
     base_cursor(const base_cursor& o);
     base_cursor(table_type& table, const pos_type pos);
 
-    inline const pos_type pos() const;
+    inline pos_type pos() const;
     base_cursor& operator++ ();
     base_cursor operator++ (int );
     base_cursor& operator-- ();
     base_cursor operator-- (int );
 
-    const bool operator== (const base_cursor& o) const;
-    const bool operator!= (const base_cursor& o) const;
+    bool operator== (const base_cursor& o) const;
+    bool operator!= (const base_cursor& o) const;
 
     base_cursor& operator= (const base_cursor& o);
 protected:
@@ -86,34 +86,34 @@ public:
 
     const_cursor begin() const; ///< get the begin cursor
     const_cursor end() const; ///< get the end cursor
-    inline const pos_type beg_pos() const; ///< get the begin position of records
-    inline const pos_type end_pos() const; ///< get the end position of records
-    inline const pos_type inc_pos(const pos_type pos, const count_type count = 1) const; ///< increment the position
-    inline const pos_type dec_pos(const pos_type pos, const count_type count = 1) const; ///< decrement the position
-    inline const pos_type front_pos() const; ///< get the position of the first record
-    inline const pos_type back_pos() const; ///< get the position of the last record
+    inline pos_type beg_pos() const; ///< get the begin position of records
+    inline pos_type end_pos() const; ///< get the end position of records
+    inline pos_type inc_pos(const pos_type pos, const count_type count = 1) const; ///< increment the position
+    inline pos_type dec_pos(const pos_type pos, const count_type count = 1) const; ///< decrement the position
+    inline pos_type front_pos() const; ///< get the position of the first record
+    inline pos_type back_pos() const; ///< get the position of the last record
 
-    inline const count_type limit() const; ///< get the size of the table by records
-    inline const count_type count() const; ///< get the count of records
+    inline count_type limit() const; ///< get the size of the table by records
+    inline count_type count() const; ///< get the count of records
     inline void set_count(const count_type count); ///< set the count of records
-    inline const bool empty() const; ///< check the table is empty
+    inline bool empty() const; ///< check the table is empty
 
     void clear(); ///< clear the table
 
-    inline const pos_type index() const; ///< get the index of the table in the source of data
+    inline pos_type index() const; ///< get the index of the table in the source of data
 
-    inline const revision_type revision() const; ///< get the revision of modifying the table
+    inline revision_type revision() const; ///< get the revision of modifying the table
     inline void set_revision(const revision_type rev); ///< set the revision of modifying the table
-    inline const revision_type inc_revision(); ///< increment the revision of modifying the table
-    inline const bool relevant() const; ///< check the table is relevant
-    inline const bool refresh(); ///< refresh the metadata of the table by the key
+    inline revision_type inc_revision(); ///< increment the revision of modifying the table
+    inline bool relevant() const; ///< check the table is relevant
+    inline bool refresh(); ///< refresh the metadata of the table by the key
     inline void update(); ///< update the key by the metadata of the table
     inline void recovery(); ///< recovery the metadata of the table by the key
 
     inline void start();  ///< start the transaction
     inline void stop();   ///< stop the transaction
     inline void cancel(); ///< cancel the transaction
-    inline const transaction_state state() const; ///< get the state of the transaction
+    inline transaction_state state() const; ///< get the state of the transaction
 
     inline const skey_type& skey() const; ///< get the reference to the key of the table
     inline skey_type& cast_skey(); ///< get the cast of the key at the begin of the transaction
@@ -126,22 +126,22 @@ public:
 #endif
 protected:
     inline void set_beg_pos(const pos_type pos); ///< set the begin position of records
-    const pos_type inc_beg_pos(const count_type count = 1); ///< increment the begin position of records
-    const pos_type dec_beg_pos(const count_type count = 1); ///< decrement the begin position of records
+    pos_type inc_beg_pos(const count_type count = 1); ///< increment the begin position of records
+    pos_type dec_beg_pos(const count_type count = 1); ///< decrement the begin position of records
     inline void set_end_pos(const pos_type pos); ///< set the end position of records
-    const pos_type inc_end_pos(const count_type count = 1); ///< increment the end position of records
-    const pos_type dec_end_pos(const count_type count = 1); ///< decrement the end position of records
+    pos_type inc_end_pos(const count_type count = 1); ///< increment the end position of records
+    pos_type dec_end_pos(const count_type count = 1); ///< decrement the end position of records
 
     inline const skey_type& cast_skey() const; ///< get the cast of the key at the begin of the transaction
-    inline const count_type rec_size() const; ///< get the size of a record
-    inline const count_type rec_space() const; ///< get the size of the records separator
-    const offset_type rec_offset(const pos_type pos) const; ///< get the offset of the record
-    inline const offset_type offset() const; ///< get the offset of the table
-    inline const bool inc_count(const count_type count = 1); ///< increment the records count of the table
-    inline const bool dec_count(const count_type count = 1); ///< decrement the records count of the table
+    inline count_type rec_size() const; ///< get the size of a record
+    inline count_type rec_space() const; ///< get the size of the records separator
+    offset_type rec_offset(const pos_type pos) const; ///< get the offset of the record
+    inline offset_type offset() const; ///< get the offset of the table
+    inline bool inc_count(const count_type count = 1); ///< increment the records count of the table
+    inline bool dec_count(const count_type count = 1); ///< decrement the records count of the table
 
-    virtual const pos_type do_inc_pos(const pos_type pos, const count_type count) const = 0; ///< increment the position
-    virtual const pos_type do_dec_pos(const pos_type pos, const count_type count) const = 0; ///< decrement the position
+    virtual pos_type do_inc_pos(const pos_type pos, const count_type count) const = 0; ///< increment the position
+    virtual pos_type do_dec_pos(const pos_type pos, const count_type count) const = 0; ///< decrement the position
     inline void read(void *data, const size_type size, const offset_type offset) const; ///< read raw data
     inline void write(const void *data, const size_type size, const offset_type offset); ///< write raw data
     virtual void do_before_remove(const pos_type pos) = 0; ///< perform an action before deleting record
@@ -193,7 +193,7 @@ base_cursor<Table>::base_cursor(const base_cursor<Table>& o) :
  * @return current position
  */
 template <typename Table>
-inline const pos_type base_cursor<Table>::pos() const
+inline pos_type base_cursor<Table>::pos() const
 {
     return m_pos;
 }
@@ -270,7 +270,7 @@ base_cursor<Table> base_cursor<Table>::operator-- (int )
  * @return the result of the checking
  */
 template <typename Table>
-const bool base_cursor<Table>::operator== (const base_cursor<Table>& o) const
+bool base_cursor<Table>::operator== (const base_cursor<Table>& o) const
 {
     return &m_table == &o.m_table && m_pos == o.m_pos;
 }
@@ -281,7 +281,7 @@ const bool base_cursor<Table>::operator== (const base_cursor<Table>& o) const
  * @return the result of the checking
  */
 template <typename Table>
-const bool base_cursor<Table>::operator!= (const base_cursor<Table>& o) const
+bool base_cursor<Table>::operator!= (const base_cursor<Table>& o) const
 {
     return !operator== (o);
 }
@@ -371,7 +371,7 @@ typename base_table<Source, Key>::const_cursor base_table<Source, Key>::end() co
  * @return the begin position of records
  */
 template <typename Source, typename Key>
-inline const pos_type base_table<Source, Key>::beg_pos() const
+inline pos_type base_table<Source, Key>::beg_pos() const
 {
     return m_cast_skey.beg;
 }
@@ -392,7 +392,7 @@ inline void base_table<Source, Key>::set_beg_pos(const pos_type pos)
  * @return new begin position of records
  */
 template <typename Source, typename Key>
-const pos_type base_table<Source, Key>::inc_beg_pos(const count_type count)
+pos_type base_table<Source, Key>::inc_beg_pos(const count_type count)
 {
     m_cast_skey.beg = inc_pos(m_cast_skey.beg, count);
     return m_cast_skey.beg;
@@ -404,7 +404,7 @@ const pos_type base_table<Source, Key>::inc_beg_pos(const count_type count)
  * @return new begin position of records
  */
 template <typename Source, typename Key>
-const pos_type base_table<Source, Key>::dec_beg_pos(const count_type count)
+pos_type base_table<Source, Key>::dec_beg_pos(const count_type count)
 {
     m_cast_skey.beg = dec_pos(m_cast_skey.beg, count);
     return m_cast_skey.beg;
@@ -415,7 +415,7 @@ const pos_type base_table<Source, Key>::dec_beg_pos(const count_type count)
  * @return the end position of records
  */
 template <typename Source, typename Key>
-inline const pos_type base_table<Source, Key>::end_pos() const
+inline pos_type base_table<Source, Key>::end_pos() const
 {
     return m_cast_skey.end;
 }
@@ -436,7 +436,7 @@ inline void base_table<Source, Key>::set_end_pos(const pos_type pos)
  * @return new end position of records
  */
 template <typename Source, typename Key>
-const pos_type base_table<Source, Key>::inc_end_pos(const count_type count)
+pos_type base_table<Source, Key>::inc_end_pos(const count_type count)
 {
     m_cast_skey.end = inc_pos(m_cast_skey.end, count);
     return m_cast_skey.end;
@@ -448,7 +448,7 @@ const pos_type base_table<Source, Key>::inc_end_pos(const count_type count)
  * @return new end position of records
  */
 template <typename Source, typename Key>
-const pos_type base_table<Source, Key>::dec_end_pos(const count_type count)
+pos_type base_table<Source, Key>::dec_end_pos(const count_type count)
 {
     m_cast_skey.end = dec_pos(m_cast_skey.end, count);
     return m_cast_skey.end;
@@ -461,7 +461,7 @@ const pos_type base_table<Source, Key>::dec_end_pos(const count_type count)
  * @return new position of the record
  */
 template <typename Source, typename Key>
-inline const pos_type base_table<Source, Key>::inc_pos(const pos_type pos, const count_type count) const
+inline pos_type base_table<Source, Key>::inc_pos(const pos_type pos, const count_type count) const
 {
 #if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
     const count_type max = limit();
@@ -480,7 +480,7 @@ inline const pos_type base_table<Source, Key>::inc_pos(const pos_type pos, const
  * @return new position of the record
  */
 template <typename Source, typename Key>
-inline const pos_type base_table<Source, Key>::dec_pos(const pos_type pos, const count_type count) const
+inline pos_type base_table<Source, Key>::dec_pos(const pos_type pos, const count_type count) const
 {
 #if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
     const count_type max = limit();
@@ -497,7 +497,7 @@ inline const pos_type base_table<Source, Key>::dec_pos(const pos_type pos, const
  * @return the position of the first record
  */
 template <typename Source, typename Key>
-inline const pos_type base_table<Source, Key>::front_pos() const
+inline pos_type base_table<Source, Key>::front_pos() const
 {
     return empty() ? NIL : m_cast_skey.beg;
 }
@@ -507,7 +507,7 @@ inline const pos_type base_table<Source, Key>::front_pos() const
  * @return the position of the last record
  */
 template <typename Source, typename Key>
-inline const pos_type base_table<Source, Key>::back_pos() const
+inline pos_type base_table<Source, Key>::back_pos() const
 {
     return empty() ? NIL : dec_pos(m_cast_skey.end);
 }
@@ -517,7 +517,7 @@ inline const pos_type base_table<Source, Key>::back_pos() const
  * @return the size of the table by records
  */
 template <typename Source, typename Key>
-inline const count_type base_table<Source, Key>::limit() const
+inline count_type base_table<Source, Key>::limit() const
 {
     return m_source.rec_count();
 }
@@ -527,7 +527,7 @@ inline const count_type base_table<Source, Key>::limit() const
  * @return the count of records
  */
 template <typename Source, typename Key>
-inline const count_type base_table<Source, Key>::count() const
+inline count_type base_table<Source, Key>::count() const
 {
     return m_cast_skey.count;
 }
@@ -547,7 +547,7 @@ inline void base_table<Source, Key>::set_count(const count_type count)
  * @return the result of the checking
  */
 template <typename Source, typename Key>
-inline const bool base_table<Source, Key>::empty() const
+inline bool base_table<Source, Key>::empty() const
 {
     return 0 == m_cast_skey.count;
 }
@@ -557,7 +557,7 @@ inline const bool base_table<Source, Key>::empty() const
  * @return the index of the table in the source of data
  */
 template <typename Source, typename Key>
-inline const pos_type base_table<Source, Key>::index() const
+inline pos_type base_table<Source, Key>::index() const
 {
     return m_source.table_index(m_offset);
 }
@@ -567,7 +567,7 @@ inline const pos_type base_table<Source, Key>::index() const
  * @return the revision of modifying the table
  */
 template <typename Source, typename Key>
-inline const revision_type base_table<Source, Key>::revision() const
+inline revision_type base_table<Source, Key>::revision() const
 {
     return m_cast_skey.rev;
 }
@@ -587,7 +587,7 @@ inline void base_table<Source, Key>::set_revision(const revision_type rev)
  * @return new revision of modifying the table
  */
 template <typename Source, typename Key>
-inline const revision_type base_table<Source, Key>::inc_revision()
+inline revision_type base_table<Source, Key>::inc_revision()
 {
     return ++m_cast_skey.rev;
 }
@@ -597,7 +597,7 @@ inline const revision_type base_table<Source, Key>::inc_revision()
  * @return the result of the checking
  */
 template <typename Source, typename Key>
-inline const bool base_table<Source, Key>::relevant() const
+inline bool base_table<Source, Key>::relevant() const
 {
     return m_skey.rev == m_cast_skey.rev;
 }
@@ -607,7 +607,7 @@ inline const bool base_table<Source, Key>::relevant() const
  * @return the result of the checking
  */
 template <typename Source, typename Key>
-inline const bool base_table<Source, Key>::refresh()
+inline bool base_table<Source, Key>::refresh()
 {
     // check the table is relevant
     if (!relevant())
@@ -671,7 +671,7 @@ inline void base_table<Source, Key>::cancel()
  * @return the state of the transaction
  */
 template <typename Source, typename Key>
-inline const transaction_state base_table<Source, Key>::state() const
+inline transaction_state base_table<Source, Key>::state() const
 {
     return m_source.state();
 }
@@ -739,7 +739,7 @@ inline const typename base_table<Source, Key>::source_type&
  * @return the size of a record
  */
 template <typename Source, typename Key>
-inline const size_type base_table<Source, Key>::rec_size() const
+inline size_type base_table<Source, Key>::rec_size() const
 {
     return m_source.rec_size();
 }
@@ -749,7 +749,7 @@ inline const size_type base_table<Source, Key>::rec_size() const
  * @return the size of the records separator
  */
 template <typename Source, typename Key>
-inline const size_type base_table<Source, Key>::rec_space() const
+inline size_type base_table<Source, Key>::rec_space() const
 {
     return m_source.rec_space();
 }
@@ -760,7 +760,7 @@ inline const size_type base_table<Source, Key>::rec_space() const
  * @return the offset of the record
  */
 template <typename Source, typename Key>
-const offset_type base_table<Source, Key>::rec_offset(const pos_type pos) const
+offset_type base_table<Source, Key>::rec_offset(const pos_type pos) const
 {
 #if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
     if (pos >= limit())
@@ -776,7 +776,7 @@ const offset_type base_table<Source, Key>::rec_offset(const pos_type pos) const
  * @return the offset of the table
  */
 template <typename Source, typename Key>
-inline const offset_type base_table<Source, Key>::offset() const
+inline offset_type base_table<Source, Key>::offset() const
 {
     return m_offset;
 }
@@ -787,7 +787,7 @@ inline const offset_type base_table<Source, Key>::offset() const
  * @return the overflow indication
  */
 template <typename Source, typename Key>
-inline const bool base_table<Source, Key>::inc_count(const count_type count)
+inline bool base_table<Source, Key>::inc_count(const count_type count)
 {
     const count_type max = limit();
 #if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
@@ -811,7 +811,7 @@ inline const bool base_table<Source, Key>::inc_count(const count_type count)
  * @return the indication that there are not any records in the table
  */
 template <typename Source, typename Key>
-inline const bool base_table<Source, Key>::dec_count(const count_type count)
+inline bool base_table<Source, Key>::dec_count(const count_type count)
 {
 #if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
     if (count > m_cast_skey.count)

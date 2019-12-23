@@ -1,4 +1,4 @@
-/** 
+/**
  * @file   memory.h
  * The shared memory for shared objects
  */
@@ -37,7 +37,7 @@ public:
 
     static const std::string& get_name();
     static void set_name(const std::string& name);
-    static const size_type get_size();
+    static size_type get_size();
     static void set_size(const size_type size);
 private:
     shared_memory();

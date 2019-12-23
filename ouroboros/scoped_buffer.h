@@ -40,8 +40,8 @@ private:
     scoped_buffer();
     scoped_buffer(const scoped_buffer& );
     scoped_buffer& operator= (const scoped_buffer& );
-    void operator== (const scoped_buffer& ) const;
-    void operator!= (const scoped_buffer& ) const;
+    bool operator== (const scoped_buffer& ) const;
+    bool operator!= (const scoped_buffer& ) const;
 private:
     void *m_buffer;
 };

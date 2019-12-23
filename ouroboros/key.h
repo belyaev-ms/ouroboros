@@ -26,22 +26,22 @@ public:
     inline simple_key(const key_type akey, const spos_type apos, const pos_type abeg,
         const pos_type aend, const count_type acount, const revision_type arev);
 
-    inline const bool operator == (const simple_key& o) const;
-    inline const bool operator != (const simple_key& o) const;
+    inline bool operator == (const simple_key& o) const;
+    inline bool operator != (const simple_key& o) const;
 
     inline void *pack(void *out) const;
     inline const void *unpack(const void *in);
-    inline const size_type size() const;
-    inline const bool valid() const;
+    inline size_type size() const;
+    inline bool valid() const;
 
-    static const size_type static_size()
+    static size_type static_size()
     {
         return sizeof(key_type) + sizeof(spos_type) + sizeof(pos_type) + sizeof(pos_type) +
             sizeof(count_type) + sizeof(revision_type);
     }
 
 public:
-    enum {COUNT = 6};   ///< the count of the key fields
+    enum { COUNT = 6 };    ///< the count of the key fields
     key_type   key;        ///< the value of the key
     spos_type  pos;        ///< the position of the table
     pos_type   beg;        ///< the position of the begin reacords
@@ -91,7 +91,7 @@ inline simple_key::simple_key(const key_type akey, const spos_type apos, const p
  * @param o the another key
  * @return the result of the checking
  */
-inline const bool simple_key::operator == (const simple_key& o) const
+inline bool simple_key::operator == (const simple_key& o) const
 {
     return key == o.key
         && pos == o.pos
@@ -106,7 +106,7 @@ inline const bool simple_key::operator == (const simple_key& o) const
  * @param o the another key
  * @return the result of the checking
  */
-inline const bool simple_key::operator != (const simple_key& o) const
+inline bool simple_key::operator != (const simple_key& o) const
 {
     return !(*this == o);
 }
@@ -161,7 +161,7 @@ inline const void* simple_key::unpack(const void *in)
  * Get the size of the packed key
  * @return the size of the packed key
  */
-inline const size_type simple_key::size() const
+inline size_type simple_key::size() const
 {
     return static_size();
 }
@@ -170,7 +170,7 @@ inline const size_type simple_key::size() const
  * Check the key is valid
  * @return the result of the checking
  */
-inline const bool simple_key::valid() const
+inline bool simple_key::valid() const
 {
     return !(0 == count && beg != end);
 }

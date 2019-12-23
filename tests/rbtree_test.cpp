@@ -21,6 +21,7 @@ typedef data_table<interface_table, record_type, skey_type, local_interface> dat
 typedef rbtree_table_adapter<datatable_type> table_type;
 typedef table_smart_pnode<node_type, table_type> pnode_type;
 typedef fast_rbtree<pnode_type> test_tree_type;
+typedef datasource_type::file_region_type file_region_type;
 
 const size_t count = 100;
 
@@ -89,6 +90,8 @@ BOOST_AUTO_TEST_CASE(simple_rbtree_test)
 {
     skey_type skey;
     datasource_type source("tree.dat", 1, count);
+    file_region_type file_region(1, source.table_size());
+    source.set_file_region(file_region);
     table_type table(source, skey);
     test_tree_type test_tree(table, NIL);
     sample_tree_type sample_tree;
@@ -221,6 +224,8 @@ BOOST_AUTO_TEST_CASE(insert_equal_rbtree_test)
 {
     skey_type skey;
     datasource_type source("tree.dat", 1, count);
+    file_region_type file_region(1, source.table_size());
+    source.set_file_region(file_region);
     table_type table(source, skey);
     test_tree_type test_tree(table, NIL);
 

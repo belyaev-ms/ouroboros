@@ -29,12 +29,12 @@ class shared_lock
 public:
     inline shared_lock();
     inline void lock();
-    inline const bool timed_lock(const boost::posix_time::ptime& abs_time);
-    inline const bool try_lock();
+    inline bool timed_lock(const boost::posix_time::ptime& abs_time);
+    inline bool try_lock();
     inline void unlock();
     inline void lock_sharable();
-    inline const bool timed_lock_sharable(const boost::posix_time::ptime& abs_time);
-    inline const bool try_lock_sharable();
+    inline bool timed_lock_sharable(const boost::posix_time::ptime& abs_time);
+    inline bool try_lock_sharable();
     inline void unlock_sharable();
 protected:
     enum lock_state
@@ -43,8 +43,8 @@ protected:
         LS_SHARABLE,
         LS_NONE
     };
-    inline const lock_state try_book_lock();
-    inline const unsigned int count_sharable();
+    inline lock_state try_book_lock();
+    inline unsigned int count_sharable();
     inline void delay() const;
 private:
     shared_lock(const shared_lock& );
@@ -83,7 +83,7 @@ inline void shared_lock::delay() const
  * Try to book the exclusive lock
  * @return the type of the current lock
  */
-inline const shared_lock::lock_state shared_lock::try_book_lock()
+inline shared_lock::lock_state shared_lock::try_book_lock()
 {
     guard_type guard(m_lock);
     if (0 == m_scoped)
@@ -98,7 +98,7 @@ inline const shared_lock::lock_state shared_lock::try_book_lock()
  * Get the count of the sharable lock
  * @return the count of the sharable lock
  */
-inline const unsigned int shared_lock::count_sharable()
+inline unsigned int shared_lock::count_sharable()
 {
     guard_type guard(m_lock);
     return m_sharable;
@@ -108,7 +108,7 @@ inline const unsigned int shared_lock::count_sharable()
  * Try to set the exclusive lock
  * @return the result of the setting
  */
-inline const bool shared_lock::try_lock()
+inline bool shared_lock::try_lock()
 {
     guard_type guard(m_lock);
     if (0 == m_scoped && 0 == m_sharable)
@@ -148,7 +148,7 @@ inline void shared_lock::lock()
  * @param abs_time the time
  * @return the result of the setting
  */
-inline const bool shared_lock::timed_lock(const boost::posix_time::ptime& abs_time)
+inline bool shared_lock::timed_lock(const boost::posix_time::ptime& abs_time)
 {
     while (boost::get_system_time() < abs_time)
     {
@@ -189,7 +189,7 @@ inline void shared_lock::unlock()
  * Try to set the sharable lock
  * @return the result of the setting
  */
-inline const bool shared_lock::try_lock_sharable()
+inline bool shared_lock::try_lock_sharable()
 {
     guard_type guard(m_lock);
     if (0 == m_scoped && m_sharable < UINT_MAX)
@@ -220,7 +220,7 @@ inline void shared_lock::lock_sharable()
  * @param abs_time the time
  * @return the result of the setting
  */
-inline const bool shared_lock::timed_lock_sharable(const boost::posix_time::ptime& abs_time)
+inline bool shared_lock::timed_lock_sharable(const boost::posix_time::ptime& abs_time)
 {
     while (boost::get_system_time() < abs_time)
     {

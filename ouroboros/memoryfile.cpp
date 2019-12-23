@@ -53,7 +53,7 @@ const std::string& memory_file::name() const
  * Initialize
  * @return result of the initialization
  */
-const bool memory_file::init()
+bool memory_file::init()
 {
     return true;
 }
@@ -88,7 +88,7 @@ void memory_file::write(const void *buffer, size_type size, const pos_type pos)
  * Change the size of the file
  * @param size the size of the file
  */
-const size_type memory_file::resize(const size_type size)
+size_type memory_file::resize(const size_type size)
 {
     OUROBOROS_ASSERT(size > 0);
     if (size != m_size)
@@ -109,7 +109,7 @@ const size_type memory_file::resize(const size_type size)
  * Get the size of the file
  * @return the size of the file
  */
-const size_type memory_file::size() const
+size_type memory_file::size() const
 {
     return m_size;
 }
@@ -127,7 +127,7 @@ void memory_file::refresh(size_type size, const pos_type pos)
 /**
  * Forced synchronization data of the file
  */
-void file::flush() const
+void memory_file::flush() const
 {
 //    OUROBOROS_THROW_BUG("method not supported");
 }
@@ -160,7 +160,7 @@ void memory_file::cancel()
  * Get the state of the transaction
  * @return the state of the transaction
  */
-const transaction_state memory_file::state() const
+transaction_state memory_file::state() const
 {
     return TR_UNKNOWN;
 }

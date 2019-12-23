@@ -39,7 +39,8 @@ typedef record4<FIELD_INT32, FIELD_INT32, FIELD_FLOAT, FIELD_INT32> record_type;
 struct test_table_interface
 {
     template <typename T> struct object_type : public shared_object<T> {};
-    typedef journal_file<OUROBOROS_PAGE_SIZE, OUROBOROS_PAGE_COUNT> file_type;
+    typedef file_page<OUROBOROS_PAGE_SIZE, sizeof(journal_status_type)> file_page_type;
+    typedef journal_file<file_page_type, OUROBOROS_PAGE_COUNT> file_type;
     template <typename Key, typename Field>
     struct skey_list : public shared_map<Key, Field> {};
     struct locker_type : public locker<mutex_lock>
@@ -112,19 +113,19 @@ const size_t lock_count = 10;   ///< maximum count of attemts to lock
  * @param key the key of the table
  * @param tbl_count the count of the tables
  * @param rec_count the count of the records in a table
- * @param itrCount the count of test iterations
+ * @param itr_count the count of test iterations
  * @param is_writer the sign of writing test
  * @param is_full the sign of full verification of records
  * @param is_except the sign of the exception handling test
  * @return the result of the executing
  */
 const int exec_test(const std::string& name, const dataset_type::key_type& key,
-    const size_t tbl_count, const size_t rec_count, const size_t itrCount,
+    const size_t tbl_count, const size_t rec_count, const size_t itr_count,
     const bool is_writer, const bool is_full, const bool is_except)
 {
     size_t except_counter = 0;
     size_t lock_counter = 0;
-    const bool itrEnabled = itrCount > 0;
+    const bool itr_enabled = itr_count > 0;
     const int pid = getpid();
 
     try
@@ -233,7 +234,7 @@ const int exec_test(const std::string& name, const dataset_type::key_type& key,
                     }
                 }
                 std::cout << "============================ " << ++j << std::endl;
-                if (itrEnabled && j > itrCount)
+                if (itr_enabled && j > itr_count)
                 {
                     std::cout << "[OK]" << std::endl;
                     return RET_OK;
@@ -305,7 +306,7 @@ const int exec_test(const std::string& name, const dataset_type::key_type& key,
                     return RET_LOCK_WR;
                 }
                 std::cout << "============================ " << ++j << std::endl;
-                if (itrEnabled && j > itrCount)
+                if (itr_enabled && j > itr_count)
                 {
                     std::cout << "[OK]" << std::endl;
                     return RET_OK;

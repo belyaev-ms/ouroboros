@@ -25,15 +25,15 @@ public:
     inline tree_key(const key_type akey, const spos_type apos, const pos_type abeg,
         const pos_type aend, const count_type acount, const revision_type arev, const pos_type aroot);
 
-    inline const bool operator == (const tree_key& o) const;
-    inline const bool operator != (const tree_key& o) const;
+    inline bool operator == (const tree_key& o) const;
+    inline bool operator != (const tree_key& o) const;
 
     inline void *pack(void *out) const;
     inline const void *unpack(const void *in);
-    inline const size_type size() const;
-    inline const bool valid() const;
+    inline size_type size() const;
+    inline bool valid() const;
 
-    static const size_type static_size()
+    static size_type static_size()
     {
         return simple_key::static_size() + sizeof(pos_type);
     }
@@ -93,7 +93,7 @@ inline tree_key::tree_key(const key_type akey, const spos_type apos, const pos_t
  * @param o the another key
  * @return the result of the checking
  */
-inline const bool tree_key::operator == (const tree_key& o) const
+inline bool tree_key::operator == (const tree_key& o) const
 {
     return simple_key::operator==(o) && root == o.root;
 }
@@ -103,7 +103,7 @@ inline const bool tree_key::operator == (const tree_key& o) const
  * @param o the another key
  * @return the result of the checking
  */
-inline const bool tree_key::operator != (const tree_key& o) const
+inline bool tree_key::operator != (const tree_key& o) const
 {
     return !(*this == o);
 }
@@ -113,7 +113,7 @@ inline const bool tree_key::operator != (const tree_key& o) const
  * @param out the pointer to data of the key
  * @return the pointer to data of the next key
  */
-inline void * tree_key::pack(void *out) const
+inline void* tree_key::pack(void *out) const
 {
     char *buf = static_cast<char *>(simple_key::pack(out));
     memcpy(buf, &root, sizeof(root));
@@ -126,7 +126,7 @@ inline void * tree_key::pack(void *out) const
  * @param in the pointer to data of the key
  * @return the pointer to data of the next key
  */
-inline const void * tree_key::unpack(const void *in)
+inline const void* tree_key::unpack(const void *in)
 {
     const char *buf = static_cast<const char *>(simple_key::unpack(in));
     memcpy(&root, buf, sizeof(root));
@@ -138,7 +138,7 @@ inline const void * tree_key::unpack(const void *in)
  * Get the size of the packed key
  * @return the size of the packed key
  */
-inline const size_type tree_key::size() const
+inline size_type tree_key::size() const
 {
     return static_size();
 }
@@ -147,7 +147,7 @@ inline const size_type tree_key::size() const
  * Check the key is valid
  * @return the result of the checking
  */
-inline const bool tree_key::valid() const
+inline bool tree_key::valid() const
 {
     return simple_key::valid() && ((count > 0 && root != NIL) || (0 == count && NIL == root));
 }

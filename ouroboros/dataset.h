@@ -14,6 +14,7 @@
 #include "ouroboros/session.h"
 #include "ouroboros/transaction.h"
 #include "ouroboros/lockedtable.h"
+#include "ouroboros/page.h"
 
 namespace ouroboros
 {
@@ -58,6 +59,8 @@ public:
     typedef info info_type; ///< the struct of the information about the dataset
     typedef Interface interface_type; ///< the interface
     typedef typename interface_type::file_type file_type; ///< the file of the dataset
+    typedef typename interface_type::file_page_type file_page_type; ///< the file page the dataset
+    typedef file_region<file_page_type> file_region_type; ///< the file region of the dataset
     typedef typename interface_type::template table_type<Record, Index, Key> table_type; ///< the table of data
     typedef typename interface_type::template key_table_type<skey_type, simple_key> key_table_type; ///< the table of keys
     typedef typename interface_type::template info_table_type<info_type, simple_key> info_table_type; ///< the table of inforamtion about the dataset
@@ -76,9 +79,9 @@ public:
     void open(); ///< open the dataset
     inline const std::string& name() const; ///< get the name of the dataset
 
-    const pos_type add_table(const key_type key); ///< add the table to the dataset
-    const count_type remove_table(const key_type key); ///< remove the table from the dataset
-    const bool table_exists(const key_type key); ///< check the table exists in the dataset
+    pos_type add_table(const key_type key); ///< add the table to the dataset
+    count_type remove_table(const key_type key); ///< remove the table from the dataset
+    bool table_exists(const key_type key); ///< check the table exists in the dataset
 
     inline session_read session_rd(const key_type key); ///< open the session to read data from the table
     inline session_write session_wr(const key_type key); ///< open the session to write data to the table
@@ -88,23 +91,24 @@ public:
     inline void lazy_start();  ///< start the lazy transaction
     inline void lazy_stop();   ///< stop the lazy transaction
     inline void lazy_cancel(); ///< cancel the lazy transaction
-    inline const transaction_state state() const; ///< get the state of the transaction
-    inline const bool lazy_transaction_exists() const; ///< check the lazy transaction exists
+    inline transaction_state state() const; ///< get the state of the transaction
+    inline bool lazy_transaction_exists() const; ///< check the lazy transaction exists
 
     void get_key_list(key_list& list) const; ///< get the list of the keys
 
-    const count_type rec_count(); ///< get the count of the records in each table of the dataset
-    const count_type table_count(); ///< get the count of the table
-    const revision_type version(); ///< get the version of the dataset
-    const size_type get_user_data(void *buffer, const size_type size); ///< get the region of the users data
-    const size_type set_user_data(const void *buffer, const size_type size); ///< set the region of the users data
+    count_type rec_count(); ///< get the count of the records in each table of the dataset
+    count_type table_count(); ///< get the count of the table
+    revision_type version(); ///< get the version of the dataset
+    size_type get_user_data(void *buffer, const size_type size); ///< get the region of the users data
+    size_type set_user_data(const void *buffer, const size_type size); ///< set the region of the users data
 
     static void remove(const std::string& name); ///< remove the dataset
 protected:
-    friend class base_session<data_set>;
     friend class sharable_session<data_set>;
     friend class scoped_session<data_set>;
+    friend class scoped_key_session<data_set>;
     friend class lazy_transaction<data_set>;
+    typedef scoped_key_session<data_set> session_write_key; ///< the session for write data to a key table
     typedef typename table_type::source_type source_type;
     typedef typename key_table_type::source_type key_source_type;
     typedef typename info_table_type::source_type info_source_type;
@@ -120,11 +124,11 @@ protected:
 
     void init(const info_type& info); ///< initialize the dataset
     inline table_type* table(const key_type key); ///< get the table by the key
-    const bool check_table(const key_type key); ///< check the table is not removed
+    bool check_table(const key_type key); ///< check the table is not removed
 
     void recovery(); ///< recovery the dataset
     inline void update_info(); ///< update the information about the dataset
-    inline const bool do_key_exists(const key_type key) const; ///< check the key exists
+    inline bool do_key_exists(const key_type key) const; ///< check the key exists
     inline skey_type& load_key(const pos_type pos); ///< load the key
     inline void update_key(table_type& table); ///< update the key of the table
     inline void lazy_transaction(lazy_transaction_type *transact); ///< set current lazy transaction
@@ -146,6 +150,7 @@ protected:
     skey_list m_skeys; ///< the list of the table keys
     object<pos_type, interface_type::template object_type> m_hole_count; ///< the count of removed keys
     lazy_transaction_type *m_lazy_transaction; ///< the pointer to current lazy transaction
+    file_region_type m_file_region; ///< the file region
 };
 
 /**
@@ -159,26 +164,26 @@ inline const std::string make_dbname(const std::string& name)
 }
 
 /**
- * Get the size of object which is aligned by the cache page
- * @param size the size of object
- * @return the size of object which is aligned by the cache page
+ * Make a file region for a dataset
+ * @param info_size the size of an informantion of a dataset
+ * @param key_size the size of a key of a dataset
+ * @param table_size the size of a data table of a dataset
+ * @return the file region for a dataset
  */
-template <typename File>
-inline const size_type cache_alignment(const size_type size)
+template <typename T>
+inline T make_file_regions(const size_type info_size, const size_type key_size,
+    const size_type table_size)
 {
-    const size_type result = calc_cache_size(size, File::CACHE_PAGE_SIZE);
-    return result;
-}
-
-/**
- * Get the size of the separator for aligning the object by the cache page
- * @param size the size of object
- * @return the size of the separator
- */
-template <typename File>
-inline const size_type separator_size(const size_type size)
-{
-    return cache_alignment<File>(size) - size;
+    typedef T file_region_type;
+    file_region_type region(1, info_size);
+    file_region_type region_key(1, key_size);
+    file_region_type region_table(1, table_size);
+    typename file_region_type::region_list regions;
+    regions.push_back(region_key);
+    regions.push_back(region_table);
+    file_region_type region_keytable(0, regions);
+    region.add(region_keytable);
+    return region;
 }
 
 //==============================================================================
@@ -209,15 +214,17 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name) :
     m_info_source(m_file, 1, 1),
     m_skey_info(make_object_name(m_info_source.name(), "info")),
     m_info_table(m_info_source, m_skey_info(), typename info_table_type::guard_type()),
-    m_source(m_file, options_type(cache_alignment<file_type>(m_info_source.size()) +
-        cache_alignment<file_type>(skey_type::static_size()), 0, NIL)),
-    m_key_source(m_file, 1, options_type(cache_alignment<file_type>(m_info_source.size()), NIL, 0)),
+    m_source(m_file, options_type(m_info_source.size() + skey_type::static_size(), 0, NIL)),
+    m_key_source(m_file, 1, options_type(m_info_source.size(), NIL, 0)),
     m_skey_key(make_object_name(m_key_source.name(), "key")),
     m_key_table(m_key_source, m_skey_key(), typename key_table_type::guard_type()),
     m_skeys(make_object_name(name, "keyList")),
     m_hole_count(make_object_name(name, "cntHole"), 0),
-    m_lazy_transaction(NULL)
+    m_lazy_transaction(NULL),
+    m_file_region(make_file_regions<file_region_type>(m_info_source.size(),
+        skey_type::static_size(), 0))
 {
+    m_file_region.make_cache(m_info_source.size());
 }
 
 /**
@@ -239,19 +246,21 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name, const
     m_info_source(m_file, 1, 1),
     m_skey_info(make_object_name(m_info_source.name(), "info")),
     m_info_table(m_info_source, m_skey_info(), typename info_table_type::guard_type()),
-    m_source(m_file, tbl_count, rec_count, options_type(cache_alignment<file_type>(m_info_source.size()) +
-        cache_alignment<file_type>(skey_type::static_size()), table_type::REC_SPACE,
-        separator_size<file_type>((raw_record_type::static_size() + table_type::REC_SPACE) * rec_count) +
-        cache_alignment<file_type>(skey_type::static_size()))),
-    m_key_source(m_file, 1, tbl_count, options_type(cache_alignment<file_type>(m_info_source.size()),
-        cache_alignment<file_type>(m_source.table_size()) + separator_size<file_type>(skey_type::static_size()), 0)),
+    m_source(m_file, tbl_count, rec_count, options_type(m_info_source.size() +
+        skey_type::static_size(), table_type::REC_SPACE, skey_type::static_size())),
+    m_key_source(m_file, 1, tbl_count, options_type(m_info_source.size(), m_source.table_size(), 0)),
     m_skey_key(make_object_name(m_key_source.name(), "key")),
     m_key_table(m_key_source, m_skey_key(), typename key_table_type::guard_type()),
     m_skeys(make_object_name(name, "keyList")),
     m_hole_count(make_object_name(name, "cntHole"), 0),
-    m_lazy_transaction(NULL)
+    m_lazy_transaction(NULL),
+    m_file_region(make_file_regions<file_region_type>(m_info_source.size(), skey_type::static_size(),
+        (raw_record_type::static_size() + table_type::REC_SPACE) * rec_count))
 {
     OUROBOROS_DEBUG("create the dataset " << PR(name) << PR(tbl_count) << PE(rec_count));
+    m_info_source.set_file_region(m_file_region);
+    m_key_source.set_file_region(m_file_region);
+    m_source.set_file_region(m_file_region);
     // set the global lock until the end of the initialization
     lock_type glock(5 * OUROBOROS_LOCK_TIMEOUT);
     m_info_table.recovery();
@@ -276,6 +285,8 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name, const
         m_source.m_tbl_count = m_info.tbl_count;
         m_key_source.m_rec_count = m_info.tbl_count;
     }
+    m_file_region.make_cache(m_info_source.size() + (skey_type::static_size() +
+        (raw_record_type::static_size() + table_type::REC_SPACE) * m_info.rec_count) * m_info.tbl_count);
     // initialize the dataset
     init(m_info);
     // update the information about the dataset
@@ -368,6 +379,9 @@ template <typename Key, typename Record, template <typename> class Index, typena
 void data_set<Key, Record, Index, Interface>::open()
 {
     OUROBOROS_DEBUG("open db " << PE(m_name));
+    m_info_source.set_file_region(m_file_region);
+    m_key_source.set_file_region(m_file_region);
+    m_source.set_file_region(m_file_region);
     // set the global lock until the end of the initialization
     lock_type glock(5 * OUROBOROS_LOCK_TIMEOUT);
     m_info_table.recovery();
@@ -382,12 +396,15 @@ void data_set<Key, Record, Index, Interface>::open()
     // initialize the dataset
     m_info = info;
     m_source.m_options.rec_space = table_type::REC_SPACE;
-    m_source.m_options.tbl_space = separator_size<file_type>((raw_record_type::static_size() +
-            table_type::REC_SPACE) * info.rec_count) + cache_alignment<file_type>(skey_type::static_size());
+    m_source.m_options.tbl_space = skey_type::static_size();
     m_source.init(info.tbl_count, info.rec_count);
-    m_key_source.m_options.rec_space = cache_alignment<file_type>(m_source.table_size()) +
-            separator_size<file_type>(skey_type::static_size());
+    m_key_source.m_options.rec_space = m_source.table_size();
     m_key_source.init(1, info.tbl_count);
+    m_file_region = make_file_regions<file_region_type>(m_info_source.size(),
+        skey_type::static_size(),
+        (raw_record_type::static_size() + table_type::REC_SPACE) * info.rec_count);
+    m_file_region.make_cache(m_info_source.size() + (skey_type::static_size() +
+        (raw_record_type::static_size() + table_type::REC_SPACE) * m_info.rec_count) * m_info.tbl_count);
     init(info);
 }
 
@@ -407,10 +424,9 @@ inline const std::string& data_set<Key, Record, Index, Interface>::name() const
  * @return the postion of the table
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
+pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
 {
-    lock_type glock;
-    lock_write lock(m_key_table);
+    session_write_key session_key(*this);
     if (do_key_exists(key))
     {
         OUROBOROS_THROW_BUG(PR(key) << "another table has the key");
@@ -423,7 +439,7 @@ const pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type
     // check the removed keys are exists
     if (m_hole_count() > 0)
     {
-        // look for the firts removed key
+        // look for the first removed key
         const typename skey_list::iterator itend = m_skeys->end();
         for (typename skey_list::iterator it = m_skeys->begin(); it != itend; ++it)
         {
@@ -438,25 +454,23 @@ const pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type
                 m_tables.insert(typename table_list::value_type(key, table));
                 table->clear();
                 table->recovery();
-                m_key_table.write(skey, skey.pos);
+                session_key->write(skey, skey.pos);
                 --m_hole_count();
-                return m_key_table.back_pos();
+                return session_key->back_pos();
             }
         }
         OUROBOROS_THROW_BUG("the sign of removed key is exists, but the key is not found!");
     }
 
     // add the key and the table to the dataset
-    const pos_type pos = m_key_table.end_pos();
+    const pos_type pos = session_key->end_pos();
     skey_type& skey = m_skeys->insert(typename skey_list::value_type(key,
             skey_type(key, pos, 0, 0, 0, 0))).first->second;
     table_type *table = new table_type(m_source, skey);
     m_tables.insert(typename table_list::value_type(key, table));
     table->clear();
     table->recovery();
-    update_info();
-    const pos_type result = m_key_table.add(skey);
-    m_key_table.update();
+    const pos_type result = session_key->add(skey);
     return result;
 }
 
@@ -466,10 +480,9 @@ const pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type
  * @return the count of the tables
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const count_type data_set<Key, Record, Index, Interface>::remove_table(const key_type key)
+count_type data_set<Key, Record, Index, Interface>::remove_table(const key_type key)
 {
-    lock_type glock;
-    lock_write lock(m_key_table);
+    session_write_key session_key(*this);
     if (!do_key_exists(key))
     {
         OUROBOROS_THROW_BUG(PR(key) << "the key is not found");
@@ -494,11 +507,9 @@ const count_type data_set<Key, Record, Index, Interface>::remove_table(const key
     skey_type& skey = m_skeys()[key];
     const spos_type pos = skey.pos;
     skey.pos = -pos - 1;
-    m_key_table.write(&skey, pos);
-    m_key_table.update();
+    session_key->write(&skey, pos);
     ++m_hole_count();
-    update_info();
-    return m_key_table.end_pos();
+    return session_key->end_pos();
 }
 
 /**
@@ -507,7 +518,7 @@ const count_type data_set<Key, Record, Index, Interface>::remove_table(const key
  * @return the table is not removed
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const bool data_set<Key, Record, Index, Interface>::check_table(const key_type key)
+bool data_set<Key, Record, Index, Interface>::check_table(const key_type key)
 {
     bool result = true;
     if (!m_key_table.relevant())
@@ -580,7 +591,7 @@ inline typename data_set<Key, Record, Index, Interface>::table_type*
  * @return the result of the checking
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const bool data_set<Key, Record, Index, Interface>::table_exists(const key_type key)
+bool data_set<Key, Record, Index, Interface>::table_exists(const key_type key)
 {
     lock_read lock(m_key_table);
     // check the table is removed
@@ -598,7 +609,7 @@ const bool data_set<Key, Record, Index, Interface>::table_exists(const key_type 
  * @return the result of the checking
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-inline const bool data_set<Key, Record, Index, Interface>::do_key_exists(const key_type key) const
+inline bool data_set<Key, Record, Index, Interface>::do_key_exists(const key_type key) const
 {
     if (m_skeys->empty())
     {
@@ -749,7 +760,7 @@ inline void data_set<Key, Record, Index, Interface>::lazy_cancel()
  * @return the state of the transaction
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-inline const transaction_state data_set<Key, Record, Index, Interface>::state() const
+inline transaction_state data_set<Key, Record, Index, Interface>::state() const
 {
     return m_file.state();
 }
@@ -892,7 +903,7 @@ void data_set<Key, Record, Index, Interface>::get_key_list(key_list& list) const
  * @return the count of the records
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const count_type data_set<Key, Record, Index, Interface>::rec_count()
+count_type data_set<Key, Record, Index, Interface>::rec_count()
 {
     count_type count = m_source.rec_count();
     if (0 == count)
@@ -909,7 +920,7 @@ const count_type data_set<Key, Record, Index, Interface>::rec_count()
  * @return the count of the tables
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const count_type data_set<Key, Record, Index, Interface>::table_count()
+count_type data_set<Key, Record, Index, Interface>::table_count()
 {
     count_type count = m_key_source.rec_count();
     if (0 == count)
@@ -926,7 +937,7 @@ const count_type data_set<Key, Record, Index, Interface>::table_count()
  * @return the version of the dataset
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const revision_type data_set<Key, Record, Index, Interface>::version()
+revision_type data_set<Key, Record, Index, Interface>::version()
 {
     revision_type ver = m_info.version;
     if (0 == ver)
@@ -945,7 +956,7 @@ const revision_type data_set<Key, Record, Index, Interface>::version()
  * @return the size of getting data
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const size_type data_set<Key, Record, Index, Interface>::get_user_data(void *buffer, const size_type size)
+size_type data_set<Key, Record, Index, Interface>::get_user_data(void *buffer, const size_type size)
 {
     info_type info;
     if (!info.compare_data(m_info))
@@ -966,7 +977,7 @@ const size_type data_set<Key, Record, Index, Interface>::get_user_data(void *buf
  * @return the size of the setting data
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-const size_type data_set<Key, Record, Index, Interface>::set_user_data(const void *buffer, const size_type size)
+size_type data_set<Key, Record, Index, Interface>::set_user_data(const void *buffer, const size_type size)
 {
     const size_type count = m_info.set_data(buffer, size);
     if (count > 0)
@@ -981,7 +992,7 @@ const size_type data_set<Key, Record, Index, Interface>::set_user_data(const voi
  * @return the result of the checking
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-inline const bool data_set<Key, Record, Index, Interface>::lazy_transaction_exists() const
+bool data_set<Key, Record, Index, Interface>::lazy_transaction_exists() const
 {
     return m_lazy_transaction != NULL;
 }

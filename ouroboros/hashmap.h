@@ -58,8 +58,8 @@ public:
     const self_type operator++ () const;
     const self_type operator++ (int ) const;
 
-    const bool operator== (const self_type& iter) const;
-    const bool operator!= (const self_type& iter) const;
+    bool operator== (const self_type& iter) const;
+    bool operator!= (const self_type& iter) const;
 
     value_type* operator-> ();
     value_type& operator* ();
@@ -99,8 +99,8 @@ public:
     void erase(const_iterator& it);
     void clear();
 
-    const size_t size() const;
-    const bool empty() const;
+    size_t size() const;
+    bool empty() const;
 
     iterator begin();
     iterator end();
@@ -269,7 +269,7 @@ const typename hash_iterator<Map>::self_type hash_iterator<Map>::operator++ (int
  * @return the result of the comparing
  */
 template <typename Map>
-const bool hash_iterator<Map>::operator== (const self_type& iter) const
+bool hash_iterator<Map>::operator== (const self_type& iter) const
 {
     return (m_map == iter.m_map) && (m_item == iter.m_item);
 }
@@ -280,7 +280,7 @@ const bool hash_iterator<Map>::operator== (const self_type& iter) const
  * @return the result of the comparing
  */
 template <typename Map>
-const bool hash_iterator<Map>::operator!= (const self_type& iter) const
+bool hash_iterator<Map>::operator!= (const self_type& iter) const
 {
     return (m_map != iter.m_map) || (m_item != iter.m_item);
 }
@@ -466,7 +466,7 @@ void hash_map<Key, Value, slotCount>::clear()
  * @return the count of items
  */
 template <typename Key, typename Value, int slotCount>
-const size_t hash_map<Key, Value, slotCount>::size() const
+size_t hash_map<Key, Value, slotCount>::size() const
 {
     return m_count;
 }
@@ -476,7 +476,7 @@ const size_t hash_map<Key, Value, slotCount>::size() const
  * @return the result of the checking
  */
 template <typename Key, typename Value, int slotCount>
-const bool hash_map<Key, Value, slotCount>::empty() const
+bool hash_map<Key, Value, slotCount>::empty() const
 {
     return 0 == m_count;
 }

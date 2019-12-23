@@ -24,7 +24,8 @@ struct test_table_interface
     template <typename T> struct object_type : public shared_object<T> {};
     template <typename Key, typename Field>
     struct skey_list : public shared_map<Key, Field> {};
-    typedef journal_file<OUROBOROS_PAGE_SIZE, OUROBOROS_PAGE_COUNT> file_type;
+    typedef file_page<OUROBOROS_PAGE_SIZE, sizeof(journal_status_type)> file_page_type;
+    typedef journal_file<file_page_type, OUROBOROS_PAGE_COUNT> file_type;
     struct locker_type : public locker<mutex_lock>
     {
         locker_type(const std::string& name, count_type& scoped_count, count_type& sharable_count) :

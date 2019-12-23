@@ -25,8 +25,8 @@ public:
 
     static void static_begin(table_type *table = NULL);
     static void static_end();
-    static const bool static_read(const pos_type pos, node_type& node);
-    static const bool static_write(const pos_type pos, const node_type& node);
+    static bool static_read(const pos_type pos, node_type& node);
+    static bool static_write(const pos_type pos, const node_type& node);
     static void static_keep(const pos_type pos, const node_type& node);
 protected:
     enum state_type
@@ -46,15 +46,34 @@ protected:
 
     void begin(table_type *table = NULL);
     void end();
-    const bool read(const pos_type pos, node_type& node) const;
-    const bool write(const pos_type pos, const node_type& node);
+    bool read(const pos_type pos, node_type& node) const;
+    bool write(const pos_type pos, const node_type& node);
     void keep(const pos_type pos, const node_type& node);
 private:
+    void clean();
     node_cache();
 private:
     bool m_enabled;
     cache_type m_cache;
     table_type *m_table;
+};
+
+/**
+ * The guard of a cache
+ */
+template <typename Cache>
+struct cache_guard
+{
+    typedef Cache cache_type;
+    typedef typename cache_type::table_type table_type;
+    cache_guard(table_type *table)
+    {
+        cache_type::static_begin(table);
+    }
+    ~cache_guard()
+    {
+        cache_type::static_end();
+    }
 };
 
 //==============================================================================
@@ -101,7 +120,7 @@ void node_cache<Node, Table>::static_end()
  */
 //static
 template <typename Node, typename Table>
-const bool node_cache<Node, Table>::static_read(const pos_type pos, node_type& node)
+bool node_cache<Node, Table>::static_read(const pos_type pos, node_type& node)
 {
     return instance().read(pos, node);
 }
@@ -114,7 +133,7 @@ const bool node_cache<Node, Table>::static_read(const pos_type pos, node_type& n
  */
 //static
 template <typename Node, typename Table>
-const bool node_cache<Node, Table>::static_write(const pos_type pos, const node_type& node)
+bool node_cache<Node, Table>::static_write(const pos_type pos, const node_type& node)
 {
     return instance().write(pos, node);
 }
@@ -161,20 +180,28 @@ void node_cache<Node, Table>::end()
 {
     if (m_enabled && m_table != NULL)
     {
-        const typename cache_type::const_iterator itend = m_cache.end();
-        for (typename cache_type::const_iterator it = m_cache.begin(); it != itend; ++it)
-        {
-            if (ST_WR == it->second.state)
-            {
-//                std::cout << "+";
-                const record_type record(it->second.node);
-                m_table->unsafe_write(record, it->first);
-            }
-        }
+        clean();
     }
     m_table = NULL;
-    m_cache.clear();
     m_enabled = false;
+}
+
+/**
+ * Clean the cache
+ */
+template <typename Node, typename Table>
+void node_cache<Node, Table>::clean()
+{
+    const typename cache_type::const_iterator itend = m_cache.end();
+    for (typename cache_type::const_iterator it = m_cache.begin(); it != itend; ++it)
+    {
+        if (ST_WR == it->second.state)
+        {
+            const record_type record(it->second.node);
+            m_table->unsafe_write(record, it->first);
+        }
+    }
+    m_cache.clear();
 }
 
 /**
@@ -184,7 +211,7 @@ void node_cache<Node, Table>::end()
  * @return the result of reading
  */
 template <typename Node, typename Table>
-const bool node_cache<Node, Table>::read(const pos_type pos, node_type& node) const
+bool node_cache<Node, Table>::read(const pos_type pos, node_type& node) const
 {
     if (m_enabled)
     {
@@ -208,6 +235,10 @@ void node_cache<Node, Table>::keep(const pos_type pos, const node_type& node)
 {
     if (m_enabled)
     {
+        if (m_cache.size() > 2 * cache_type::SLOT_COUNT)
+        {
+            clean();
+        }
         m_cache.insert(typename cache_type::value_type(pos, item(ST_RD, node)));
     }
 }
@@ -219,13 +250,17 @@ void node_cache<Node, Table>::keep(const pos_type pos, const node_type& node)
  * @return if the result is true then need to write the node to the table
  */
 template <typename Node, typename Table>
-const bool node_cache<Node, Table>::write(const pos_type pos, const node_type& node)
+bool node_cache<Node, Table>::write(const pos_type pos, const node_type& node)
 {
     if (m_enabled)
     {
         typename cache_type::iterator it = m_cache.find(pos);
         if (m_cache.end() == it)
         {
+            if (m_cache.size() > 2 * cache_type::SLOT_COUNT)
+            {
+                clean();
+            }
             m_cache.insert(typename cache_type::value_type(pos, item(ST_WR, node)));
         }
         else

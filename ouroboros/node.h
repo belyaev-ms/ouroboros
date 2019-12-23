@@ -48,28 +48,28 @@ public:
     data_node();
     data_node(const self_type& node);
 
-    inline const pos_type parent() const;
-    inline const pos_type left() const;
-    inline const pos_type right() const;
-    inline const node_color color() const;
-    inline const bool parent(const pos_type pos);
-    inline const bool left(const pos_type pos);
-    inline const bool right(const pos_type pos);
-    inline const bool color(const node_color in_color);
+    inline pos_type parent() const;
+    inline pos_type left() const;
+    inline pos_type right() const;
+    inline node_color color() const;
+    inline bool parent(const pos_type pos);
+    inline bool left(const pos_type pos);
+    inline bool right(const pos_type pos);
+    inline bool color(const node_color in_color);
 
     inline const key_type key() const;
     body_type& body();
     const body_type& body() const;
-    const bool body(const body_type& body);
+    bool body(const body_type& body);
 
     self_type& operator= (const self_type& node);
 
-    inline const bool operator== (const self_type& node) const;
-    inline const bool operator!= (const self_type& node) const;
-    inline const bool operator< (const self_type& node) const;
-    inline const bool operator<= (const self_type& node) const;
-    inline const bool operator> (const self_type& node) const;
-    inline const bool operator>= (const self_type& node) const;
+    inline bool operator== (const self_type& node) const;
+    inline bool operator!= (const self_type& node) const;
+    inline bool operator< (const self_type& node) const;
+    inline bool operator<= (const self_type& node) const;
+    inline bool operator> (const self_type& node) const;
+    inline bool operator>= (const self_type& node) const;
 private:
     pos_type   m_parent;
     pos_type   m_left;
@@ -130,16 +130,16 @@ public:
     void set_parent(const node_type& node);
     void set_left(const node_type& node);
     void set_right(const node_type& node);
-    const pos_type pparent() const;
-    const pos_type pleft() const;
-    const pos_type pright() const;
+    pos_type pparent() const;
+    pos_type pleft() const;
+    pos_type pright() const;
     void pparent(const pos_type pos);
     void pleft(const pos_type pos);
     void pright(const pos_type pos);
-    const node_color color() const;
+    node_color color() const;
     void color(const node_color in_color);
     const key_type key() const;
-    inline const pos_type pos() const;
+    inline pos_type pos() const;
     virtual void pos(const pos_type in_pos);
     inline table_type& table() const;
     const body_type operator() () const;
@@ -149,19 +149,19 @@ public:
     self_type& operator= (const self_type& pnode);
 
     const self_type root() const;
-    const bool is_left_son() const;
-    const bool is_right_son() const;
+    bool is_left_son() const;
+    bool is_right_son() const;
     const self_type maximum() const;
     const self_type minimum() const;
     const self_type successor() const;
     const self_type predecessor() const;
 
-    const bool operator== (const self_type& pnode) const;
-    const bool operator!= (const self_type& pnode) const;
-    const bool operator< (const self_type& pnode) const;
-    const bool operator<= (const self_type& pnode) const;
-    const bool operator> (const self_type& pnode) const;
-    const bool operator>= (const self_type& pnode) const;
+    bool operator== (const self_type& pnode) const;
+    bool operator!= (const self_type& pnode) const;
+    bool operator< (const self_type& pnode) const;
+    bool operator<= (const self_type& pnode) const;
+    bool operator> (const self_type& pnode) const;
+    bool operator>= (const self_type& pnode) const;
 protected:
     inline const node_type read() const; ///< read data of the node
     inline void write(const node_type& node); ///< write data the node
@@ -201,7 +201,7 @@ public:
 
     base_class& operator= (const self_type& pnode);
     base_class& operator= (const base_class& pnode);
-    inline const pos_type pos() const { return base_class::pos(); }; ///@todo
+    inline pos_type pos() const { return base_class::pos(); }; ///@todo
     virtual void pos(const pos_type in_pos);
     inline void reset() const; ///< reset the cache of data
 protected:
@@ -238,8 +238,8 @@ public:
     const self_type operator-- () const;
     const self_type operator-- (int ) const;
 
-    const bool operator== (const self_type& iter) const;
-    const bool operator!= (const self_type& iter) const;
+    bool operator== (const self_type& iter) const;
+    bool operator!= (const self_type& iter) const;
 
     pnode_type* operator-> ();
     pnode_type& operator* ();
@@ -282,8 +282,8 @@ public:
     const self_type operator-- () const;
     const self_type operator-- (int ) const;
 
-    const bool operator== (const self_type& iter) const;
-    const bool operator!= (const self_type& iter) const;
+    bool operator== (const self_type& iter) const;
+    bool operator!= (const self_type& iter) const;
 
     pnode_type* operator-> ();
     pnode_type& operator* ();
@@ -380,7 +380,7 @@ data_node<Key, Body, Converter>::data_node() :
  * @return the position of the parent node
  */
 template <typename Key, typename Body, typename Converter>
-inline const pos_type data_node<Key, Body, Converter>::parent() const
+inline pos_type data_node<Key, Body, Converter>::parent() const
 {
     return m_parent;
 }
@@ -390,7 +390,7 @@ inline const pos_type data_node<Key, Body, Converter>::parent() const
  * @return the position of the left node
  */
 template <typename Key, typename Body, typename Converter>
-inline const pos_type data_node<Key, Body, Converter>::left() const
+inline pos_type data_node<Key, Body, Converter>::left() const
 {
     return m_left;
 }
@@ -400,7 +400,7 @@ inline const pos_type data_node<Key, Body, Converter>::left() const
  * @return the position of the right node
  */
 template <typename Key, typename Body, typename Converter>
-inline const pos_type data_node<Key, Body, Converter>::right() const
+inline pos_type data_node<Key, Body, Converter>::right() const
 {
     return m_right;
 }
@@ -410,7 +410,7 @@ inline const pos_type data_node<Key, Body, Converter>::right() const
  * @return the color of the node
  */
 template <typename Key, typename Body, typename Converter>
-inline const node_color data_node<Key, Body, Converter>::color() const
+inline node_color data_node<Key, Body, Converter>::color() const
 {
     return m_color;
 }
@@ -421,7 +421,7 @@ inline const node_color data_node<Key, Body, Converter>::color() const
  * @return there was a change
  */
 template <typename Key, typename Body, typename Converter>
-inline const bool data_node<Key, Body, Converter>::parent(const pos_type pos)
+inline bool data_node<Key, Body, Converter>::parent(const pos_type pos)
 {
     if (m_parent != pos)
     {
@@ -437,7 +437,7 @@ inline const bool data_node<Key, Body, Converter>::parent(const pos_type pos)
  * @return there was a change
  */
 template <typename Key, typename Body, typename Converter>
-inline const bool data_node<Key, Body, Converter>::left(const pos_type pos)
+inline bool data_node<Key, Body, Converter>::left(const pos_type pos)
 {
     if (m_left != pos)
     {
@@ -453,7 +453,7 @@ inline const bool data_node<Key, Body, Converter>::left(const pos_type pos)
  * @return there was a change
  */
 template <typename Key, typename Body, typename Converter>
-inline const bool data_node<Key, Body, Converter>::right(const pos_type pos)
+inline bool data_node<Key, Body, Converter>::right(const pos_type pos)
 {
     if (m_right != pos)
     {
@@ -469,7 +469,7 @@ inline const bool data_node<Key, Body, Converter>::right(const pos_type pos)
  * @return there was a change
  */
 template <typename Key, typename Body, typename Converter>
-inline const bool data_node<Key, Body, Converter>::color(const node_color in_color)
+inline bool data_node<Key, Body, Converter>::color(const node_color in_color)
 {
     if (m_color != in_color)
     {
@@ -518,7 +518,7 @@ inline const typename data_node<Key, Body, Converter>::body_type&
  * @return there was a change
  */
 template <typename Key, typename Body, typename Converter>
-inline const bool data_node<Key, Body, Converter>::body(const body_type& in_body)
+inline bool data_node<Key, Body, Converter>::body(const body_type& in_body)
 {
     if (m_body != in_body)
     {
@@ -551,7 +551,7 @@ typename data_node<Key, Body, Converter>::self_type&
  * @return the result of the checking
  */
 template <typename Key, typename Body, typename Converter>
-inline const bool data_node<Key, Body, Converter>::operator== (const self_type& node) const
+inline bool data_node<Key, Body, Converter>::operator== (const self_type& node) const
 {
     return (m_parent == node.m_parent) && (m_left == node.m_left) && (m_right == node.m_right)
         && (m_color == node.m_color) && (m_body == node.m_body);
@@ -563,7 +563,7 @@ inline const bool data_node<Key, Body, Converter>::operator== (const self_type& 
  * @return the result of the checking
  */
 template <typename Key, typename Body, typename Converter>
-inline const bool data_node<Key, Body, Converter>::operator!= (const self_type& node) const
+inline bool data_node<Key, Body, Converter>::operator!= (const self_type& node) const
 {
     return (m_parent != node.m_parent) || (m_left != node.m_left) || (m_right != node.m_right)
         || (m_color != node.m_color) || (m_body != node.m_body);
@@ -575,7 +575,7 @@ inline const bool data_node<Key, Body, Converter>::operator!= (const self_type& 
  * @return the result of the checking
  */
 template <typename Key, typename Body, typename Converter>
-inline const bool data_node<Key, Body, Converter>::operator< (const self_type& node) const
+inline bool data_node<Key, Body, Converter>::operator< (const self_type& node) const
 {
     return key() < node.key();
 }
@@ -586,7 +586,7 @@ inline const bool data_node<Key, Body, Converter>::operator< (const self_type& n
  * @return the result of the checking
  */
 template <typename Key, typename Body, typename Converter>
-inline const bool data_node<Key, Body, Converter>::operator<= (const self_type& node) const
+inline bool data_node<Key, Body, Converter>::operator<= (const self_type& node) const
 {
     return key() <= node.key();
 }
@@ -597,7 +597,7 @@ inline const bool data_node<Key, Body, Converter>::operator<= (const self_type& 
  * @return the result of the checking
  */
 template <typename Key, typename Body, typename Converter>
-inline const bool data_node<Key, Body, Converter>::operator> (const self_type& node) const
+inline bool data_node<Key, Body, Converter>::operator> (const self_type& node) const
 {
     return key() > node.key();
 }
@@ -608,7 +608,7 @@ inline const bool data_node<Key, Body, Converter>::operator> (const self_type& n
  * @return the result of the checking
  */
 template <typename Key, typename Body, typename Converter>
-inline const bool data_node<Key, Body, Converter>::operator>= (const self_type& node) const
+inline bool data_node<Key, Body, Converter>::operator>= (const self_type& node) const
 {
     return key() >= node.key();
 }
@@ -896,7 +896,7 @@ void table_pnode<Node, Table, Extractor>::set_right(const node_type& node)
  * @return the color of the node
  */
 template <typename Node, typename Table, typename Extractor>
-const node_color table_pnode<Node, Table, Extractor>::color() const
+node_color table_pnode<Node, Table, Extractor>::color() const
 {
     return read().color();
 }
@@ -917,7 +917,7 @@ const typename table_pnode<Node, Table, Extractor>::key_type
  * @return the position of the node
  */
 template <typename Node, typename Table, typename Extractor>
-inline const pos_type table_pnode<Node, Table, Extractor>::pos() const
+inline pos_type table_pnode<Node, Table, Extractor>::pos() const
 {
     return m_pos;
 }
@@ -949,7 +949,7 @@ inline typename table_pnode<Node, Table, Extractor>::table_type&
  * @return the position of the parent node
  */
 template <typename Node, typename Table, typename Extractor>
-const pos_type table_pnode<Node, Table, Extractor>::pparent() const
+pos_type table_pnode<Node, Table, Extractor>::pparent() const
 {
     return read().parent();
 }
@@ -959,7 +959,7 @@ const pos_type table_pnode<Node, Table, Extractor>::pparent() const
  * @return the position of the left node
  */
 template <typename Node, typename Table, typename Extractor>
-const pos_type table_pnode<Node, Table, Extractor>::pleft() const
+pos_type table_pnode<Node, Table, Extractor>::pleft() const
 {
     return read().left();
 }
@@ -969,7 +969,7 @@ const pos_type table_pnode<Node, Table, Extractor>::pleft() const
  * @return the position of the right node
  */
 template <typename Node, typename Table, typename Extractor>
-const pos_type table_pnode<Node, Table, Extractor>::pright() const
+pos_type table_pnode<Node, Table, Extractor>::pright() const
 {
     return read().right();
 }
@@ -1146,7 +1146,7 @@ const typename table_pnode<Node, Table, Extractor>::self_type
  * @return the result of the checking
  */
 template <typename Node, typename Table, typename Extractor>
-const bool table_pnode<Node, Table, Extractor>::is_left_son() const
+bool table_pnode<Node, Table, Extractor>::is_left_son() const
 {
 #ifndef OUROBOROS_OPTIMIZATION_NODE_RW
     return (pparent() != NIL) && (parent().pleft() == pos());
@@ -1166,7 +1166,7 @@ const bool table_pnode<Node, Table, Extractor>::is_left_son() const
  * @return the result of the checking
  */
 template <typename Node, typename Table, typename Extractor>
-const bool table_pnode<Node, Table, Extractor>::is_right_son() const
+bool table_pnode<Node, Table, Extractor>::is_right_son() const
 {
 #ifndef OUROBOROS_OPTIMIZATION_NODE_RW
     return (pparent() != NIL) && (parent().pright() == pos());
@@ -1295,7 +1295,7 @@ typename table_pnode<Node, Table, Extractor>::self_type&
  * @return the result of the checking
  */
 template <typename Node, typename Table, typename Extractor>
-const bool table_pnode<Node, Table, Extractor>::operator== (const self_type& pnode) const
+bool table_pnode<Node, Table, Extractor>::operator== (const self_type& pnode) const
 {
     return key() == pnode.key();
 }
@@ -1306,7 +1306,7 @@ const bool table_pnode<Node, Table, Extractor>::operator== (const self_type& pno
  * @return the result of the checking
  */
 template <typename Node, typename Table, typename Extractor>
-const bool table_pnode<Node, Table, Extractor>::operator!= (const self_type& pnode) const
+bool table_pnode<Node, Table, Extractor>::operator!= (const self_type& pnode) const
 {
     return key() != pnode.key();
 }
@@ -1317,7 +1317,7 @@ const bool table_pnode<Node, Table, Extractor>::operator!= (const self_type& pno
  * @return the result of the checking
  */
 template <typename Node, typename Table, typename Extractor>
-const bool table_pnode<Node, Table, Extractor>::operator< (const self_type& pnode) const
+bool table_pnode<Node, Table, Extractor>::operator< (const self_type& pnode) const
 {
     return get() < pnode.get();
 }
@@ -1328,7 +1328,7 @@ const bool table_pnode<Node, Table, Extractor>::operator< (const self_type& pnod
  * @return the result of the checking
  */
 template <typename Node, typename Table, typename Extractor>
-const bool table_pnode<Node, Table, Extractor>::operator<= (const self_type& pnode) const
+bool table_pnode<Node, Table, Extractor>::operator<= (const self_type& pnode) const
 {
     return get() <= pnode.get();
 }
@@ -1339,7 +1339,7 @@ const bool table_pnode<Node, Table, Extractor>::operator<= (const self_type& pno
  * @return the result of the checking
  */
 template <typename Node, typename Table, typename Extractor>
-const bool table_pnode<Node, Table, Extractor>::operator> (const self_type& pnode) const
+bool table_pnode<Node, Table, Extractor>::operator> (const self_type& pnode) const
 {
     return get() > pnode.get();
 }
@@ -1350,7 +1350,7 @@ const bool table_pnode<Node, Table, Extractor>::operator> (const self_type& pnod
  * @return the result of the checking
  */
 template <typename Node, typename Table, typename Extractor>
-const bool table_pnode<Node, Table, Extractor>::operator>= (const self_type& pnode) const
+bool table_pnode<Node, Table, Extractor>::operator>= (const self_type& pnode) const
 {
     return get() >= pnode.get();
 }
@@ -1657,7 +1657,7 @@ const typename node_iterator<PNode>::self_type node_iterator<PNode>::operator-- 
  * @return the result of the checking
  */
 template <typename PNode>
-const bool node_iterator<PNode>::operator== (const self_type& iter) const
+bool node_iterator<PNode>::operator== (const self_type& iter) const
 {
     return &(m_iter.table()) == &(iter.m_iter.table())
         && m_iter.pos() == iter.m_iter.pos();
@@ -1669,7 +1669,7 @@ const bool node_iterator<PNode>::operator== (const self_type& iter) const
  * @return the result of the checking
  */
 template <typename PNode>
-const bool node_iterator<PNode>::operator!= (const self_type& iter) const
+bool node_iterator<PNode>::operator!= (const self_type& iter) const
 {
     return &(m_iter.table()) != &(iter.m_iter.table())
         || m_iter.pos() != iter.m_iter.pos();
@@ -1935,7 +1935,7 @@ const typename node_reverseiterator<Iterator>::self_type
  * @return the result of the checking
  */
 template <typename Iterator>
-const bool node_reverseiterator<Iterator>::operator== (const self_type& iter) const
+bool node_reverseiterator<Iterator>::operator== (const self_type& iter) const
 {
     return m_current == iter.m_current;
 }
@@ -1946,7 +1946,7 @@ const bool node_reverseiterator<Iterator>::operator== (const self_type& iter) co
  * @return the result of the checking
  */
 template <typename Iterator>
-const bool node_reverseiterator<Iterator>::operator!= (const self_type& iter) const
+bool node_reverseiterator<Iterator>::operator!= (const self_type& iter) const
 {
     return m_current != iter.m_current;
 }

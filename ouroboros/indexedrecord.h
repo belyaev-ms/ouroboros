@@ -40,22 +40,22 @@ public:
     inline indexed_record();
     inline indexed_record(const node_type& node);
 
-    inline const bool operator == (const indexed_record& o) const;
-    inline const bool operator != (const indexed_record& o) const;
+    inline bool operator == (const indexed_record& o) const;
+    inline bool operator != (const indexed_record& o) const;
 
-    inline const bool operator == (const record_type& record) const;
-    inline const bool operator != (const record_type& record) const;
+    inline bool operator == (const record_type& record) const;
+    inline bool operator != (const record_type& record) const;
 
     inline void *pack(void *out) const;
     inline const void *unpack(const void *in);
-    inline const size_type size() const;
+    inline size_type size() const;
 
     ///@todo operator () replace to operator *()
     inline node_type operator() ();
     inline const node_type operator() () const;
     inline void operator() (const node_type& node);
 
-    static const size_type static_size();
+    static size_type static_size();
 private:
     pos_type   m_parent;
     pos_type   m_left;
@@ -99,7 +99,7 @@ inline indexed_record<Record, Index>::indexed_record(const node_type& node) :
  * @return the result of the checking
  */
 template <typename Record, template <typename> class Index>
-inline const bool indexed_record<Record, Index>::operator == (const indexed_record& o) const
+inline bool indexed_record<Record, Index>::operator == (const indexed_record& o) const
 {
     return record_type::operator==(o);
 }
@@ -110,7 +110,7 @@ inline const bool indexed_record<Record, Index>::operator == (const indexed_reco
  * @return the result of the checking
  */
 template <typename Record, template <typename> class Index>
-inline const bool indexed_record<Record, Index>::operator != (const indexed_record& o) const
+inline bool indexed_record<Record, Index>::operator != (const indexed_record& o) const
 {
     return !(*this == o);
 }
@@ -121,7 +121,7 @@ inline const bool indexed_record<Record, Index>::operator != (const indexed_reco
  * @return the result of the checking
  */
 template <typename Record, template <typename> class Index>
-inline const bool indexed_record<Record, Index>::operator == (const record_type& record) const
+inline bool indexed_record<Record, Index>::operator == (const record_type& record) const
 {
     return record_type::operator==(record);
 }
@@ -132,7 +132,7 @@ inline const bool indexed_record<Record, Index>::operator == (const record_type&
  * @return the result of the checking
  */
 template <typename Record, template <typename> class Index>
-inline const bool indexed_record<Record, Index>::operator != (const record_type& record) const
+inline bool indexed_record<Record, Index>::operator != (const record_type& record) const
 {
     return !(*this == record);
 }
@@ -190,7 +190,7 @@ inline const void * indexed_record<Record, Index>::unpack(const void *in)
  * @return the size of the record
  */
 template <typename Record, template <typename> class Index>
-inline const size_type indexed_record<Record, Index>::size() const
+inline size_type indexed_record<Record, Index>::size() const
 {
     return sizeof(m_parent) + sizeof(m_left) + sizeof(m_right) +
         sizeof(m_color) + record_type::size();
@@ -202,7 +202,7 @@ inline const size_type indexed_record<Record, Index>::size() const
  */
 //static
 template <typename Record, template <typename> class Index>
-const size_type indexed_record<Record, Index>::static_size()
+size_type indexed_record<Record, Index>::static_size()
 {
     return sizeof(pos_type) + sizeof(pos_type) + sizeof(pos_type) +
         sizeof(node_color) + record_type::static_size();

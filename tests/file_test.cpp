@@ -12,10 +12,10 @@ BOOST_AUTO_TEST_CASE(test1)
     const size_type size = 1024;
     const std::string filename = "test.dat";
 
-    file::remove(filename.c_str());
+    base_file::remove(filename.c_str());
     BOOST_REQUIRE(!boost::filesystem::exists(filename));
     {
-        file file(filename.c_str());
+        base_file file(filename.c_str());
         BOOST_REQUIRE(boost::filesystem::exists(filename));
         BOOST_REQUIRE_EQUAL(size, file.resize(size));
         BOOST_REQUIRE_EQUAL(size, file.size());
@@ -40,6 +40,6 @@ BOOST_AUTO_TEST_CASE(test1)
             BOOST_REQUIRE_EQUAL(out[i], in[i]);
         }
     }
-    file::remove(filename.c_str());
+    base_file::remove(filename.c_str());
     BOOST_REQUIRE(!boost::filesystem::exists(filename));
 }

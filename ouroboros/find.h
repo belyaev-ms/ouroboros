@@ -25,7 +25,7 @@ public:
     typedef Operator<field_type> operator_type;
 
     value_comparator(const field_type& field);
-    inline const bool operator ()(const record_type& record) const;
+    inline bool operator ()(const record_type& record) const;
 private:
     value_comparator();
     field_type m_field;
@@ -45,7 +45,7 @@ struct fields_comparator
     typedef typename index2_type::field_type field2_type;
     typedef Operator<field1_type> operator_type;
 
-    inline const bool operator ()(const record_type& record) const;
+    inline bool operator ()(const record_type& record) const;
 };
 
 /**
@@ -61,7 +61,7 @@ public:
     typedef typename comparator1_type::record_type record_type;
 
     combiner(const comparator1_type& comp1, const comparator2_type& comp2);
-    inline const bool operator ()(const record_type& record) const;
+    inline bool operator ()(const record_type& record) const;
 private:
     const comparator1_type m_comp1;
     const comparator2_type m_comp2;
@@ -81,13 +81,13 @@ public:
     finder(const comparator_type& comp);
     finder(const comparator_type& comp, const count_type count);
 
-    inline const bool operator()(); ///< compare
+    inline bool operator()(); ///< compare
     inline record_type& record(const pos_type pos); ///< get the buffer of a record
     inline const result_type& result() const; ///< get the search result
-    inline const pos_type pos() const; ///< get the position of the last processed record
+    inline pos_type pos() const; ///< get the position of the last processed record
     void reset(const count_type count = 0); ///< reset to the first state
 protected:
-    inline const bool push(const record_type& record); ///< push a found record
+    inline bool push(const record_type& record); ///< push a found record
 protected:
     const comparator_type m_comp; ///< the comparator
     record_type m_record; ///< the buffer of a record
@@ -297,7 +297,7 @@ value_comparator<Record, Index, Operator>::value_comparator(const field_type& fi
  * @return result of the comparing
  */
 template <typename Record, template <typename> class Index, template <typename> class Operator>
-inline const bool value_comparator<Record, Index, Operator>::operator ()(const record_type& record) const
+inline bool value_comparator<Record, Index, Operator>::operator ()(const record_type& record) const
 {
     const field_type field = index_type::value(record);
     return operator_type()(field, m_field);
@@ -313,7 +313,7 @@ inline const bool value_comparator<Record, Index, Operator>::operator ()(const r
  */
 template <typename Record, template <typename> class Index1, template <typename> class Index2,
         template <typename> class Operator>
-inline const bool fields_comparator<Record, Index1, Index2, Operator>::operator ()(const record_type& record) const
+inline bool fields_comparator<Record, Index1, Index2, Operator>::operator ()(const record_type& record) const
 {
     const field1_type field1 = index1_type::value(record);
     const field2_type field2 = index2_type::value(record);
@@ -342,7 +342,7 @@ combiner<TComparer1, TComparer2, Operator>::combiner(const comparator1_type& com
  * @return result of the comparing
  */
 template <typename TComparer1, typename TComparer2, template <typename> class Operator>
-inline const bool combiner<TComparer1, TComparer2, Operator>::operator ()(const record_type& record) const
+inline bool combiner<TComparer1, TComparer2, Operator>::operator ()(const record_type& record) const
 {
     return operator_type()(m_comp1(record), m_comp2(record));
 }
@@ -383,7 +383,7 @@ finder<Comparator, Container>::finder(const comparator_type& comp,
  * @return false - the record was added, but the container is full
  */
 template <typename Comparator, template <typename> class Container>
-inline const bool finder<Comparator, Container>::push(const record_type& record)
+inline bool finder<Comparator, Container>::push(const record_type& record)
 {
     m_result.push_back(record);
     return (--m_count > 0);
@@ -394,7 +394,7 @@ inline const bool finder<Comparator, Container>::push(const record_type& record)
  * @return true - continue the searching
  */
 template <typename Comparator, template <typename> class Container>
-inline const bool finder<Comparator, Container>::operator ()()
+inline bool finder<Comparator, Container>::operator ()()
 {
     if (m_comp(m_record))
     {
@@ -432,7 +432,7 @@ inline const typename finder<Comparator, Container>::result_type&
  * @return the position of the last processed record
  */
 template <typename Comparator, template <typename> class Container>
-inline const pos_type finder<Comparator, Container>::pos() const
+inline pos_type finder<Comparator, Container>::pos() const
 {
     return m_pos;
 }
