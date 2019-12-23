@@ -313,12 +313,9 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_add(const record_type& record)
 {
 #ifdef OUROBOROS_NODECACHE_ENABLED
-    cache_type::static_begin(this);
+    cache_guard<cache_type> guard(this);
 #endif
     const pos_type result = do_add(record);
-#ifdef OUROBOROS_NODECACHE_ENABLED
-    cache_type::static_end();
-#endif
     return result;
 }
 
@@ -331,18 +328,14 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_add(const record_list& records)
 {
 #ifdef OUROBOROS_NODECACHE_ENABLED
-    ///@todo guard???
-    cache_type::static_begin(this);
+    cache_guard<cache_type> guard(this);
 #endif
     pos_type result = unsafe_table::end_pos();
     const typename record_list::const_iterator end = records.end();
     for (typename record_list::const_iterator it = records.begin(); it != end; ++it)
     {
-        result = unsafe_add(*it);
+        result = do_add(*it);
     }
-#ifdef OUROBOROS_NODECACHE_ENABLED
-    cache_type::static_end();
-#endif
     return result;
 }
 
