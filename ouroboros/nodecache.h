@@ -7,7 +7,7 @@
 #define STG_NODECACHE_H
 
 #include "ouroboros/global.h"
-#include "ouroboros/hashmap.h"
+#include "ouroboros/cache.h"
 
 namespace ouroboros
 {
@@ -18,6 +18,7 @@ namespace ouroboros
 template <typename Node, typename Table>
 class node_cache
 {
+    friend cache <node_cache, sizeof(Node), 64>;
 public:
     typedef Node node_type;
     typedef Table table_type;
@@ -29,18 +30,7 @@ public:
     static bool static_write(const pos_type pos, const node_type& node);
     static void static_keep(const pos_type pos, const node_type& node);
 protected:
-    enum state_type
-    {
-        ST_RD,
-        ST_WR
-    };
-    struct item
-    {
-        state_type state;
-        node_type node;
-        item(const state_type s, const node_type& n) : state(s), node(n) {}
-    };
-    typedef hash_map<pos_type, item, 32> cache_type;
+    typedef cache<node_cache, sizeof(node_type), 64> cache_type;
 
     static node_cache& instance();
 
@@ -48,14 +38,14 @@ protected:
     void end();
     bool read(const pos_type pos, node_type& node) const;
     bool write(const pos_type pos, const node_type& node);
-    void keep(const pos_type pos, const node_type& node);
+    void keep(const pos_type pos, const node_type& node) const;
+    void save_page(const pos_type index, void *data);
 private:
-    void clean();
     node_cache();
 private:
     bool m_enabled;
-    cache_type m_cache;
     table_type *m_table;
+    cache_type m_cache;
 };
 
 /**
@@ -156,7 +146,8 @@ void node_cache<Node, Table>::static_keep(const pos_type pos, const node_type& n
 template <typename Node, typename Table>
 node_cache<Node, Table>::node_cache() :
     m_enabled(false),
-    m_table(NULL)
+    m_table(NULL),
+    m_cache(*this)
 {
 }
 
@@ -167,8 +158,8 @@ node_cache<Node, Table>::node_cache() :
 template <typename Node, typename Table>
 void node_cache<Node, Table>::begin(table_type *table)
 {
+    m_cache.free();
     m_table = table;
-    m_cache.clear();
     m_enabled = true;
 }
 
@@ -180,28 +171,23 @@ void node_cache<Node, Table>::end()
 {
     if (m_enabled && m_table != NULL)
     {
-        clean();
+        m_cache.free();
     }
     m_table = NULL;
     m_enabled = false;
 }
 
 /**
- * Clean the cache
+ * Save a node
  */
 template <typename Node, typename Table>
-void node_cache<Node, Table>::clean()
+void node_cache<Node, Table>::save_page(const pos_type index, void *data)
 {
-    const typename cache_type::const_iterator itend = m_cache.end();
-    for (typename cache_type::const_iterator it = m_cache.begin(); it != itend; ++it)
+    if (m_enabled)
     {
-        if (ST_WR == it->second.state)
-        {
-            const record_type record(it->second.node);
-            m_table->unsafe_write(record, it->first);
-        }
+        const record_type record(*reinterpret_cast<node_type*>(data));
+        m_table->unsafe_write(record, index);
     }
-    m_cache.clear();
 }
 
 /**
@@ -215,10 +201,10 @@ bool node_cache<Node, Table>::read(const pos_type pos, node_type& node) const
 {
     if (m_enabled)
     {
-        const typename cache_type::const_iterator it = m_cache.find(pos);
-        if (it != m_cache.end())
+        const typename cache_type::page_status_type status = m_cache.page_exists(pos);
+        if (status.state() != PG_DETACHED)
         {
-            node = it->second.node;
+            node = *reinterpret_cast<node_type*>(m_cache.get_page(status));
             return true;
         }
     }
@@ -231,15 +217,11 @@ bool node_cache<Node, Table>::read(const pos_type pos, node_type& node) const
  * @param node the node
  */
 template <typename Node, typename Table>
-void node_cache<Node, Table>::keep(const pos_type pos, const node_type& node)
+void node_cache<Node, Table>::keep(const pos_type pos, const node_type& node) const
 {
     if (m_enabled)
     {
-        if (m_cache.size() > 2 * cache_type::SLOT_COUNT)
-        {
-            clean();
-        }
-        m_cache.insert(typename cache_type::value_type(pos, item(ST_RD, node)));
+        *reinterpret_cast<node_type*>(m_cache.get_page(pos)) = node;
     }
 }
 
@@ -254,20 +236,7 @@ bool node_cache<Node, Table>::write(const pos_type pos, const node_type& node)
 {
     if (m_enabled)
     {
-        typename cache_type::iterator it = m_cache.find(pos);
-        if (m_cache.end() == it)
-        {
-            if (m_cache.size() > 2 * cache_type::SLOT_COUNT)
-            {
-                clean();
-            }
-            m_cache.insert(typename cache_type::value_type(pos, item(ST_WR, node)));
-        }
-        else
-        {
-            it->second.state = ST_WR;
-            it->second.node = node;
-        }
+        *reinterpret_cast<node_type*>(m_cache.get_page(pos)) = node;
         return NULL == m_table;
     }
     return true;
