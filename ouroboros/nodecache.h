@@ -24,8 +24,9 @@ public:
     typedef Table table_type;
     typedef typename table_type::record_type record_type;
 
-    static void static_begin(table_type *table = NULL);
+    static void static_begin(table_type& table);
     static void static_end();
+    static void static_cancel();
     static bool static_read(const pos_type pos, node_type& node);
     static bool static_write(const pos_type pos, const node_type& node);
     static void static_keep(const pos_type pos, const node_type& node);
@@ -34,8 +35,9 @@ protected:
 
     static node_cache& instance();
 
-    void begin(table_type *table = NULL);
+    void begin(table_type& table);
     void end();
+    void cancel();
     bool read(const pos_type pos, node_type& node) const;
     bool write(const pos_type pos, const node_type& node);
     void keep(const pos_type pos, const node_type& node) const;
@@ -43,7 +45,6 @@ protected:
 private:
     node_cache();
 private:
-    bool m_enabled;
     table_type *m_table;
     cache_type m_cache;
 };
@@ -56,7 +57,7 @@ struct cache_guard
 {
     typedef Cache cache_type;
     typedef typename cache_type::table_type table_type;
-    cache_guard(table_type *table)
+    cache_guard(table_type& table)
     {
         cache_type::static_begin(table);
     }
@@ -87,7 +88,7 @@ node_cache<Node, Table>& node_cache<Node, Table>::instance()
  */
 //static
 template <typename Node, typename Table>
-void node_cache<Node, Table>::static_begin(table_type *table)
+void node_cache<Node, Table>::static_begin(table_type& table)
 {
     instance().begin(table);
 }
@@ -100,6 +101,16 @@ template <typename Node, typename Table>
 void node_cache<Node, Table>::static_end()
 {
     instance().end();
+}
+
+/**
+ * Cancel caching
+ */
+//static
+template <typename Node, typename Table>
+void node_cache<Node, Table>::static_cancel()
+{
+    instance().cancel();
 }
 
 /**
@@ -145,7 +156,6 @@ void node_cache<Node, Table>::static_keep(const pos_type pos, const node_type& n
  */
 template <typename Node, typename Table>
 node_cache<Node, Table>::node_cache() :
-    m_enabled(false),
     m_table(NULL),
     m_cache(*this)
 {
@@ -156,11 +166,10 @@ node_cache<Node, Table>::node_cache() :
  * @param table the table of cached nodes
  */
 template <typename Node, typename Table>
-void node_cache<Node, Table>::begin(table_type *table)
+void node_cache<Node, Table>::begin(table_type& table)
 {
     m_cache.free();
-    m_table = table;
-    m_enabled = true;
+    m_table = &table;
 }
 
 /**
@@ -169,12 +178,24 @@ void node_cache<Node, Table>::begin(table_type *table)
 template <typename Node, typename Table>
 void node_cache<Node, Table>::end()
 {
-    if (m_enabled && m_table != NULL)
+    if (m_table != NULL)
     {
         m_cache.free();
     }
     m_table = NULL;
-    m_enabled = false;
+}
+
+/**
+ * Cancel caching
+ */
+template <typename Node, typename Table>
+void node_cache<Node, Table>::cancel()
+{
+    if (m_table != NULL)
+    {
+        m_table = NULL;
+        m_cache.free();
+    }
 }
 
 /**
@@ -183,7 +204,7 @@ void node_cache<Node, Table>::end()
 template <typename Node, typename Table>
 void node_cache<Node, Table>::save_page(const pos_type index, void *data)
 {
-    if (m_enabled)
+    if (m_table != NULL)
     {
         const record_type record(*reinterpret_cast<node_type*>(data));
         m_table->unsafe_write(record, index);
@@ -199,7 +220,7 @@ void node_cache<Node, Table>::save_page(const pos_type index, void *data)
 template <typename Node, typename Table>
 bool node_cache<Node, Table>::read(const pos_type pos, node_type& node) const
 {
-    if (m_enabled)
+    if (m_table != NULL)
     {
         const typename cache_type::page_status_type status = m_cache.page_exists(pos);
         if (status.state() != PG_DETACHED)
@@ -219,7 +240,7 @@ bool node_cache<Node, Table>::read(const pos_type pos, node_type& node) const
 template <typename Node, typename Table>
 void node_cache<Node, Table>::keep(const pos_type pos, const node_type& node) const
 {
-    if (m_enabled)
+    if (m_table != NULL)
     {
         *reinterpret_cast<node_type*>(m_cache.get_page(pos)) = node;
     }
@@ -234,10 +255,10 @@ void node_cache<Node, Table>::keep(const pos_type pos, const node_type& node) co
 template <typename Node, typename Table>
 bool node_cache<Node, Table>::write(const pos_type pos, const node_type& node)
 {
-    if (m_enabled)
+    if (m_table != NULL)
     {
         *reinterpret_cast<node_type*>(m_cache.get_page(pos)) = node;
-        return NULL == m_table;
+        return false;
     }
     return true;
 }
