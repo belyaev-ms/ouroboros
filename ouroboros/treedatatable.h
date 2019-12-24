@@ -312,11 +312,7 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::do_add(co
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_add(const record_type& record)
 {
-#ifdef OUROBOROS_NODECACHE_ENABLED
-    cache_guard<cache_type> guard(*this);
-#endif
-    const pos_type result = do_add(record);
-    return result;
+    return do_add(record);
 }
 
 /**
@@ -327,9 +323,6 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_ad
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_add(const record_list& records)
 {
-#ifdef OUROBOROS_NODECACHE_ENABLED
-    cache_guard<cache_type> guard(*this);
-#endif
     pos_type result = unsafe_table::end_pos();
     const typename record_list::const_iterator end = records.end();
     for (typename record_list::const_iterator it = records.begin(); it != end; ++it)
@@ -987,12 +980,15 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 inline bool tree_data_table<Table, IndexedRecord, Key, Interface>::refresh()
 {
     typename base_class::lock_read lock(*this);
-    if (unsafe_table::refresh())
+    bool result = unsafe_table::refresh();
+    if (result)
     {
         m_tree.set_root(base_class::cast_skey().root);
-        return true;
     }
-    return false;
+#ifdef OUROBOROS_NODECACHE_ENABLED
+    cache_type::static_begin(*this);
+#endif
+    return result;
 }
 
 /**
@@ -1002,6 +998,9 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 inline void tree_data_table<Table, IndexedRecord, Key, Interface>::update()
 {
     typename base_class::lock_write lock(*this);
+#ifdef OUROBOROS_NODECACHE_ENABLED
+    cache_type::static_end();
+#endif
     skey_type& skey = base_class::cast_skey();
     skey.root = m_tree.get_root();
     unsafe_table::update();
@@ -1014,6 +1013,9 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 inline void tree_data_table<Table, IndexedRecord, Key, Interface>::recovery()
 {
     typename base_class::lock_read lock(*this);
+#ifdef OUROBOROS_NODECACHE_ENABLED
+    cache_type::static_cancel();
+#endif
     m_tree.set_root(unsafe_table::skey().root);
     unsafe_table::recovery();
 }
