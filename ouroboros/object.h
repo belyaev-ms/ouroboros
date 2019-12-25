@@ -25,7 +25,7 @@ const std::string make_object_name(T1 s1, T2 s2)
 {
     std::ostringstream out;
     out << s1 << "." << s2;
-    const std::string& s = out.str();
+    const std::string s = out.str();
     return std::string(std::find(s.rbegin(), s.rend(), '/').base(), s.end());
 }
 

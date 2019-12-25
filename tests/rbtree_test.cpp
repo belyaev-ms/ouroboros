@@ -23,7 +23,7 @@ typedef table_smart_pnode<node_type, table_type> pnode_type;
 typedef fast_rbtree<pnode_type> test_tree_type;
 typedef datasource_type::file_region_type file_region_type;
 
-const size_t count = 100;
+const size_t rec_count = 100;
 
 /**
  * Check the search in the tree
@@ -32,7 +32,7 @@ const size_t count = 100;
  */
 void check_tree_find(sample_tree_type& sample_tree, test_tree_type& test_tree)
 {
-    for (size_t i = 0; i < count; ++i)
+    for (size_t i = 0; i < rec_count; ++i)
     {
         test_tree_type::iterator test_it = test_tree.lower_bound(i);
         sample_tree_type::iterator sample_it = sample_tree.lower_bound(i);
@@ -89,7 +89,7 @@ void require_equal_tree(sample_tree_type& sample_tree, test_tree_type& test_tree
 BOOST_AUTO_TEST_CASE(simple_rbtree_test)
 {
     skey_type skey;
-    datasource_type source("tree.dat", 1, count);
+    datasource_type source("tree.dat", 1, rec_count);
     file_region_type file_region(1, source.table_size());
     source.set_file_region(file_region);
     table_type table(source, skey);
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(simple_rbtree_test)
     sample_tree_type sample_tree;
 
     BOOST_TEST_MESSAGE("add even values:");
-    for (size_t i = 0; i < count; i += 2)
+    for (size_t i = 0; i < rec_count; i += 2)
     {
         BOOST_TEST_MESSAGE("\tadd " << i);
         test_tree.insert(i);
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(simple_rbtree_test)
     }
 
     BOOST_TEST_MESSAGE("add odd values:");
-    for (size_t i = 1; i < count; i += 2)
+    for (size_t i = 1; i < rec_count; i += 2)
     {
         BOOST_TEST_MESSAGE("\tadd " << i);
         test_tree.insert(i);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(simple_rbtree_test)
     }
 
     BOOST_TEST_MESSAGE("remove the half of the odd values:");
-    for (size_t i = 1; i < count / 2; i += 2)
+    for (size_t i = 1; i < rec_count / 2; i += 2)
     {
         BOOST_TEST_MESSAGE("\tdel " << i);
         test_tree.erase(i);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(simple_rbtree_test)
     }
 
     BOOST_TEST_MESSAGE("remove the part of the values from middle of the tree:");
-    for (size_t i = 3 * count / 4 ; i < 9 * count / 10; ++i)
+    for (size_t i = 3 * rec_count / 4 ; i < 9 * rec_count / 10; ++i)
     {
         BOOST_TEST_MESSAGE("\tdel " << i);
         test_tree.erase(i);
@@ -135,9 +135,9 @@ BOOST_AUTO_TEST_CASE(simple_rbtree_test)
     // add/remove random values
     BOOST_TEST_MESSAGE("add/remove random values:");
     std::srand(time(NULL));
-    for (size_t i = 0; i < 10 * count; ++i)
+    for (size_t i = 0; i < 10 * rec_count; ++i)
     {
-        int32_t val = std::rand() % count;
+        int32_t val = std::rand() % rec_count;
         test_tree_type::iterator stg_it = test_tree.find(val);
         sample_tree_type::iterator std_it = sample_tree.find(val);
         BOOST_REQUIRE_EQUAL(stg_it != test_tree.end(), std_it != sample_tree.end());
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(simple_rbtree_test)
             test_tree.erase(val);
             sample_tree.erase(val);
         }
-        else if (test_tree.size() < count)
+        else if (test_tree.size() < rec_count)
         {
             BOOST_TEST_MESSAGE("\tadd " << val);
             test_tree.insert(val);
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(simple_rbtree_test)
     }
 
     BOOST_TEST_MESSAGE("remove all values:");
-    for (size_t i = 0; i < count; ++i)
+    for (size_t i = 0; i < rec_count; ++i)
     {
         int32_t val = i;
         test_tree_type::iterator stg_it = test_tree.find(val);
@@ -174,14 +174,14 @@ BOOST_AUTO_TEST_CASE(simple_rbtree_test)
     BOOST_REQUIRE_EQUAL(test_tree.empty(), sample_tree.empty());
 
     BOOST_TEST_MESSAGE("add all values with overflow:");
-    for (size_t i = 0; i < 2 * count; ++i)
+    for (size_t i = 0; i < 2 * rec_count; ++i)
     {
         int32_t val = i;
         BOOST_TEST_MESSAGE("\tadd " << val);
         test_tree.insert(val);
-        if (val >= static_cast<int32_t>(count))
+        if (val >= static_cast<int32_t>(rec_count))
         {
-            sample_tree.erase(val - count);
+            sample_tree.erase(val - rec_count);
         }
         sample_tree.insert(val);
         require_equal_tree(sample_tree, test_tree);
@@ -223,14 +223,14 @@ void check_insert(test_tree_type& tree, const size_t val, const size_t count)
 BOOST_AUTO_TEST_CASE(insert_equal_rbtree_test)
 {
     skey_type skey;
-    datasource_type source("tree.dat", 1, count);
+    datasource_type source("tree.dat", 1, rec_count);
     file_region_type file_region(1, source.table_size());
     source.set_file_region(file_region);
     table_type table(source, skey);
     test_tree_type test_tree(table, NIL);
 
     const size_t step = 4;
-    for (size_t i = 0; i < count; i += step)
+    for (size_t i = 0; i < rec_count; i += step)
     {
         check_insert(test_tree, i, step);
     }

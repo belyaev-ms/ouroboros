@@ -468,10 +468,12 @@ dataset_transaction<Dataset>::~dataset_transaction()
 {
     if (std::uncaught_exception())
     {
+        // cppcheck-suppress virtualCallInConstructor
         cancel();
     }
     else
     {
+        // cppcheck-suppress virtualCallInConstructor
         stop();
     }
 }
@@ -548,10 +550,12 @@ lazy_transaction<Dataset>::~lazy_transaction()
 {
     if (std::uncaught_exception())
     {
+        // cppcheck-suppress virtualCallInConstructor
         cancel();
     }
     else
     {
+        // cppcheck-suppress virtualCallInConstructor
         stop();
     }
 }
@@ -678,10 +682,12 @@ base_global_transaction<Interface, Lock, Helper>::~base_global_transaction()
 {
     if (std::uncaught_exception())
     {
+        // cppcheck-suppress virtualCallInConstructor
         cancel();
     }
     else
     {
+        // cppcheck-suppress virtualCallInConstructor
         stop();
     }
 }

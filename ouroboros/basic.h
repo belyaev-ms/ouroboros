@@ -24,7 +24,7 @@ struct options_type
         rec_space(0),
         tbl_space(0)
     {}
-    options_type(const offset_type aoffset, const count_type arec_space = 0, const count_type atbl_space = 0) :
+    explicit options_type(const offset_type aoffset, const count_type arec_space = 0, const count_type atbl_space = 0) :
         offset(aoffset),
         rec_space(arec_space),
         tbl_space(atbl_space)

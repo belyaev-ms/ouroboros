@@ -226,9 +226,9 @@ const int exec_test(const std::string& name, const dataset_type::key_type& key,
                     {
                         std::cout << "[FAIL]" << std::endl;
                         OUROBOROS_TOOLS_ERROR(PR(pid) << PR(key) << PR(records[i].field1()) << PE(records[i + 1].field1()));
-                        for (size_t i = 0; i < records.size(); ++i)
+                        for (size_t n = 0; n < records.size(); ++n)
                         {
-                            OUROBOROS_TOOLS_DEBUG("\t" << records[i]);
+                            OUROBOROS_TOOLS_DEBUG("\t" << records[n]);
                         }
                         return RET_FAIL;
                     }

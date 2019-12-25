@@ -152,7 +152,7 @@ public:
     typedef Interface interface_type;
     typedef typename interface_type::file_type file_type;
     typedef Record record_type;
-    data_source(file_type& file, const options_type& options = options_type()) :
+    explicit data_source(file_type& file, const options_type& options = options_type()) :
         base_class(file, record_type().size(), options)
     {}
     data_source(file_type& file, const count_type tbl_count, const options_type& options = options_type()) :
@@ -161,7 +161,7 @@ public:
     data_source(file_type& file, const count_type tbl_count, const count_type rec_count, const options_type& options = options_type()) :
         base_class(file, tbl_count, rec_count, record_type().size(), options)
     {}
-    data_source(const std::string& name, const options_type& options = options_type()) :
+    explicit data_source(const std::string& name, const options_type& options = options_type()) :
         base_class(name, record_type().size(), options)
     {}
     data_source(const std::string& name, const count_type tbl_count, const options_type& options = options_type()) :

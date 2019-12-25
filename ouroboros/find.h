@@ -24,7 +24,7 @@ public:
     typedef typename index_type::field_type field_type;
     typedef Operator<field_type> operator_type;
 
-    value_comparator(const field_type& field);
+    explicit value_comparator(const field_type& field);
     inline bool operator ()(const record_type& record) const;
 private:
     value_comparator();
@@ -78,7 +78,7 @@ public:
     typedef typename comparator_type::record_type record_type;
     typedef typename Container<record_type>::vector_type result_type;
 
-    finder(const comparator_type& comp);
+    explicit finder(const comparator_type& comp);
     finder(const comparator_type& comp, const count_type count);
 
     inline bool operator()(); ///< compare
@@ -105,7 +105,7 @@ class comp_equal : public value_comparator<Record, Index, std::equal_to>
     typedef value_comparator<Record, Index, std::equal_to> base_class;
 public:
     typedef typename base_class::field_type field_type;
-    comp_equal(const field_type& field) : base_class(field) {};
+    explicit comp_equal(const field_type& field) : base_class(field) {};
 };
 
 /**
@@ -117,7 +117,7 @@ class comp_not_equal : public value_comparator<Record, Index, std::not_equal_to>
     typedef value_comparator<Record, Index, std::not_equal_to> base_class;
 public:
     typedef typename base_class::field_type field_type;
-    comp_not_equal(const field_type& field) : base_class(field) {};
+    explicit comp_not_equal(const field_type& field) : base_class(field) {};
 };
 
 /**
@@ -129,7 +129,7 @@ class comp_greater : public value_comparator<Record, Index, std::greater>
     typedef value_comparator<Record, Index, std::greater> base_class;
 public:
     typedef typename base_class::field_type field_type;
-    comp_greater(const field_type& field) : base_class(field) {};
+    explicit comp_greater(const field_type& field) : base_class(field) {};
 };
 
 /**
@@ -141,7 +141,7 @@ class comp_less : public value_comparator<Record, Index, std::less>
     typedef value_comparator<Record, Index, std::less> base_class;
 public:
     typedef typename base_class::field_type field_type;
-    comp_less(const field_type& field) : base_class(field) {};
+    explicit comp_less(const field_type& field) : base_class(field) {};
 };
 
 /**
@@ -153,7 +153,7 @@ class comp_greater_equal : public value_comparator<Record, Index, std::greater_e
     typedef value_comparator<Record, Index, std::greater_equal> base_class;
 public:
     typedef typename base_class::field_type field_type;
-    comp_greater_equal(const field_type& field) : base_class(field) {};
+    explicit comp_greater_equal(const field_type& field) : base_class(field) {};
 };
 
 /**
@@ -165,7 +165,7 @@ class comp_less_equal : public value_comparator<Record, Index, std::less_equal>
     typedef value_comparator<Record, Index, std::less_equal> base_class;
 public:
     typedef typename base_class::field_type field_type;
-    comp_less_equal(const field_type& field) : base_class(field) {};
+    explicit comp_less_equal(const field_type& field) : base_class(field) {};
 };
 
 namespace
@@ -192,7 +192,7 @@ class comp_not_mask : public value_comparator<Record, Index, not_bit_mask>
     typedef value_comparator<Record, Index, not_bit_mask> base_class;
 public:
     typedef typename base_class::field_type field_type;
-    comp_not_mask(const field_type& field) : base_class(field) {};
+    explicit comp_not_mask(const field_type& field) : base_class(field) {};
 };
 
 namespace

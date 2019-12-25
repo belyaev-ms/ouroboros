@@ -213,6 +213,7 @@ inline bool locker<Locker>::lock(const size_t timeout)
         if (!Locker::lock(timeout))
         {
             base_locker::unlock();
+            // cppcheck-suppress knownConditionTrueFalse
             OUROBOROS_THROW_ERROR(lock_error, "error installing the exclusive lock "
                     << (NULL == name() ? "" : name()));
         }
@@ -233,6 +234,7 @@ inline bool locker<Locker>::unlock()
         if (!Locker::unlock())
         {
             base_locker::lock();
+            // cppcheck-suppress knownConditionTrueFalse
             OUROBOROS_THROW_ERROR(lock_error, "error removing the exclusive lock "
                     << (NULL == name() ? "" : name()));
         }
@@ -264,6 +266,7 @@ inline bool locker<Locker>::lock_sharable(const size_t timeout)
         if (!Locker::lock_sharable(timeout))
         {
             base_locker::unlock_sharable();
+            // cppcheck-suppress knownConditionTrueFalse
             OUROBOROS_THROW_ERROR(lock_error, "error installing the shared lock "
                     << (NULL == name() ? "" : name()));
         }
@@ -284,6 +287,7 @@ inline bool locker<Locker>::unlock_sharable()
         if (!Locker::unlock_sharable())
         {
             base_locker::lock_sharable();
+            // cppcheck-suppress knownConditionTrueFalse
             OUROBOROS_THROW_ERROR(lock_error, "error removing the shared lock "
                     << (NULL == name() ? "" : name()));
         }

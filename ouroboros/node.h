@@ -44,7 +44,7 @@ public:
 
     data_node(const body_type& in_body, const pos_type in_parent, const node_color in_color);
     data_node(const body_type& in_body, const pos_type in_parent);
-    data_node(const body_type& in_body);
+    explicit data_node(const body_type& in_body);
     data_node();
     data_node(const self_type& node);
 
@@ -110,7 +110,7 @@ public:
     typedef typename node_type::body_type body_type;
     typedef self_type static_pnode;
 public:
-    table_pnode(table_type& table);
+    explicit table_pnode(table_type& table);
     table_pnode(table_type& table, const pos_type pos);
     table_pnode(const self_type& pnode);
     virtual ~table_pnode();
@@ -193,9 +193,10 @@ public:
     typedef typename node_type::body_type body_type;
     typedef base_class static_pnode;
 public:
-    table_smart_pnode(table_type& table);
+    explicit table_smart_pnode(table_type& table);
     table_smart_pnode(table_type& table, const pos_type pos);
     table_smart_pnode(const self_type& pnode);
+    // cppcheck-suppress noExplicitConstructor
     table_smart_pnode(const base_class& pnode);
     virtual ~table_smart_pnode();
 
