@@ -33,7 +33,7 @@ template <typename TMutex>
 class base_mutex_lock
 {
 public:
-    inline base_mutex_lock(const std::string& name);
+    explicit inline base_mutex_lock(const std::string& name);
 
     inline bool lock(); ///< set the exclusive lock
     inline bool lock(const size_t timeout); ///< set the exclusive lock with a timeout
@@ -60,7 +60,7 @@ private:
  */
 struct mutex_lock : public base_mutex_lock<boost::interprocess::interprocess_upgradable_mutex>
 {
-    inline mutex_lock(const std::string& name) :
+    explicit inline mutex_lock(const std::string& name) :
         base_mutex_lock<boost::interprocess::interprocess_upgradable_mutex>(name)
     {}
 };
@@ -70,7 +70,7 @@ struct mutex_lock : public base_mutex_lock<boost::interprocess::interprocess_upg
  */
 struct simple_mutex_lock : public base_mutex_lock<shared_lock>
 {
-    inline simple_mutex_lock(const std::string& name) :
+    explicit inline simple_mutex_lock(const std::string& name) :
         base_mutex_lock<shared_lock>(name)
     {}
 };

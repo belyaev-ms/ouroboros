@@ -38,7 +38,7 @@ public:
     typedef data_node<key_type, record_type, converter> node_type;
 
     inline indexed_record();
-    inline indexed_record(const node_type& node);
+    explicit inline indexed_record(const node_type& node);
 
     inline bool operator == (const indexed_record& o) const;
     inline bool operator != (const indexed_record& o) const;

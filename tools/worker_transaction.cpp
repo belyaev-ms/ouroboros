@@ -62,7 +62,7 @@ typedef dataset_transaction<dataset_type> transaction_type;
 class condition_transaction
 {
 public:
-    condition_transaction(dataset_type& dataset) :
+    explicit condition_transaction(dataset_type& dataset) :
         m_transact(s_enabled ? new transaction_type(dataset) : NULL)
     {
     }

@@ -138,7 +138,9 @@ public:
     virtual ~dataset_transaction();
 
     virtual void start(); ///< start the transaction
+    // cppcheck-suppress virtualCallInConstructor
     virtual void stop(); ///< stop the transaction
+    // cppcheck-suppress virtualCallInConstructor
     virtual void cancel(); ///< cancel the transaction
 private:
     dataset_type& m_dataset; ///< the supported dataset
@@ -164,7 +166,9 @@ public:
 
     void push(session_write& session); ///< push a session to context of the transaction
     virtual void start(); ///< start the transaction
+    // cppcheck-suppress virtualCallInConstructor
     virtual void stop(); ///< stop the transaction
+    // cppcheck-suppress virtualCallInConstructor
     virtual void cancel(); ///< cancel the transaction
 protected:
     void SessionsStop(); ///< stop all session of the transaction
@@ -188,7 +192,9 @@ public:
     virtual ~base_global_transaction();
     void attach(transaction_type *transact); ///< attach a transaction
     virtual void start(); ///< start the transaction
+    // cppcheck-suppress virtualCallInConstructor
     virtual void stop(); ///< stop the transaction
+    // cppcheck-suppress virtualCallInConstructor
     virtual void cancel(); ///< cancel the transaction
 protected:
     base_global_transaction();
