@@ -27,7 +27,7 @@ public:
 
     record1();
     record1(const record_type& record);
-    record1(const field1_type& field1);
+    explicit record1(const field1_type& field1);
     inline void *pack(void *out) const;
     inline const void *unpack(const void *in);
     inline size_type size() const;

@@ -72,7 +72,7 @@ public:
     typedef global_lock<interface_type> lock_type; ///< the lock for the dataset
     typedef global_lazy_lock<interface_type> lazy_lock_type; ///< the lazy lock for the dataset
 
-    data_set(const std::string& name);
+    explicit data_set(const std::string& name);
     data_set(const std::string& name, const count_type tbl_count, const count_type rec_count,
         const count_type ver = 0, const void *user_data = NULL, const size_type user_size = 0);
     ~data_set();

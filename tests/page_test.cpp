@@ -257,7 +257,6 @@ void test_file_region()
     }
     {
         size_t count1 = 2;
-        size_t size1 = 10;
         file_region_type subregion1(2, 10);
         typename file_region_type::region_list subregions;
         subregions.push_back(subregion);

@@ -139,7 +139,9 @@ public:
     explicit attach_assistant(managed_shared_memory& mem) : m_mem(mem) {}
     void operator ()()
     {
+        // cppcheck-suppress unreadVariable symbolName=count
         count_type& count = *m_mem.find_or_construct<count_type>(SHMEM_COUNTER_NAME)(0);
+        // cppcheck-suppress unreadVariable symbolName=count
         OUROBOROS_DEBUG("attach memory count = " << count);
         ++count;
     }

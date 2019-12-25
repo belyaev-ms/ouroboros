@@ -37,12 +37,6 @@ BOOST_AUTO_TEST_CASE(test1)
         BOOST_REQUIRE_EQUAL(size, file.size());
 
         source_type source(file, tbl_count, rec_count, rec_size);
-        char out[size] = { 0 };
-        char in[size] = { 0 };
-        for (size_t i = 0; i < size; ++i)
-        {
-            out[i] = i;
-        }
         skey_list keys(tbl_count);
         ptable_list tables(tbl_count);
         for (size_t i = 0; i < tbl_count; ++i)

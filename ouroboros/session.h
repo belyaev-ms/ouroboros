@@ -88,7 +88,7 @@ public:
     inline const table_type* operator-> () const; ///< get the pointer to the table
 
     inline bool valid() const; ///< check the session is valid
-    void operator= (const base_session& session);
+    base_session& operator= (const base_session& session);
 protected:
     typedef typename table_type::unsafe_table unsafe_table; ///< the table without lock
     virtual void lock(); ///< lock the table
@@ -126,7 +126,7 @@ public:
     inline table_type* operator-> (); ///< get the pointer to the table
     inline const table_type* operator-> () const; ///< get the pointer to the table
 
-    void operator= (const table_session& session);
+    table_session& operator= (const table_session& session);
 protected:
     typedef typename base_class::unsafe_table unsafe_table;
     virtual bool do_start();  ///< start the transaction
@@ -153,7 +153,7 @@ public:
     base_sharable_session(const base_sharable_session& session);
     explicit base_sharable_session(base_table_type *table);
 
-    inline void operator= (const base_sharable_session& session);
+    base_sharable_session& operator= (const base_sharable_session& session);
 protected:
     typedef typename base_class::unsafe_table unsafe_table;
     virtual void lock(); ///< lock the table
@@ -178,7 +178,7 @@ public:
     base_scoped_session(const base_scoped_session& session);
     explicit base_scoped_session(base_table_type *table);
 
-    inline void operator= (const base_scoped_session& session);
+    base_scoped_session& operator= (const base_scoped_session& session);
 protected:
     typedef typename base_class::unsafe_table unsafe_table;
     virtual void lock(); ///< lock the table
@@ -205,7 +205,7 @@ public:
     sharable_session(dataset_type& dataset, const key_type& key);
     virtual ~sharable_session();
 
-    inline void operator= (const sharable_session& session);
+    sharable_session& operator= (const sharable_session& session);
 };
 
 /**
@@ -230,7 +230,7 @@ public:
     scoped_session(dataset_type& dataset, const key_type& key);
     virtual ~scoped_session();
 
-    inline void operator= (const scoped_session& session);
+    scoped_session& operator= (const scoped_session& session);
 private:
     virtual bool do_start();  ///< start the transation
     virtual bool do_stop();   ///< stop the transation
@@ -261,7 +261,7 @@ public:
     explicit scoped_key_session(dataset_type& dataset);
     virtual ~scoped_key_session();
 
-    inline void operator= (const scoped_key_session& session);
+    scoped_key_session& operator= (const scoped_key_session& session);
 private:
     virtual bool do_start();  ///< start the transation
     virtual bool do_stop();   ///< stop the transation
@@ -505,13 +505,15 @@ inline const typename base_session<Table, GlobalLock>::table_type*
  * @param session the another session
  */
 template <typename Table, typename GlobalLock>
-void base_session<Table, GlobalLock>::operator= (const base_session& session)
+base_session<Table, GlobalLock>& base_session<Table, GlobalLock>::
+    operator= (const base_session& session)
 {
     m_glock = session.m_glock;
     m_primary = session.m_primary;
     m_table = session.m_table;
     session.m_glock = false;
     session.m_primary = false;
+    return *this;
 }
 
 /**
@@ -657,11 +659,13 @@ inline const typename table_session<Table, TableInterface, GlobalLock>::table_ty
  * @param session the another session
  */
 template <typename Table, template <typename> class TableInterface, typename GlobalLock>
-void table_session<Table, TableInterface, GlobalLock>::operator= (const table_session& session)
+table_session<Table, TableInterface, GlobalLock>& table_session<Table,
+    TableInterface, GlobalLock>::operator= (const table_session& session)
 {
     m_lock = session.m_lock;
     session.m_lock = false;
     base_class::operator =(session);
+    return *this;
 }
 
 /**
@@ -793,9 +797,11 @@ bool base_sharable_session<Table, GlobalLock>::do_start()
  * @param session the another session
  */
 template <typename Table, typename GlobalLock>
-inline void base_sharable_session<Table, GlobalLock>::operator= (const base_sharable_session& session)
+base_sharable_session<Table, GlobalLock>& base_sharable_session<Table,
+    GlobalLock>::operator= (const base_sharable_session& session)
 {
     base_class::operator =(session);
+    return *this;
 }
 
 //==============================================================================
@@ -863,9 +869,11 @@ void base_scoped_session<Table, GlobalLock>::unlock()
  * @param session the another session
  */
 template <typename Table, typename GlobalLock>
-inline void base_scoped_session<Table, GlobalLock>::operator= (const base_scoped_session& session)
+base_scoped_session<Table, GlobalLock>& base_scoped_session<Table,
+    GlobalLock>::operator= (const base_scoped_session& session)
 {
     base_class::operator =(session);
+    return *this;
 }
 
 //==============================================================================
@@ -927,9 +935,11 @@ sharable_session<Dataset>::~sharable_session()
  * @param session the another session
  */
 template <typename Dataset>
-inline void sharable_session<Dataset>::operator= (const sharable_session& session)
+sharable_session<Dataset>& sharable_session<Dataset>::
+    operator= (const sharable_session& session)
 {
     base_class::operator =(session);
+    return *this;
 }
 
 //==============================================================================
@@ -996,11 +1006,13 @@ scoped_session<Dataset>::~scoped_session()
  * @param session the another session
  */
 template <typename Dataset>
-inline void scoped_session<Dataset>::operator= (const scoped_session& session)
+scoped_session<Dataset>& scoped_session<Dataset>::
+    operator= (const scoped_session& session)
 {
     base_class::operator =(session);
     m_dataset = session.m_dataset;
     session.m_dataset = NULL;
+    return *this;
 }
 
 /**
@@ -1114,11 +1126,13 @@ scoped_key_session<Dataset>::~scoped_key_session()
  * @param session the another session
  */
 template <typename Dataset>
-inline void scoped_key_session<Dataset>::operator= (const scoped_key_session& session)
+inline scoped_key_session<Dataset>& scoped_key_session<Dataset>::
+    operator= (const scoped_key_session& session)
 {
     base_class::operator =(session);
     m_dataset = session.m_dataset;
     session.m_dataset = NULL;
+    return *this;
 }
 
 /**

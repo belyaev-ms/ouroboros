@@ -470,6 +470,7 @@ pos_type data_table<Table, Record, Key, Interface>::rfind(const record_type& rec
  * @return the position of the found record
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+// cppcheck-suppress syntaxError
 template <typename Finder>
 pos_type data_table<Table, Record, Key, Interface>::find(Finder& finder, const pos_type beg, const count_type count) const
 {

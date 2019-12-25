@@ -1,0 +1,6 @@
+#!/bin/bash
+cppcheck --force --inline-suppr --suppressions-list=$1 --enable=all --template=gcc --project=./compile_commands.json 2> cppcheck.log
+if [ -s cppcheck.log ]; then
+    cat cppcheck.log
+    exit 1
+fi

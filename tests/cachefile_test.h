@@ -510,6 +510,7 @@ BOOST_AUTO_TEST_CASE(wrrd_page_TR_rd_full_test)
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
     {
         file.write(&outbuf[i * blockSize], blockSize, i * blockSize);
+        // cppcheck-suppress variableScope symbolName=inbuf
         char inbuf[blockSize];
         if (i >= file_type::CACHE_PAGE_COUNT)
         {
@@ -568,6 +569,7 @@ BOOST_AUTO_TEST_CASE(rollback_test)
     for (size_t i = 0; i < sizeof(outbuf) /  blockSize; i++)
     {
         file.write(&stubbuf[i * blockSize], blockSize, i * blockSize);
+        // cppcheck-suppress variableScope symbolName=inbuf
         char inbuf[blockSize];
         if (i >= file_type::CACHE_PAGE_COUNT)
         {

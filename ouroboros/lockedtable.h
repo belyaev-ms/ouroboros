@@ -46,7 +46,7 @@ class sharable_table_lock
 {
 public:
     typedef Table table_type;
-    inline sharable_table_lock(const table_type& table);
+    explicit inline sharable_table_lock(const table_type& table);
     inline ~sharable_table_lock();
 protected:
     inline void lock() const;
@@ -63,7 +63,7 @@ class scoped_table_lock
 {
 public:
     typedef Table table_type;
-    inline scoped_table_lock(const table_type& table);
+    explicit inline scoped_table_lock(const table_type& table);
     inline ~scoped_table_lock();
 protected:
     inline void lock() const;

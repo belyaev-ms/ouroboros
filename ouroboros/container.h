@@ -70,7 +70,7 @@ public:
     typedef typename container_type::const_iterator const_iterator;
     typedef typename container_type::value_type value_type;
 
-    inline map(const std::string& name);
+    explicit inline map(const std::string& name);
     inline map(const std::string& name, const count_type count);
     inline ~map();
     inline container_type& operator() ();
@@ -98,7 +98,7 @@ public:
     typedef typename container_type::const_iterator const_iterator;
     typedef typename container_type::value_type value_type;
 
-    inline map(const std::string& name);
+    explicit inline map(const std::string& name);
     inline map(const std::string& name, const count_type count);
     inline container_type& operator() ();
     inline const container_type& operator() () const;
@@ -123,7 +123,7 @@ public:
     typedef typename container_type::const_iterator const_iterator;
     typedef typename container_type::value_type value_type;
 
-    inline map(const std::string& name);
+    explicit inline map(const std::string& name);
     inline map(const std::string& name, const count_type count);
     inline container_type& operator() ();
     inline const container_type& operator() () const;

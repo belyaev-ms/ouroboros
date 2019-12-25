@@ -51,6 +51,9 @@ endif (OUROBOROS_COVERAGE_ENABLED)
 add_custom_target(
     cppcheck
     COMMAND cppcheck
+    --force
+    --inline-suppr
+    --suppress=unusedFunction
     --enable=all
     --template=gcc
     --project=${CMAKE_BINARY_DIR}/compile_commands.json

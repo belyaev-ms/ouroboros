@@ -263,6 +263,7 @@ inline pos_type page_status<PPage>::index() const
  * @param next the next page
  */
 template <typename Cache, int pageSize>
+// cppcheck-suppress uninitMemberVar symbolName=m_data
 inline cache_page<Cache, pageSize>::cache_page(cache_page *prev, cache_page *next) :
     m_prev(prev),
     m_next(next),
@@ -276,6 +277,7 @@ inline cache_page<Cache, pageSize>::cache_page(cache_page *prev, cache_page *nex
  * Constructor
  */
 template <typename Cache, int pageSize>
+// cppcheck-suppress uninitMemberVar symbolName=m_data
 inline cache_page<Cache, pageSize>::cache_page() :
     m_prev(NULL),
     m_next(NULL),
