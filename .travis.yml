@@ -14,8 +14,12 @@ before_install:
     - sudo apt-get update -qq
     - sudo pip install codecov
     
-install:
-    - sudo apt-get install -qq cppcheck
+before_script:
+    - curl -OL https://github.com/danmar/cppcheck/archive/1.90.tar.gz
+    - tar -xvf 1.90.tar.gz
+    - cd cppcheck-1.90
+    - sudo make install
+    - cd ..
   
 script:
     - ./configure
