@@ -18,7 +18,7 @@ before_script:
     - curl -OL https://github.com/danmar/cppcheck/archive/1.90.tar.gz
     - tar -xvf 1.90.tar.gz
     - cd cppcheck-1.90
-    - sudo make install
+    - sudo make install FILESDIR=/usr/share/cppcheck
     - cd ..
   
 script:
