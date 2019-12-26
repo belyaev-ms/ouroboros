@@ -1,4 +1,3 @@
-#include <vector>
 #include "ouroboros/field_types.h"
 #include "ouroboros/record.h"
 #include "ouroboros/dataset.h"
@@ -43,7 +42,7 @@ int main(int argc, char *argv[])
         const size_t key = 0;
         dataset_type::session_read session_rd = dataset.session_rd(key);
         count_type count = session_rd->count();
-        std::vector<record_type> records(count);
+        dataset_type::record_list records(count);
         session_rd->read(records, session_rd->beg_pos());
     }
 }
