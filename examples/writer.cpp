@@ -76,9 +76,9 @@ int main(int argc, char *argv[])
         for (count_type i = 0; i < count; ++i)
         {
             sleep(1);
-            records[i].field1(std::time(nullptr));  // current time
-            records[i].field2(std::rand());         // some value
-            records[i].field3(std::rand());         // some status
+            records[i].field1(std::time(NULL)); // current time
+            records[i].field2(std::rand());     // some value
+            records[i].field3(std::rand());     // some status
         }
         
         // write the values to dataset
