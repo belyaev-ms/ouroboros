@@ -81,8 +81,8 @@ Transaction, unlike a session, allows to lock the entire dataset. If there will 
 For example, if we need to add the new table:
 ```сpp
 {
-	typedef transaction<dataset_type> transaction_type;
-	transaction_type transaction(dataset);
+    typedef transaction<dataset_type> transaction_type;
+    transaction_type transaction(dataset);
     if (dataset.table_exists(0))
     {
     	dataset.add_table(0);
