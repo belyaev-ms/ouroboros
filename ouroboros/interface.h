@@ -131,6 +131,10 @@ template <template <template <typename, typename, typename> class, typename, tem
 struct base_memory_interface : public base_interface<base_table_memory_interface, Table>,
     public base_dataset_local_interface {};
 
+/**
+ * The interface for working with a dataset stored in local memory
+ * (without separation between processes)
+ */
 typedef base_local_interface<indexed_table> local_interface;
 
 }   //namespace ouroboros

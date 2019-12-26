@@ -828,7 +828,6 @@ base_scoped_session<Table, GlobalLock>::base_scoped_session(const base_scoped_se
 
 /**
  * Constructor
- * @param dataset the supported dataset
  * @param table the supported table
  */
 template <typename Table, typename GlobalLock>

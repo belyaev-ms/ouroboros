@@ -224,7 +224,6 @@ inline void backup_file<FilePage, pageCount, File, Cache>::recovery()
 /**
  * Add the index of the page to the backup set
  * @param index the index of the page
- * @param page the pointer to the buffer of the page
  */
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>

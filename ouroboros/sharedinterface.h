@@ -54,6 +54,10 @@ template <template <template <typename, typename, typename> class, typename, tem
 struct base_shared_interface : public base_interface<base_table_shared_interface<pageCount>, Table>,
     public base_dataset_shared_interface {};
 
+/**
+ * The interface for working with a dataset in shared memory
+ * (with separation between processes)
+ */
 typedef base_shared_interface<indexed_table> shared_interface;
 
 }   //namespace ouroboros

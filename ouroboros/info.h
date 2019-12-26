@@ -57,6 +57,12 @@ private:
     char data[DATA_SIZE];       ///< the user data region
 };
 
+/**
+ * Convert a memory dump to a hex string
+ * @param buffer the pointer to memory buffer
+ * @param size the size of the buffer
+ * @return a hex string
+ */
 inline const std::string dump_memory(const void *buffer, const size_type size)
 {
     std::ostringstream s;

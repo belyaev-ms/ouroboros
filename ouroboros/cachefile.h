@@ -57,9 +57,9 @@ public:
     virtual void save_page(const pos_type index, void *data); ///< save data of the cache page
 protected:
     void clean(); ///< clean dirty pages of a cache
-    virtual void do_read(void *buffer, size_type size, const offset_type offset) const; ///< read data
-    virtual void do_write(const void *buffer, size_type size, const offset_type offset); ///< write data
-    virtual void do_refresh(size_type size, const offset_type pos); ///< refresh data
+    virtual void do_read(void *buffer, size_type size, const pos_type pos) const; ///< read data
+    virtual void do_write(const void *buffer, size_type size, const pos_type pos); ///< write data
+    virtual void do_refresh(size_type size, const pos_type pos); ///< refresh data
     virtual void *get_page(const pos_type index); ///< get the buffer of the cache page
     virtual void *get_page(const pos_type index) const; ///< get the buffer of the cache page
     virtual void save_page(const file_page_type& page); /// save data of the file page
@@ -109,10 +109,10 @@ cache_file<FilePage, pageCount, File, Cache>::cache_file(const std::string& name
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 void cache_file<FilePage, pageCount, File, Cache>::
-    do_read(void *buffer, size_type size, const offset_type offset) const
+    do_read(void *buffer, size_type size, const offset_type pos) const
 {
-    file_page_type page0(offset);
-    file_page_type page1(offset, size - 1);
+    file_page_type page0(pos);
+    file_page_type page1(pos, size - 1);
     if (page0 == page1)
     {
         page0.assign(get_page(page0.index()));
