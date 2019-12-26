@@ -61,7 +61,9 @@ public:
     pos_type add(const record_type& record); ///< add a record
     pos_type add(const record_list& records); ///< add records
     pos_type read_front(record_type& record) const; ///< read the first record
+    pos_type read_front(record_list& records) const; ///< read the first records
     pos_type read_back(record_type& record) const; ///< read the last record
+    pos_type read_back(record_list& records) const; ///< read the last records
 
     count_type remove_by_index(const field_type& beg, const field_type& end); ///< delete records by index [beg, end)
     pos_type read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const; ///< read the first record by index
@@ -110,8 +112,10 @@ protected:
     inline pos_type do_add(const record_type& record); ///< add a record
     inline pos_type unsafe_add(const record_type& record); ///< add a record
     inline pos_type unsafe_add(const record_list& records); ///< add records
-    inline pos_type rawReadFirstRecord(record_type& record) const; ///< read the first record
-    inline pos_type rawReadLastRecord(record_type& record) const; ///< read the last record
+    inline pos_type unsafe_read_front(record_type& record) const; ///< read the first record
+    inline pos_type unsafe_read_front(record_list& records) const; ///< read the first records
+    inline pos_type unsafe_read_back(record_type& record) const; ///< read the last record
+    inline pos_type unsafe_read_back(record_list& records) const; ///< read the last records
 protected:
     /** hide the parents methods */
     pos_type read(indexed_record_type& record, const pos_type pos) const;
@@ -123,6 +127,9 @@ protected:
     pos_type add(const indexed_record_type& record);
     pos_type add(const indexed_record_list& records);
     pos_type read_front(indexed_record_type& record) const;
+    pos_type read_front(indexed_record_list& records) const;
+    pos_type read_back(indexed_record_type& record) const;
+    pos_type read_back(indexed_record_list& records) const;
     pos_type read_front_by_index(indexed_record_type& record, const field_type& beg, const field_type& end) const;
     pos_type read_back_by_index(indexed_record_type& record, const field_type& beg, const field_type& end) const;
 private:
@@ -261,7 +268,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_rwrite(const record_type& record, const pos_type pos)
 {
     unsafe_write(record, pos);
-    return unsafe_table::DecRecNum(pos);
+    return unsafe_table::dec_pos(pos);
 }
 
 /**
@@ -350,6 +357,27 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_fron
 }
 
 /**
+ * Read the first records (without any locking)
+ * @param records data of the first records
+ * @return the position of the first record
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_front(record_list& records) const
+{
+    indexed_record_list indexed_records(records.size());
+    const pos_type pos = base_class::unsafe_read_front(indexed_records);
+    if (pos != NIL)
+    {
+        const count_type count = records.size();
+        for (count_type i = 0; i < count; ++i)
+        {
+            records[i] = static_cast<record_type>(indexed_records[i]);
+        }
+    }
+    return pos;
+}
+
+/**
  * Read the last record (without any locking)
  * @param record data of the last record
  * @return the position of the last record
@@ -362,6 +390,27 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_back
     if (pos != NIL)
     {
         record = static_cast<record_type>(indexed_record);
+    }
+    return pos;
+}
+
+/**
+ * Read the last records (without any locking)
+ * @param records data of the first records
+ * @return the position of the first record
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_back(record_list& records) const
+{
+    indexed_record_list indexed_records(records.size());
+    const pos_type pos = base_class::unsafe_read_back(indexed_records);
+    if (pos != NIL)
+    {
+        const count_type count = records.size();
+        for (count_type i = 0; i < count; ++i)
+        {
+            records[i] = static_cast<record_type>(indexed_records[i]);
+        }
     }
     return pos;
 }
@@ -520,6 +569,18 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_front(recor
 }
 
 /**
+ * Read the first records
+ * @param records data of the first records
+ * @return the position of the next record
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_front(record_list& records) const
+{
+    typename base_class::lock_read lock(*this);
+    return unsafe_read_front(records);
+}
+
+/**
  * Read the last record
  * @param record data of the last record
  * @return the position of the last record
@@ -529,6 +590,18 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_back(record
 {
     typename base_class::lock_read lock(*this);
     return unsafe_read_back(record);
+}
+
+/**
+ * Read the last records
+ * @param record data of the last records
+ * @return the position of the next record
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_back(record_list& records) const
+{
+    typename base_class::lock_read lock(*this);
+    return unsafe_read_back(records);
 }
 
 /**

@@ -39,7 +39,9 @@ public:
     pos_type remove(const pos_type beg, const count_type count); ///< remove records [beg, beg + count)
     count_type remove_back(const count_type count); ///< remove records from the back of the table
     pos_type read_front(void *data) const; ///< read the first record
+    pos_type read_front(void *data, const count_type count) const; ///< read the first records
     pos_type read_back(void *data) const; ///< read the last record
+    pos_type read_back(void *data, const count_type count) const; ///< read the last records
     pos_type find(const void *data, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
     pos_type rfind(const void *data, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
 
@@ -499,6 +501,23 @@ pos_type table<Source, Key>::read_front(void* data) const
 }
 
 /**
+ * Read the first record
+ * @param data data of the first records
+ * @param count the count of the read records
+ * @return the position of the next record
+ */
+template <typename Source, typename Key>
+pos_type table<Source, Key>::read_front(void* data, const count_type count) const
+{
+    const pos_type pos = base_class::front_pos();
+    if (pos != NIL && count <= base_class::count())
+    {
+        return read(data, pos, count);
+    }
+    return NIL;
+}
+
+/**
  * Read the last record
  * @param data data of the last record
  * @return the position of the last record
@@ -512,6 +531,30 @@ pos_type table<Source, Key>::read_back(void* data) const
         read(data, pos);
     }
     return pos;
+}
+
+/**
+ * Read the last record
+ * @param data data of the last records
+ * @param count the count of the read records
+ * @return the position of the next record
+ */
+template <typename Source, typename Key>
+pos_type table<Source, Key>::read_back(void* data, const count_type count) const
+{
+    pos_type pos = base_class::back_pos();
+    if (pos != NIL && count <= base_class::count())
+    {
+        const size_type rec_size = base_class::rec_size();
+        char *buffer = static_cast<char *>(data);
+        for (count_type i = 0; i < count; ++i)
+        {
+            pos = rread(buffer, pos);
+            buffer += rec_size;
+        }
+        return pos;
+    }
+    return NIL;
 }
 
 /**

@@ -90,7 +90,9 @@ public:
     pos_type add(const record_type& record); ///< add a record
     pos_type add(const record_list& records); ///< add records
     pos_type read_front(record_type& record) const; ///< read the first record
+    pos_type read_front(record_list& records) const; ///< read the first records
     pos_type read_back(record_type& record) const; ///< read the last record
+    pos_type read_back(record_list& records) const; ///< read the last records
     pos_type find(const record_type& record, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
     inline pos_type rfind(const record_type& record, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
     template <typename Finder>
@@ -114,6 +116,14 @@ protected:
     inline pos_type do_add(const record_type& record); ///< add a record
     template <typename T>
     inline pos_type do_add(const record_list& records); ///< add records
+    template <typename T>
+    inline pos_type do_read_front(record_type& record) const; ///< read the first record
+    template <typename T>
+    inline pos_type do_read_front(record_list& records) const; ///< read the first records
+    template <typename T>
+    inline pos_type do_read_back(record_type& record) const; ///< read the last record
+    template <typename T>
+    inline pos_type do_read_back(record_list& records) const; ///< read the last records
     /* the methods don't use any locking */
     pos_type unsafe_read(record_type& record, const pos_type pos) const; ///< read a record
     pos_type unsafe_read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
@@ -123,6 +133,10 @@ protected:
     pos_type unsafe_rwrite(const record_type& record, const pos_type pos); ///< reverse write a record
     pos_type unsafe_add(const record_type& record); ///< add a record
     pos_type unsafe_add(const record_list& records); ///< add records
+    pos_type unsafe_read_front(record_type& record) const; ///< read the first record
+    pos_type unsafe_read_front(record_list& records) const; ///< read the first records
+    pos_type unsafe_read_back(record_type& record) const; ///< read the last record
+    pos_type unsafe_read_back(record_list& records) const; ///< read the last records
 protected:
     /** hide the parents methods */
     pos_type read(void *data, const pos_type pos) const; ///< read a record
@@ -410,12 +424,18 @@ pos_type data_table<Table, Record, Key, Interface>::add(const record_list& recor
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 pos_type data_table<Table, Record, Key, Interface>::read_front(record_type& record) const
 {
-    const pos_type pos = base_class::read_front(m_buffer.get());
-    if (pos != NIL)
-    {
-        record.unpack(m_buffer.get());
-    }
-    return pos;
+    return do_read_front<base_class>(record);
+}
+
+/**
+ * Read the first records
+ * @param records data of the first records
+ * @return the position of the next record
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+pos_type data_table<Table, Record, Key, Interface>::read_front(record_list& records) const
+{
+    return do_read_front<base_class>(records);
 }
 
 /**
@@ -426,12 +446,18 @@ pos_type data_table<Table, Record, Key, Interface>::read_front(record_type& reco
 template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
 pos_type data_table<Table, Record, Key, Interface>::read_back(record_type& record) const
 {
-    const pos_type pos = base_class::read_back(m_buffer.get());
-    if (pos != NIL)
-    {
-        record.unpack(m_buffer.get());
-    }
-    return pos;
+    return do_read_back<base_class>(record);
+}
+
+/**
+ * Read the last records
+ * @param records data of the last records
+ * @return the position of the next record
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+pos_type data_table<Table, Record, Key, Interface>::read_back(record_list& records) const
+{
+    return do_read_back<base_class>(records);
 }
 
 /**
@@ -654,6 +680,86 @@ inline pos_type data_table<Table, Record, Key, Interface>::do_add(const record_l
 }
 
 /**
+ * Read the first record
+ * @param record data of the first record
+ * @return the position of the first record
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <typename T>
+pos_type data_table<Table, Record, Key, Interface>::do_read_front(record_type& record) const
+{
+    const pos_type pos = T::read_front(m_buffer.get());
+    if (pos != NIL)
+    {
+        record.unpack(m_buffer.get());
+    }
+    return pos;
+}
+
+/**
+ * Read the first records
+ * @param records data of the first records
+ * @return the position of the next records
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <typename T>
+inline pos_type data_table<Table, Record, Key, Interface>::do_read_front(record_list& records) const
+{
+   const count_type count = records.size();
+    scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
+    const pos_type result = T::read_front(buffer.get(), count);
+    if (result != NIL)
+    {
+        const void *it = buffer.get();
+        for (count_type i = 0; i < count; ++i)
+        {
+            it = records[i].unpack(it);
+        }
+    }
+    return result;
+}
+
+/**
+ * Read the last record
+ * @param record data of the last record
+ * @return the position of the last record
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <typename T>
+pos_type data_table<Table, Record, Key, Interface>::do_read_back(record_type& record) const
+{
+    const pos_type pos = T::read_back(m_buffer.get());
+    if (pos != NIL)
+    {
+        record.unpack(m_buffer.get());
+    }
+    return pos;
+}
+
+/**
+ * Read the last records
+ * @param records data of the last records
+ * @return the position of the next records
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <typename T>
+inline pos_type data_table<Table, Record, Key, Interface>::do_read_back(record_list& records) const
+{
+   const count_type count = records.size();
+    scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
+    const pos_type result = T::read_back(buffer.get(), count);
+    if (result != NIL)
+    {
+        const void *it = buffer.get();
+        for (count_type i = 0; i < count; ++i)
+        {
+            it = records[i].unpack(it);
+        }
+    }
+    return result;
+}
+
+/**
  * Read a record (without any locking)
  * @param record data of the record
  * @param pos the position of the record
@@ -745,6 +851,50 @@ template <template <typename, typename, typename> class Table, typename Record, 
 pos_type data_table<Table, Record, Key, Interface>::unsafe_add(const record_list& records)
 {
     return do_add<unsafe_table>(records);
+}
+
+/**
+ * Read the first record (without any locking)
+ * @param record data of the first record
+ * @return the position of the first record
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+pos_type data_table<Table, Record, Key, Interface>::unsafe_read_front(record_type& record) const
+{
+    return do_read_front<unsafe_table>(record);
+}
+
+/**
+ * Read the first records (without any locking)
+ * @param record data of the first records
+ * @return the position of the next record
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+pos_type data_table<Table, Record, Key, Interface>::unsafe_read_front(record_list& records) const
+{
+    return do_read_front<unsafe_table>(records);
+}
+
+/**
+ * Read the last record (without any locking)
+ * @param record data of the last record
+ * @return the position of the last record
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+pos_type data_table<Table, Record, Key, Interface>::unsafe_read_back(record_type& record) const
+{
+    return do_read_back<unsafe_table>(record);
+}
+
+/**
+ * Read the last records (without any locking)
+ * @param records data of the last records
+ * @return the position of the next record
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+pos_type data_table<Table, Record, Key, Interface>::unsafe_read_back(record_list& records) const
+{
+    return do_read_back<unsafe_table>(records);
 }
 
 }   //namespace ouroboros

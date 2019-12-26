@@ -119,7 +119,9 @@ public:
     inline pos_type remove(const pos_type beg, const count_type count); ///< delete records [beg, beg + count)
     inline count_type remove_back(const count_type count); ///< delete records from the back
     inline pos_type read_front(void *data) const; ///< read the first record
+    inline pos_type read_front(void *data, const count_type count) const; ///< read the first records
     inline pos_type read_back(void *data) const; ///< read the last record
+    inline pos_type read_back(void *data, const count_type count) const; ///< read the last records
     inline pos_type find(const void *data, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
     inline pos_type rfind(const void *data, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
 
@@ -651,6 +653,19 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_front(
 }
 
 /**
+ * Read the first records
+ * @param data data of the first records
+ * @param count the count of the read records
+ * @return the position of the next record
+ */
+template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_front(void* data, const count_type count) const
+{
+    lock_read lock(*this);
+    return base_class::read_front(data, count);
+}
+
+/**
  * Read the last record
  * @param data data of the last record
  * @return the position of the last record
@@ -660,6 +675,19 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_back(v
 {
     lock_read lock(*this);
     return base_class::read_back(data);
+}
+
+/**
+ * Read the last records
+ * @param data data of the last records
+ * @param count the count of the read records
+ * @return the position of the next record
+ */
+template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
+inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_back(void* data, const count_type count) const
+{
+    lock_read lock(*this);
+    return base_class::read_back(data, count);
 }
 
 /**
