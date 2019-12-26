@@ -357,7 +357,7 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::remove_by_index(
     for (pos_list::reverse_iterator it = list.rbegin(); it != itend; ++it)
     {
         pos_type pbeg = *it % count;
-        pos_type pend = unsafe_table::inc_pos(pbeg);
+        count_type pcount = 1;
         for (pos_list::reverse_iterator ait = it + 1 ; ait != itend; ++ait)
         {
             const pos_type pos = *ait % count;
@@ -367,8 +367,9 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::remove_by_index(
             }
             pbeg = pos;
             it = ait;
+            ++pcount;
         }
-        base_class::rawDelRecords(pbeg, pend);
+        unsafe_table::remove(pbeg, pcount);
     }
 
     return count;
