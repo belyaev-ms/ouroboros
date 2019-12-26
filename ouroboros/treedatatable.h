@@ -277,7 +277,7 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_wr
     const typename record_list::iterator end = records.end();
     for (typename record_list::const_iterator it = records.begin(); it != end; ++it)
     {
-        result = rawWtiteRecord(*it, result);
+        result = unsafe_write(*it, result);
     }
     return result;
 }
@@ -338,11 +338,14 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_ad
  * @return the position of the first record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::rawReadFirstRecord(record_type& record) const
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_front(record_type& record) const
 {
     indexed_record_type indexed_record;
-    const pos_type pos = base_class::read_front(&indexed_record);
-    record = static_cast<record_type>(indexed_record);
+    const pos_type pos = base_class::unsafe_read_front(indexed_record);
+    if (pos != NIL)
+    {
+        record = static_cast<record_type>(indexed_record);
+    }
     return pos;
 }
 
@@ -352,11 +355,14 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::rawReadFirstReco
  * @return the position of the last record
  */
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::rawReadLastRecord(record_type& record) const
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_back(record_type& record) const
 {
     indexed_record_type indexed_record;
-    const pos_type pos = base_class::read_back(&indexed_record);
-    record = static_cast<record_type>(indexed_record);
+    const pos_type pos = base_class::unsafe_read_back(indexed_record);
+    if (pos != NIL)
+    {
+        record = static_cast<record_type>(indexed_record);
+    }
     return pos;
 }
 
@@ -484,7 +490,7 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_by_inde
     for (pos_list::reverse_iterator it = list.rbegin(); it != itend; ++it)
     {
         pos_type pbeg = *it % count;
-        pos_type pend = unsafe_table::inc_pos(pbeg);
+        count_type pcount = 1;
         for (pos_list::reverse_iterator ait = it + 1 ; ait != itend; ++ait)
         {
             const pos_type pos = *ait % count;
@@ -494,8 +500,9 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_by_inde
             }
             pbeg = pos;
             it = ait;
+            ++pcount;
         }
-        base_class::rawDelRecords(pbeg, pend);
+        unsafe_table::remove(pbeg, pcount);
     }
     return count;
 }
@@ -509,7 +516,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_front(record_type& record) const
 {
     typename base_class::lock_read lock(*this);
-    return rawReadFirstRecord(record);
+    return unsafe_read_front(record);
 }
 
 /**
@@ -521,7 +528,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_back(record_type& record) const
 {
     typename base_class::lock_read lock(*this);
-    return rawReadLastRecord(record);
+    return unsafe_read_back(record);
 }
 
 /**
