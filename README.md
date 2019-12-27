@@ -6,7 +6,7 @@
 Embedded NoSQL storage of data. This storage can use like round-robin database. **Ouroboros** aims to handle time series data such as sensors values, network bandwidth, temperatures or CPU load. The data is stored in a circular buffer based database, thus the system storage footprint remains constant over time. This storage stores data in a data table that has some depth and if number of records over the depth, the new record overwrites the oldest record.
 
 ## Help
-Ouroboros provides access to a dataset that has a set of tables. In one dataset, tables have the same record structure and the same maximum number of records (the same depth). Access to a tabble is provided by key.
+Ouroboros provides access to a dataset that has a set of tables. In one dataset, tables have the same record structure and the same maximum number of records (the same depth). Access to a table is provided by key.
 
 ### Fields
 The following field type are supported:
@@ -67,10 +67,10 @@ Thus for a single table, read operations can be handled at one time but active w
 For example, the following code works with a table that has a key equal to 0, and first gets count of stored records and then gets their:
 ```сpp
 {
-	dataset_type::serssion_rd session_rd = dataset.session_rd(0);
-	const size_t count = session_rd->count();
-	dataset_type::records_list records(count);
-	session_rd->read_front(records);
+    dataset_type::serssion_rd session_rd = dataset.session_rd(0);
+    const size_t count = session_rd->count();
+    dataset_type::records_list records(count);
+    session_rd->read_front(records);
 }
 ```
 Thus, a session restricts access to a single table in a dataset.
