@@ -406,7 +406,7 @@ inline void indexed_table<Table, Record, Index, Key, Interface>::remove_index(co
             return;
         }
     }
-    OUROBOROS_THROW_ERROR(bug_error, "the index not found " << PR(pos) << PE(record));
+    OUROBOROS_THROW_BUG("the index not found " << PR(pos) << PE(record));
 }
 
 /**

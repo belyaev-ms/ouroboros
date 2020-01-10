@@ -359,11 +359,13 @@ inline const typename base_session<Table, GlobalLock>::key_type
 template <typename Table, typename GlobalLock>
 void base_session<Table, GlobalLock>::start()
 {
+#if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
     if (TR_STARTED != state())
     {
         assert(m_table->sharable_count() == 0);
         assert(m_table->scoped_count() == 0);
     }
+#endif
     lock();
     do_start();
 }
@@ -377,11 +379,13 @@ void base_session<Table, GlobalLock>::stop()
     OUROBOROS_SAFE_BEGIN;
     const bool result = do_stop();
     unlock();
+#if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
     if (result)
     {
         assert(m_table->sharable_count() == 0);
         assert(m_table->scoped_count() == 0);
     }
+#endif
     OUROBOROS_SAFE_END;
 }
 
@@ -394,11 +398,13 @@ void base_session<Table, GlobalLock>::cancel()
     OUROBOROS_SAFE_BEGIN;
     const bool result = do_cancel();
     unlock();
+#if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
     if (result)
     {
         assert(m_table->sharable_count() == 0);
         assert(m_table->scoped_count() == 0);
     }
+#endif
     OUROBOROS_SAFE_END;
 }
 

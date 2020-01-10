@@ -198,7 +198,6 @@ public:
     table_smart_pnode(const self_type& pnode);
     // cppcheck-suppress noExplicitConstructor
     table_smart_pnode(const base_class& pnode);
-    virtual ~table_smart_pnode();
 
     base_class& operator= (const self_type& pnode);
     base_class& operator= (const base_class& pnode);
@@ -1406,16 +1405,6 @@ table_smart_pnode<Node, Table, Extractor>::table_smart_pnode(const base_class& p
     m_cached(false)
 {
 
-}
-
-/**
- * Destructor
- */
-//virtual
-template <typename Node, typename Table, typename Extractor>
-table_smart_pnode<Node, Table, Extractor>::~table_smart_pnode()
-{
-    reset();
 }
 
 /**
