@@ -24,7 +24,7 @@ struct simple_convertor
 {
     typedef Key key_type;
     typedef Body body_type;
-    inline const key_type key(const body_type& body) const
+    inline key_type key(const body_type& body) const
     {
         return body;
     }
@@ -57,7 +57,7 @@ public:
     inline bool right(const pos_type pos);
     inline bool color(const node_color in_color);
 
-    inline const key_type key() const;
+    inline key_type key() const;
     body_type& body();
     const body_type& body() const;
     bool body(const body_type& body);
@@ -75,7 +75,7 @@ private:
     pos_type   m_left;
     pos_type   m_right;
     node_color m_color;
-    body_type m_body;
+    body_type  m_body;
 };
 
 /**
@@ -87,7 +87,7 @@ struct simple_extractor
 {
     typedef Node node_type;
     typedef Record record_type;
-    inline const node_type node(const record_type& record) const
+    inline node_type node(const record_type& record) const
     {
         return record.field1();
     }
@@ -122,11 +122,11 @@ public:
     void left(const self_type& pnode);
     void right(const self_type& pnode);
 
-    const node_type get() const;
+    node_type get() const;
     void set(const node_type& node);
-    const node_type get_parent() const;
-    const node_type get_left() const;
-    const node_type get_right() const;
+    node_type get_parent() const;
+    node_type get_left() const;
+    node_type get_right() const;
     void set_parent(const node_type& node);
     void set_left(const node_type& node);
     void set_right(const node_type& node);
@@ -138,23 +138,23 @@ public:
     void pright(const pos_type pos);
     node_color color() const;
     void color(const node_color in_color);
-    const key_type key() const;
+    key_type key() const;
     inline pos_type pos() const;
     virtual void pos(const pos_type in_pos);
     inline table_type& table() const;
-    const body_type operator() () const;
+    body_type operator() () const;
     void operator() (const body_type& body);
     inline void reset() const {}; ///< todo
     self_type substitute(const self_type& pnode);
     self_type& operator= (const self_type& pnode);
 
-    const self_type root() const;
+    self_type root() const;
     bool is_left_son() const;
     bool is_right_son() const;
-    const self_type maximum() const;
-    const self_type minimum() const;
-    const self_type successor() const;
-    const self_type predecessor() const;
+    self_type maximum() const;
+    self_type minimum() const;
+    self_type successor() const;
+    self_type predecessor() const;
 
     bool operator== (const self_type& pnode) const;
     bool operator!= (const self_type& pnode) const;
@@ -163,9 +163,9 @@ public:
     bool operator> (const self_type& pnode) const;
     bool operator>= (const self_type& pnode) const;
 protected:
-    inline const node_type read() const; ///< read data of the node
+    inline node_type read() const; ///< read data of the node
     inline void write(const node_type& node); ///< write data the node
-    virtual const node_type read(const pos_type pos) const; ///< read data of a node
+    virtual node_type read(const pos_type pos) const; ///< read data of a node
     virtual void write(const node_type& node, const pos_type pos); ///< write data of a node
 private:
     table_pnode();
@@ -205,7 +205,7 @@ public:
     virtual void pos(const pos_type in_pos);
     inline void reset() const; ///< reset the cache of data
 protected:
-    virtual const node_type read(const pos_type pos) const; ///< read data of a node
+    virtual node_type read(const pos_type pos) const; ///< read data of a node
     virtual void write(const node_type& node, const pos_type pos); ///< write data the node
     inline void assign(const self_type& pnode) const; ///< assign the cache of data
 private:
@@ -228,14 +228,14 @@ public:
     node_iterator(const pnode_type& pnode);
     node_iterator(const self_type& iter);
 
-    self_type operator++ ();
+    self_type& operator++ ();
     self_type operator++ (int );
-    self_type operator-- ();
+    self_type& operator-- ();
     self_type operator-- (int );
 
-    const self_type operator++ () const;
+    const self_type& operator++ () const;
     const self_type operator++ (int ) const;
-    const self_type operator-- () const;
+    const self_type& operator-- () const;
     const self_type operator-- (int ) const;
 
     bool operator== (const self_type& iter) const;
@@ -484,7 +484,7 @@ inline bool data_node<Key, Body, Converter>::color(const node_color in_color)
  * @return the key of the node
  */
 template <typename Key, typename Body, typename Converter>
-inline const typename data_node<Key, Body, Converter>::key_type
+inline typename data_node<Key, Body, Converter>::key_type
     data_node<Key, Body, Converter>::key() const
 {
     return converter().key(body());
@@ -674,7 +674,7 @@ table_pnode<Node, Table, Extractor>::~table_pnode()
  */
 //virtual
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::node_type
+typename table_pnode<Node, Table, Extractor>::node_type
     table_pnode<Node, Table, Extractor>::read(const pos_type pos) const
 {
     if (NIL == pos)
@@ -735,7 +735,7 @@ void table_pnode<Node, Table, Extractor>::write(const node_type& node, const pos
  * @return data of the node
  */
 template <typename Node, typename Table, typename Extractor>
-inline const typename table_pnode<Node, Table, Extractor>::node_type
+inline typename table_pnode<Node, Table, Extractor>::node_type
     table_pnode<Node, Table, Extractor>::read() const
 {
     return read(m_pos);
@@ -756,7 +756,7 @@ inline void table_pnode<Node, Table, Extractor>::write(const node_type& node)
  * @return data of the node
  */
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::node_type
+typename table_pnode<Node, Table, Extractor>::node_type
     table_pnode<Node, Table, Extractor>::get() const
 {
     return read();
@@ -777,10 +777,10 @@ void table_pnode<Node, Table, Extractor>::set(const node_type& node)
  * @return the body of the node
  */
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::body_type
+typename table_pnode<Node, Table, Extractor>::body_type
     table_pnode<Node, Table, Extractor>::operator() () const
 {
-    return read().body;
+    return read().body();
 }
 
 /**
@@ -791,8 +791,10 @@ template <typename Node, typename Table, typename Extractor>
 void table_pnode<Node, Table, Extractor>::operator() (const body_type& body)
 {
     node_type node = read();
-    node.body = body;
-    write(node);
+    if (node.body(body))
+    {
+        write(node);
+    }
 }
 
 /**
@@ -833,7 +835,7 @@ typename table_pnode<Node, Table, Extractor>::self_type
  * @return data of the parent node
  */
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::node_type
+typename table_pnode<Node, Table, Extractor>::node_type
     table_pnode<Node, Table, Extractor>::get_parent() const
 {
     return read(read().parent());
@@ -844,7 +846,7 @@ const typename table_pnode<Node, Table, Extractor>::node_type
  * @return data of the left node
  */
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::node_type
+typename table_pnode<Node, Table, Extractor>::node_type
     table_pnode<Node, Table, Extractor>::get_left() const
 {
     return read(read().left());
@@ -855,7 +857,7 @@ const typename table_pnode<Node, Table, Extractor>::node_type
  * @return data of the right node
  */
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::node_type
+typename table_pnode<Node, Table, Extractor>::node_type
     table_pnode<Node, Table, Extractor>::get_right() const
 {
     return read(read().right());
@@ -906,7 +908,7 @@ node_color table_pnode<Node, Table, Extractor>::color() const
  * @return the key of the node
  */
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::key_type
+typename table_pnode<Node, Table, Extractor>::key_type
     table_pnode<Node, Table, Extractor>::key() const
 {
     return read().key();
@@ -1126,7 +1128,7 @@ typename table_pnode<Node, Table, Extractor>::self_type
  * @return the root node
  */
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::self_type
+typename table_pnode<Node, Table, Extractor>::self_type
     table_pnode<Node, Table, Extractor>::root() const
 {
 #ifndef OUROBOROS_OPTIMIZATION_NODE_RW
@@ -1186,7 +1188,7 @@ bool table_pnode<Node, Table, Extractor>::is_right_son() const
  * @return the sub node that has a maximal key
  */
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::self_type
+typename table_pnode<Node, Table, Extractor>::self_type
     table_pnode<Node, Table, Extractor>::maximum() const
 {
 #ifndef OUROBOROS_OPTIMIZATION_NODE_RW
@@ -1206,7 +1208,7 @@ const typename table_pnode<Node, Table, Extractor>::self_type
  * @return the sub node that has a minimal key
  */
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::self_type
+typename table_pnode<Node, Table, Extractor>::self_type
     table_pnode<Node, Table, Extractor>::minimum() const
 {
 #ifndef OUROBOROS_OPTIMIZATION_NODE_RW
@@ -1226,7 +1228,7 @@ const typename table_pnode<Node, Table, Extractor>::self_type
  * @return the successor of the node
  */
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::self_type
+typename table_pnode<Node, Table, Extractor>::self_type
     table_pnode<Node, Table, Extractor>::successor() const
 {
     if (pright() != NIL)
@@ -1253,7 +1255,7 @@ const typename table_pnode<Node, Table, Extractor>::self_type
  * @return the predecessor of the node
  */
 template <typename Node, typename Table, typename Extractor>
-const typename table_pnode<Node, Table, Extractor>::self_type
+typename table_pnode<Node, Table, Extractor>::self_type
     table_pnode<Node, Table, Extractor>::predecessor() const
 {
     if (pleft() != NIL)
@@ -1453,7 +1455,7 @@ void table_smart_pnode<Node, Table, Extractor>::pos(const pos_type in_pos)
  */
 //virtual
 template <typename Node, typename Table, typename Extractor>
-const typename table_smart_pnode<Node, Table, Extractor>::node_type
+typename table_smart_pnode<Node, Table, Extractor>::node_type
     table_smart_pnode<Node, Table, Extractor>::read(const pos_type pos) const
 {
     if (NIL == pos || base_class::pos() != pos)
@@ -1546,7 +1548,7 @@ node_iterator<PNode>::node_iterator(const self_type& iter) :
  * @return the iterator to next node
  */
 template <typename PNode>
-typename node_iterator<PNode>::self_type node_iterator<PNode>::operator++ ()
+typename node_iterator<PNode>::self_type& node_iterator<PNode>::operator++ ()
 {
     OUROBOROS_ASSERT(m_iter.pos() != NIL);
     m_iter = m_iter.successor();
@@ -1571,7 +1573,7 @@ typename node_iterator<PNode>::self_type node_iterator<PNode>::operator++ (int )
  * @return the iterator to previous node
  */
 template <typename PNode>
-typename node_iterator<PNode>::self_type node_iterator<PNode>::operator-- ()
+typename node_iterator<PNode>::self_type& node_iterator<PNode>::operator-- ()
 {
     OUROBOROS_ASSERT(m_iter.pos() != NIL);
     m_iter = m_iter.predecessor();
@@ -1596,7 +1598,7 @@ typename node_iterator<PNode>::self_type node_iterator<PNode>::operator-- (int )
  * @return the iterator to next node
  */
 template <typename PNode>
-const typename node_iterator<PNode>::self_type node_iterator<PNode>::operator++ () const
+const typename node_iterator<PNode>::self_type& node_iterator<PNode>::operator++ () const
 {
     OUROBOROS_ASSERT(m_iter.pos() != NIL);
     m_iter = m_iter.successor();
@@ -1621,7 +1623,7 @@ const typename node_iterator<PNode>::self_type node_iterator<PNode>::operator++ 
  * @return the iterator to previous node
  */
 template <typename PNode>
-const typename node_iterator<PNode>::self_type node_iterator<PNode>::operator-- () const
+const typename node_iterator<PNode>::self_type& node_iterator<PNode>::operator-- () const
 {
     OUROBOROS_ASSERT(m_iter.pos() != NIL);
     m_iter = m_iter.predecessor();

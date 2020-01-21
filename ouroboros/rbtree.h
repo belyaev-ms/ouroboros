@@ -123,12 +123,12 @@ public:
 protected:
     inline table_type& table() const; ///< get the table of nodes
     inline typename table_type::unsafe_table& raw_table() const; ///< get the table of nodes (for the operations without lock)
-    inline const pnode_type construct(const node_type& node); ///< make the pointer to the node
-    virtual const pnode_type do_insert(pnode_type z); ///< insert new node
-    const pnode_type do_insert(pnode_type z, pnode_type y); ///< insert new node
-    virtual const pnode_type remove(iterator& iter); ///< remove the node
-    inline void destruct(const pnode_type pnode); ///< remove the pointer to the node
-    virtual void move(const pnode_type node, const pos_type pos); ///< move node to the new position
+    inline pnode_type construct(const node_type& node); ///< make the pointer to the node
+    virtual pnode_type do_insert(pnode_type z); ///< insert new node
+    pnode_type do_insert(pnode_type z, pnode_type y); ///< insert new node
+    virtual pnode_type remove(iterator& iter); ///< remove the node
+    inline void destruct(const pnode_type& pnode); ///< remove the pointer to the node
+    virtual void move(const pnode_type& node, const pos_type pos); ///< move node to the new position
     inline void set_root(const pos_type root); ///< set position of the root of the tree
     inline pos_type get_root() const; ///< get position of the root of the tree
 private:
@@ -138,7 +138,7 @@ private:
     void right_rotate(pnode_type x); ///< rotate the node to the right
     void insert_fixup(pnode_type x); ///< fix up the balance of the tree after inserting the node
     void remove_fixup(pnode_type x); ///< fix up the balance of the tree after removing the node
-    inline const node_color get_node_color(pnode_type pnode) const;
+    inline node_color get_node_color(pnode_type pnode) const;
 #if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
     void verify() const;
     void verify_colors_for_each_node(pnode_type pnode, count_type& count) const;
@@ -182,9 +182,9 @@ public:
     virtual iterator find(const key_type& key) const; ///< find a node by the key
     virtual void clear(); ///< clear the tree
 protected:
-    virtual const pnode_type do_insert(pnode_type z); ///< insert new node
-    virtual const pnode_type remove(iterator& iter); ///< remove the node
-    virtual void move(const pnode_type node, const pos_type pos); ///< move node to the new position
+    virtual pnode_type do_insert(pnode_type z); ///< insert new node
+    virtual pnode_type remove(iterator& iter); ///< remove the node
+    virtual void move(const pnode_type& node, const pos_type pos); ///< move node to the new position
     inline void set_root(const pos_type root); ///< set the position of the root of the tree
 private:
     static_pnode m_min; ///< the node that has a minimum key
@@ -571,7 +571,7 @@ void rbtree<PNode>::right_rotate(pnode_type x)
  */
 //virtual
 template <typename PNode>
-const typename rbtree<PNode>::pnode_type rbtree<PNode>::do_insert(pnode_type z)
+typename rbtree<PNode>::pnode_type rbtree<PNode>::do_insert(pnode_type z)
 {
     pnode_type x = m_root;
     pnode_type y(table());
@@ -590,7 +590,7 @@ const typename rbtree<PNode>::pnode_type rbtree<PNode>::do_insert(pnode_type z)
  * @return the pointer to the node
  */
 template <typename PNode>
-inline const typename rbtree<PNode>::pnode_type rbtree<PNode>::do_insert(pnode_type z, pnode_type y)
+inline typename rbtree<PNode>::pnode_type rbtree<PNode>::do_insert(pnode_type z, pnode_type y)
 {
     z.parent(y);
     if (y.pos() == NIL)
@@ -680,7 +680,7 @@ void rbtree<PNode>::insert_fixup(pnode_type x)
  */
 //virtual
 template <typename PNode>
-const typename rbtree<PNode>::pnode_type rbtree<PNode>::remove(iterator& iter)
+typename rbtree<PNode>::pnode_type rbtree<PNode>::remove(iterator& iter)
 {
     pnode_type y(table());
     pnode_type z(*iter);
@@ -823,7 +823,7 @@ void rbtree<PNode>::remove_fixup(pnode_type x)
  * @return color of the node
  */
 template <typename PNode>
-inline const node_color rbtree<PNode>::get_node_color(pnode_type pnode) const
+inline node_color rbtree<PNode>::get_node_color(pnode_type pnode) const
 {
     return pnode.pos() == NIL ? BLACK : pnode.color();
 }
@@ -834,7 +834,7 @@ inline const node_color rbtree<PNode>::get_node_color(pnode_type pnode) const
  * @return the pointer to the node
  */
 template <typename PNode>
-inline const typename rbtree<PNode>::pnode_type
+inline typename rbtree<PNode>::pnode_type
     rbtree<PNode>::construct(const node_type& node)
 {
     const typename table_type::record_type record(node);
@@ -855,7 +855,7 @@ inline const typename rbtree<PNode>::pnode_type
  * @param pnode the pointer to the node
  */
 template <typename PNode>
-inline void rbtree<PNode>::destruct(const pnode_type pnode)
+inline void rbtree<PNode>::destruct(const pnode_type& pnode)
 {
     raw_table().remove(pnode.pos());
 }
@@ -867,7 +867,7 @@ inline void rbtree<PNode>::destruct(const pnode_type pnode)
  */
 //virtual
 template <typename PNode>
-void rbtree<PNode>::move(const pnode_type pnode, const pos_type pos)
+void rbtree<PNode>::move(const pnode_type& pnode, const pos_type pos)
 {
     if (pnode.pleft() != NIL)
     {
@@ -1114,7 +1114,7 @@ void fast_rbtree<PNode>::clear()
  */
 //virtual
 template <typename PNode>
-const typename fast_rbtree<PNode>::pnode_type fast_rbtree<PNode>::do_insert(pnode_type z)
+typename fast_rbtree<PNode>::pnode_type fast_rbtree<PNode>::do_insert(pnode_type z)
 {
     const key_type key = z.get().key();
     if (base_class::empty())
@@ -1142,7 +1142,7 @@ const typename fast_rbtree<PNode>::pnode_type fast_rbtree<PNode>::do_insert(pnod
  */
 //virtual
 template <typename PNode>
-const typename fast_rbtree<PNode>::pnode_type fast_rbtree<PNode>::remove(iterator& iter)
+typename fast_rbtree<PNode>::pnode_type fast_rbtree<PNode>::remove(iterator& iter)
 {
     if (m_min.pos() != NIL)
     {
@@ -1168,7 +1168,7 @@ const typename fast_rbtree<PNode>::pnode_type fast_rbtree<PNode>::remove(iterato
  */
 //virtual
 template <typename PNode>
-void fast_rbtree<PNode>::move(const pnode_type pnode, const pos_type pos)
+void fast_rbtree<PNode>::move(const pnode_type& pnode, const pos_type pos)
 {
     if (m_min.pos() == pnode.pos())
     {

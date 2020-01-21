@@ -76,7 +76,7 @@ public:
 
     inline table_type& table(); ///< get the table
     inline const table_type& table() const; ///< get the table
-    inline const key_type Key() const; ///< get the key of the table
+    inline key_type Key() const; ///< get the key of the table
     void start();  ///< start the transaction
     void stop();   ///< stop the transaction
     void cancel(); ///< cancel the transaction
@@ -347,7 +347,7 @@ inline const typename base_session<Table, GlobalLock>::table_type&
  * @return the key of the table
  */
 template <typename Table, typename GlobalLock>
-inline const typename base_session<Table, GlobalLock>::key_type
+inline typename base_session<Table, GlobalLock>::key_type
     base_session<Table, GlobalLock>::Key() const
 {
     return m_table->skey().key;
@@ -377,7 +377,10 @@ template <typename Table, typename GlobalLock>
 void base_session<Table, GlobalLock>::stop()
 {
     OUROBOROS_SAFE_BEGIN;
-    const bool result = do_stop();
+#if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
+    const bool result =
+#endif
+    do_stop();
     unlock();
 #if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
     if (result)
@@ -396,7 +399,10 @@ template <typename Table, typename GlobalLock>
 void base_session<Table, GlobalLock>::cancel()
 {
     OUROBOROS_SAFE_BEGIN;
-    const bool result = do_cancel();
+#if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
+    const bool result =
+#endif
+    do_cancel();
     unlock();
 #if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
     if (result)

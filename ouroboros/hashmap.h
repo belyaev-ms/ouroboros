@@ -52,10 +52,10 @@ public:
     explicit hash_iterator(const map_type *map);
     hash_iterator(const map_type *map, item_type *item);
     hash_iterator(const self_type& iter);
-    self_type operator++ ();
+    self_type& operator++ ();
     self_type operator++ (int );
 
-    const self_type operator++ () const;
+    const self_type& operator++ () const;
     const self_type operator++ (int ) const;
 
     bool operator== (const self_type& iter) const;
@@ -178,7 +178,7 @@ hash_iterator<Map>::hash_iterator(const self_type& iter) :
  * @return the iterator on the current item
  */
 template <typename Map>
-typename hash_iterator<Map>::self_type hash_iterator<Map>::operator++ ()
+typename hash_iterator<Map>::self_type& hash_iterator<Map>::operator++ ()
 {
     if (m_item->next != NULL)
     {
@@ -223,7 +223,7 @@ typename hash_iterator<Map>::self_type hash_iterator<Map>::operator++ (int )
  * @return the iterator on the current item
  */
 template <typename Map>
-const typename hash_iterator<Map>::self_type hash_iterator<Map>::operator++ () const
+const typename hash_iterator<Map>::self_type& hash_iterator<Map>::operator++ () const
 {
     if (m_item->next != NULL)
     {

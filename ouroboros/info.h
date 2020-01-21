@@ -63,7 +63,7 @@ private:
  * @param size the size of the buffer
  * @return a hex string
  */
-inline const std::string dump_memory(const void *buffer, const size_type size)
+inline std::string dump_memory(const void *buffer, const size_type size)
 {
     std::ostringstream s;
     const char *p = reinterpret_cast<const char*>(buffer);

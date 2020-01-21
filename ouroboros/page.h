@@ -77,7 +77,7 @@ public:
     file_region(const count_type count, const file_region& region);
     file_region(const count_type count, const region_list& regions);
     file_region& add(const file_region& region);
-    const range_type operator[] (const pos_type index) const;
+    range_type operator[] (const pos_type index) const;
     offset_type convert_offset(const offset_type raw_offset) const;
     size_type convert_size(const size_type raw_size) const;
     void make_cache(const size_type size) const;
@@ -103,8 +103,8 @@ private:
     typedef std::pair<offset_type, cached_region> result_type;
     typedef std::map<offset_type, cached_region> cache_type;
     size_type align_size(const size_type size) const;
-    const result_type get_offset(const pos_type index, count_type& count, offset_type offset) const;
-    const result_type get_offset(offset_type& raw_offset, offset_type offset) const;
+    result_type get_offset(const pos_type index, count_type& count, offset_type offset) const;
+    result_type get_offset(offset_type& raw_offset, offset_type offset) const;
 private:
     count_type m_count;
     size_type m_size;
@@ -125,7 +125,7 @@ public:
     explicit status_file_page(void *ptr);
     bool verify() const;
     void set_status(const status_type& status);
-    const status_type get_status() const;
+    status_type get_status() const;
 };
 
 //==============================================================================
@@ -540,7 +540,7 @@ file_region<FilePage>& file_region<FilePage>::add(const file_region& region)
  * @return the range of the region
  */
 template <typename FilePage>
-const typename file_region<FilePage>::range_type file_region<FilePage>::
+typename file_region<FilePage>::range_type file_region<FilePage>::
     operator[] (const pos_type index) const
 {
     range_type range(0, 0);
@@ -567,7 +567,7 @@ const typename file_region<FilePage>::range_type file_region<FilePage>::
  * @return the offset of the current region and the flag of successful
  */
 template <typename FilePage>
-const typename file_region<FilePage>::result_type file_region<FilePage>::
+typename file_region<FilePage>::result_type file_region<FilePage>::
     get_offset(const pos_type index, count_type& count, offset_type offset) const
 {
     if (m_size > 0)
@@ -656,7 +656,7 @@ size_type file_region<FilePage>::convert_size(const size_type raw_size) const
  * @return the real offset in the file
  */
 template <typename FilePage>
-const typename file_region<FilePage>::result_type file_region<FilePage>::
+typename file_region<FilePage>::result_type file_region<FilePage>::
     get_offset(offset_type& raw_offset, offset_type offset) const
 {
     if (m_size > 0)
@@ -744,7 +744,7 @@ void status_file_page<FilePage, Status>::set_status(const status_type& status)
  * @return the status of the page
  */
 template <typename FilePage, typename Status>
-const typename status_file_page<FilePage, Status>::status_type
+typename status_file_page<FilePage, Status>::status_type
     status_file_page<FilePage, Status>::get_status() const
 {
     const char *p = static_cast<const char *>(base_class::get());

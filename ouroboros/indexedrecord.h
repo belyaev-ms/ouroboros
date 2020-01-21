@@ -26,7 +26,7 @@ class indexed_record : public Record
     typedef typename Index<Record>::field_type key_type;
     struct converter
     {
-        inline const key_type key(const Record& record) const
+        inline key_type key(const Record& record) const
         {
             return Index<Record>::value(record);
         }
@@ -51,8 +51,7 @@ public:
     inline size_type size() const;
 
     ///@todo operator () replace to operator *()
-    inline node_type operator() ();
-    inline const node_type operator() () const;
+    inline node_type operator() () const;
     inline void operator() (const node_type& node);
 
     static size_type static_size();
@@ -214,20 +213,6 @@ size_type indexed_record<Record, Index>::static_size()
  */
 template <typename Record, template <typename> class Index>
 inline typename indexed_record<Record, Index>::node_type
-    indexed_record<Record, Index>::operator() ()
-{
-    node_type node(*this, m_parent, m_color);
-    node.left(m_left);
-    node.right(m_right);
-    return node;
-}
-
-/**
- * Get the node from the record
- * @return the node
- */
-template <typename Record, template <typename> class Index>
-inline const typename indexed_record<Record, Index>::node_type
     indexed_record<Record, Index>::operator() () const
 {
     node_type node(*this, m_parent, m_color);

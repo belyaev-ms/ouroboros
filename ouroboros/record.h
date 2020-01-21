@@ -31,7 +31,7 @@ public:
     inline void *pack(void *out) const;
     inline const void *unpack(const void *in);
     inline size_type size() const;
-    inline const field1_type field1() const;
+    inline field1_type field1() const;
     inline void field1(const field1_type& field);
 
     inline bool operator == (const record_type& o) const;
@@ -62,7 +62,7 @@ public:
     inline void *pack(void *out) const;
     inline const void *unpack(const void *in);
     inline size_type size() const;
-    inline const field2_type field2() const;
+    inline field2_type field2() const;
     inline void field2(const field2_type& field);
 
     inline bool operator == (const record_type& o) const;
@@ -94,7 +94,7 @@ public:
     inline void *pack(void *out) const;
     inline const void *unpack(const void *in);
     inline size_type size() const;
-    inline const field3_type field3() const;
+    inline field3_type field3() const;
     inline void field3(const field3_type& field);
 
     inline bool operator == (const record_type& o) const;
@@ -127,7 +127,7 @@ public:
     inline void *pack(void *out) const;
     inline const void *unpack(const void *in);
     inline size_type size() const;
-    inline const field4_type field4() const;
+    inline field4_type field4() const;
     inline void field4(const field4_type& field);
 
     inline bool operator == (const record_type& o) const;
@@ -161,7 +161,7 @@ public:
     inline void *pack(void *out) const;
     inline const void *unpack(const void *in);
     inline size_type size() const;
-    inline const field5_type field5() const;
+    inline field5_type field5() const;
     inline void field5(const field5_type& field);
 
     inline bool operator == (const record_type& o) const;
@@ -196,7 +196,7 @@ public:
     inline void *pack(void *out) const;
     inline const void *unpack(const void *in);
     inline size_type size() const;
-    inline const field6_type field6() const;
+    inline field6_type field6() const;
     inline void field6(const field6_type& field);
 
     inline bool operator == (const record_type& o) const;
@@ -260,7 +260,7 @@ inline void record1<F1>::field1(const field1_type& field)
 }
 
 template <typename F1>
-inline const typename record1<F1>::field1_type record1<F1>::field1() const
+inline typename record1<F1>::field1_type record1<F1>::field1() const
 {
     return m_field1.data();
 }
@@ -349,7 +349,7 @@ inline void record2<F1, F2>::field2(const field2_type& field)
 }
 
 template <typename F1, typename F2>
-inline const typename record2<F1, F2>::field2_type record2<F1, F2>::field2() const
+inline typename record2<F1, F2>::field2_type record2<F1, F2>::field2() const
 {
     return m_field2.data();
 }
@@ -441,7 +441,7 @@ inline void record3<F1, F2, F3>::field3(const field3_type& field)
 }
 
 template <typename F1, typename F2, typename F3>
-inline const typename record3<F1, F2, F3>::field3_type record3<F1, F2, F3>::field3() const
+inline typename record3<F1, F2, F3>::field3_type record3<F1, F2, F3>::field3() const
 {
     return m_field3.data();
 }
@@ -535,7 +535,7 @@ inline void record4<F1, F2, F3, F4>::field4(const field4_type& field)
 }
 
 template <typename F1, typename F2, typename F3, typename F4>
-inline const typename record4<F1, F2, F3, F4>::field4_type record4<F1, F2, F3, F4>::field4() const
+inline typename record4<F1, F2, F3, F4>::field4_type record4<F1, F2, F3, F4>::field4() const
 {
     return m_field4.data();
 }
@@ -630,7 +630,7 @@ inline void record5<F1, F2, F3, F4, F5>::field5(const field5_type& field)
 }
 
 template <typename F1, typename F2, typename F3, typename F4, typename F5>
-inline const typename record5<F1, F2, F3, F4, F5>::field5_type record5<F1, F2, F3, F4, F5>::field5() const
+inline typename record5<F1, F2, F3, F4, F5>::field5_type record5<F1, F2, F3, F4, F5>::field5() const
 {
     return m_field5.data();
 }
@@ -726,7 +726,7 @@ inline void record6<F1, F2, F3, F4, F5, F6>::field6(const field6_type& field)
 }
 
 template <typename F1, typename F2, typename F3, typename F4, typename F5, typename F6>
-inline const typename record6<F1, F2, F3, F4, F5, F6>::field6_type record6<F1, F2, F3, F4, F5, F6>::field6() const
+inline typename record6<F1, F2, F3, F4, F5, F6>::field6_type record6<F1, F2, F3, F4, F5, F6>::field6() const
 {
     return m_field6.data();
 }

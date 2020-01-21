@@ -24,7 +24,7 @@ class index1
 public:
     typedef Record record_type;
     typedef typename record_type::field1_type field_type;
-    static inline const field_type value(const record_type& record)
+    static inline field_type value(const record_type& record)
     {
         return record.field1();
     }
@@ -39,7 +39,7 @@ class index2
 public:
     typedef Record record_type;
     typedef typename record_type::field2_type field_type;
-    static inline const field_type value(const record_type& record)
+    static inline field_type value(const record_type& record)
     {
         return record.field2();
     }
@@ -54,7 +54,7 @@ class index3
 public:
     typedef Record record_type;
     typedef typename record_type::field3_type field_type;
-    static inline const field_type value(const record_type& record)
+    static inline field_type value(const record_type& record)
     {
         return record.field3();
     }
@@ -69,7 +69,7 @@ class index4
 public:
     typedef Record record_type;
     typedef typename record_type::field4_type field_type;
-    static inline const field_type value(const record_type& record)
+    static inline field_type value(const record_type& record)
     {
         return record.field4();
     }
@@ -84,7 +84,7 @@ class index5
 public:
     typedef Record record_type;
     typedef typename record_type::field5_type field_type;
-    static inline const field_type value(const record_type& record)
+    static inline field_type value(const record_type& record)
     {
         return record.field5();
     }
@@ -99,7 +99,7 @@ class index6
 public:
     typedef Record record_type;
     typedef typename record_type::field6_type field_type;
-    static inline const field_type value(const record_type& record)
+    static inline field_type value(const record_type& record)
     {
         return record.field6();
     }

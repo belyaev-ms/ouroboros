@@ -25,7 +25,7 @@ class tree_data_table : public data_table<Table, IndexedRecord, Key, Interface>
     typedef typename indexed_record_type::node_type node_type;
     struct extractor
     {
-        inline const node_type node(const indexed_record_type& record) const
+        inline node_type node(const indexed_record_type& record) const
         {
             return record();
         }
