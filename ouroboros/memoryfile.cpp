@@ -127,7 +127,7 @@ void memory_file::refresh(size_type size, const pos_type pos)
 /**
  * Forced synchronization data of the file
  */
-void memory_file::flush() const
+void memory_file::sync() const
 {
 //    OUROBOROS_THROW_BUG("method not supported");
 }

@@ -254,9 +254,6 @@ void journal_file<FilePage, pageCount, File, Cache>::do_before_add_index(const p
     // if the page is not fixed then throw exception
     status_file_page_type status_page(page);
     OUROBOROS_ASSERT(status_page.get_status().state == JS_CLEAN);
-#ifdef OUROBOROS_FLUSH_ENABLED
-    base_class::flush_backup();
-#endif
 }
 
 /**
@@ -273,6 +270,9 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_add_index(const po
     // mark the page as not fixed
     status_file_page_type status_page(page);
     status_page.set_status(journal_status_type(s_transaction_id, JS_DIRTY));
+#ifdef OUROBOROS_SYNC_ENABLED
+    base_class::sync_backup();
+#endif
 }
 
 /**
@@ -338,6 +338,9 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes()
         }
         base_class::clean();
         m_reference_index = NIL;
+#ifdef OUROBOROS_SYNC_ENABLED
+        base_class::sync();
+#endif
     }
 }
 

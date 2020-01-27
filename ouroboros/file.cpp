@@ -264,7 +264,7 @@ void base_file::refresh(size_type size, const pos_type pos)
 /**
  * Forced synchronization data of the base_file
  */
-void base_file::flush() const
+void base_file::sync() const
 {
     size_t count = 0;
     while (fdatasync(m_fd) != 0)

@@ -47,8 +47,8 @@ protected:
     void remove_index(const pos_type index); ///< remove the index of the page to the backup set
     void recovery(); ///< restore the file from the backup file
     void clear_indexes(); ///< remove all indexes of pages from the backup set
-#ifdef OUROBOROS_FLUSH_ENABLED
-    void flush_backup() const; ///< forced synchronization data of the backup file
+#ifdef OUROBOROS_SYNC_ENABLED
+    void sync_backup() const; ///< forced synchronization data of the backup file
 #endif
 private:
     virtual void do_before_add_index(const pos_type index, void *page); ///< perform an action before add the index
@@ -305,7 +305,9 @@ template <typename FilePage, int pageCount, typename File,
 void backup_file<FilePage, pageCount, File, Cache>::do_after_add_index(const pos_type index,
     void *page)
 {
-
+#ifdef OUROBOROS_SYNC_ENABLED
+    sync_backup();
+#endif
 }
 
 /**
@@ -354,15 +356,15 @@ void backup_file<FilePage, pageCount, File, Cache>::do_after_clear_indexes()
 
 }
 
-#ifdef OUROBOROS_FLUSH_ENABLED
+#ifdef OUROBOROS_SYNC_ENABLED
 /**
  * Forced synchronization data of the backup file
  */
 template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
-void backup_file<FilePage, pageCount, File, Cache>::flush_backup() const
+void backup_file<FilePage, pageCount, File, Cache>::sync_backup() const
 {
-    m_backup.flush();
+    m_backup.sync();
 }
 #endif
 

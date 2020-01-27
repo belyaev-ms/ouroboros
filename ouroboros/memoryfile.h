@@ -35,7 +35,7 @@ public:
     size_type resize(const size_type size); ///< change the size of the file
     size_type size() const; ///< get the size of the file
     void refresh(size_type size, const pos_type pos); ///< refresh data
-    void flush() const; ///< forced synchronization data of the file
+    void sync() const; ///< forced synchronization data of the file
 
     void start();  ///< start the transaction
     void stop();   ///< stop the transaction
