@@ -95,7 +95,7 @@ public:
 
 #ifdef OUROBOROS_TEST_TOOLS_ENABLED
     void test() const; ///< test the table
-    pos_type get_root() const; ///< get the postiorion of the root
+    pos_type get_root() const; ///< get the position of the root
 #endif
 protected:
     virtual void do_before_remove(const pos_type pos); ///< perform an action before deleting record

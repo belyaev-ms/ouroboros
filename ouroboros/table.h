@@ -338,12 +338,13 @@ void table<Source, Key>::do_write(const void *data, const pos_type beg, const po
 template <typename Source, typename Key>
 pos_type table<Source, Key>::add(const void *data)
 {
-    base_class::cast_skey().end = write(data, base_class::cast_skey().end);
+    skey_type& cast_skey = base_class::cast_skey();
+    cast_skey.end = write(data, cast_skey.end);
     if (base_class::inc_count())
     {
-        base_class::cast_skey().beg = base_class::cast_skey().end;
+        cast_skey.beg = cast_skey.end;
     }
-    return base_class::cast_skey().end;
+    return cast_skey.end;
 }
 
 /**
@@ -355,12 +356,13 @@ pos_type table<Source, Key>::add(const void *data)
 template <typename Source, typename Key>
 pos_type table<Source, Key>::add(const void *data, const count_type count)
 {
-    base_class::cast_skey().end = write(data, base_class::cast_skey().end, count);
+    skey_type& cast_skey = base_class::cast_skey();
+    cast_skey.end = write(data, cast_skey.end, count);
     if (base_class::inc_count(count))
     {
-        base_class::cast_skey().beg = base_class::cast_skey().end;
+        cast_skey.beg = cast_skey.end;
     }
-    return base_class::cast_skey().end;
+    return cast_skey.end;
 }
 
 /**
@@ -386,18 +388,19 @@ pos_type table<Source, Key>::remove(const pos_type beg, const count_type count)
     const pos_type end = base_class::inc_pos(beg, count);
     if (valid_range(beg, end))
     {
+        const skey_type& cast_skey = base_class::cast_skey();
         if (base_class::count() == count)
         {
             base_class::do_clear();
-            return base_class::cast_skey().beg;
+            return cast_skey.beg;
         }
-        else if (beg == base_class::cast_skey().beg)
+        else if (beg == cast_skey.beg)
         {
             base_class::do_before_remove(beg, count);
             base_class::dec_count(count);
             return base_class::inc_beg_pos(count);
         }
-        else if (end == base_class::cast_skey().end)
+        else if (end == cast_skey.end)
         {
             base_class::do_before_remove(beg, count);
             base_class::dec_count(count);
@@ -474,14 +477,16 @@ inline void table<Source, Key>::do_remove(const pos_type beg, const pos_type end
 {
     ///@todo need to replace the most small part of records (head or tail)
     scoped_buffer<void> buffer(base_class::rec_size());
+    void *pbuffer = buffer.get();
     pos_type ibeg = beg;
     pos_type iend = end;
+    const skey_type& cast_skey = base_class::cast_skey();
     do
     {
         do_before_move(iend, ibeg);
-        iend = read(buffer.get(), iend);
-        ibeg = write(buffer.get(), ibeg);
-    } while (iend != base_class::cast_skey().end);
+        iend = read(pbuffer, iend);
+        ibeg = write(pbuffer, ibeg);
+    } while (iend != cast_skey.end);
 }
 
 /**
@@ -697,8 +702,9 @@ template <typename Source, typename Key>
 inline bool table<Source, Key>::valid_pos(const pos_type pos) const
 {
     const count_type max = base_class::limit();
-    const pos_type rbeg = base_class::cast_skey().beg;
-    const pos_type rend = base_class::cast_skey().end;
+    const skey_type& cast_skey = base_class::cast_skey();
+    const pos_type rbeg = cast_skey.beg;
+    const pos_type rend = cast_skey.end;
     return !base_class::empty() && pos < max &&
         (rbeg < rend ? (rbeg <= pos && pos < rend) : (rbeg <= pos || pos < rend));
 }
@@ -714,8 +720,9 @@ inline bool table<Source, Key>::valid_range(const pos_type beg, const pos_type e
 {
     ///@todo not found checking for beg < end end etc.
     const count_type max = base_class::limit();
-    const pos_type rbeg = base_class::cast_skey().beg;
-    const pos_type rend = base_class::cast_skey().end;
+    const skey_type& cast_skey = base_class::cast_skey();
+    const pos_type rbeg = cast_skey.beg;
+    const pos_type rend = cast_skey.end;
     return !base_class::empty() && beg < max && end < max &&
         (rbeg < rend ?
             (rbeg <= beg && beg < rend) && (rbeg < end && end <= rend) :

@@ -503,12 +503,13 @@ pos_type data_table<Table, Record, Key, Interface>::find(Finder& finder, const p
     typename base_class::lock_read lock(*this);
     if (!unsafe_table::empty())
     {
+        void *pbuffer = m_buffer.get();
         pos_type pos = beg;
         for (count_type i = 0; i < count; ++i)
         {
             const pos_type result = pos;
-            pos = unsafe_table::read(m_buffer.get(), result);
-            finder.record(pos).unpack(m_buffer.get());
+            pos = unsafe_table::read(pbuffer, result);
+            finder.record(pos).unpack(pbuffer);
             if (!finder())
             {
                 return result;
@@ -532,12 +533,13 @@ pos_type data_table<Table, Record, Key, Interface>::rfind(Finder& finder, const 
     typename base_class::lock_read lock(*this);
     if (!unsafe_table::empty())
     {
+        void *pbuffer = m_buffer.get();
         pos_type pos = unsafe_table::dec_pos(end);
         for (count_type i = 0; i < count; ++i)
         {
             const pos_type result = pos;
-            pos = unsafe_table::rread(m_buffer.get(), result);
-            finder.record(pos).unpack(m_buffer.get());
+            pos = unsafe_table::rread(pbuffer, result);
+            finder.record(pos).unpack(pbuffer);
             if (!finder())
             {
                 return result;

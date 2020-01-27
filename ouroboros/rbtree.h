@@ -838,16 +838,18 @@ inline typename rbtree<PNode>::pnode_type
     rbtree<PNode>::construct(const node_type& node)
 {
     const typename table_type::record_type record(node);
-    const pos_type beg = raw_table().beg_pos();
-    const pos_type end = raw_table().end_pos();
-    if (!raw_table().empty() && end == beg)
+    table_type& table = rbtree::table();
+    typename table_type::unsafe_table& raw_table = static_cast<table_type&>(table);
+    const pos_type beg = raw_table.beg_pos();
+    const pos_type end = raw_table.end_pos();
+    if (!raw_table.empty() && end == beg)
     {
-        pnode_type pnode(table(), beg);
+        pnode_type pnode(table, beg);
         iterator it(pnode);
         erase(it);
     }
-    table().unsafe_add(record);
-    return pnode_type(table(), end);
+    table.unsafe_add(record);
+    return pnode_type(table, end);
 }
 
 /**
