@@ -268,7 +268,11 @@ template <typename FilePage, int pageCount, typename File,
 void backup_file<FilePage, pageCount, File, Cache>::clear_indexes()
 {
     do_before_clear_indexes();
+#if __cplusplus >= 201103L
     index_list::const_iterator it = m_indexes.begin();
+#else
+    index_list::iterator it = m_indexes.begin();
+#endif
     while (it != m_indexes.end())
     {
         const pos_type index = *it;

@@ -18,7 +18,7 @@ namespace ouroboros
 template <typename Node, typename Table>
 class node_cache
 {
-    friend cache <node_cache, sizeof(Node), 64>;
+    friend class cache <node_cache, sizeof(Node), 64>;
 public:
     typedef Node node_type;
     typedef Table table_type;
