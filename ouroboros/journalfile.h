@@ -285,7 +285,8 @@ template <typename FilePage, int pageCount, typename File,
 void journal_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const pos_type index)
 {
     journal_status_type index_status;
-    if (NIL == m_reference_index)
+    bool is_reference_page = NIL == m_reference_index;
+    if (is_reference_page)
     {
         index_status = journal_status_type(s_transaction_id, JS_FIXED);
         m_reference_index = index;
@@ -296,6 +297,13 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const
         void *page = base_class::m_cache.get_page(status);
         status_file_page_type status_page(page);
         status_page.set_status(index_status);
+        if (is_reference_page)
+        {
+            simple_file::do_write(page, base_class::CACHE_PAGE_SIZE, index * base_class::CACHE_PAGE_SIZE);
+#ifdef OUROBOROS_SYNC_ENABLED
+            base_class::sync();
+#endif
+        }
     }
     else
     {
