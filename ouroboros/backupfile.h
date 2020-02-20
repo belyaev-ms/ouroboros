@@ -38,6 +38,9 @@ public:
     void cancel(); ///< cancel the transaction
 
     static void remove(const std::string& name); ///< remove a file by the name
+#ifdef OUROBOROS_SYNC_ENABLED
+    virtual void save_page(const pos_type index, void *data); ///< save data of the cache page
+#endif
 protected:
     virtual size_type do_resize(const size_type size); ///< change the size of the file
     virtual void *get_page(const pos_type index); ///< get the buffer of the cache page
@@ -50,7 +53,6 @@ protected:
 #ifdef OUROBOROS_SYNC_ENABLED
     void sync_backup() const; ///< forced synchronization data of the backup file
 #endif
-private:
     virtual void do_before_add_index(const pos_type index, void *page); ///< perform an action before add the index
     virtual void do_after_add_index(const pos_type index, void *page); ///< perform an action after add the index
     virtual void do_before_remove_index(const pos_type index); ///< perform an action before remove the index
@@ -62,6 +64,10 @@ private:
 protected:
     simple_file m_backup; ///< the backup file
     index_list m_indexes; ///< the backup set
+private:
+#ifdef OUROBOROS_SYNC_ENABLED
+    mutable size_t m_sync_count; ///< the count of allowed sync the backup
+#endif
 };
 
 //==============================================================================
@@ -89,6 +95,9 @@ template <typename FilePage, int pageCount, typename File,
 backup_file<FilePage, pageCount, File, Cache>::backup_file(const std::string& name) :
     base_class(name),
     m_backup(name + ".bak")
+#ifdef OUROBOROS_SYNC_ENABLED
+    , m_sync_count(0)
+#endif
 {
 }
 
@@ -103,6 +112,9 @@ backup_file<FilePage, pageCount, File, Cache>::backup_file(const std::string& na
         const file_region_type& region) :
     base_class(name, region),
     m_backup(name + ".bak")
+#ifdef OUROBOROS_SYNC_ENABLED
+    , m_sync_count(0)
+#endif
 {
 }
 
@@ -175,6 +187,9 @@ template <typename FilePage, int pageCount, typename File,
 void backup_file<FilePage, pageCount, File, Cache>::start()
 {
     base_class::start();
+#ifdef OUROBOROS_SYNC_ENABLED
+    m_sync_count = 0;
+#endif
 }
 
 /**
@@ -184,6 +199,9 @@ template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 void backup_file<FilePage, pageCount, File, Cache>::stop()
 {
+#ifdef OUROBOROS_SYNC_ENABLED
+    m_sync_count = 1;
+#endif
     base_class::stop();
     clear_indexes();
 }
@@ -310,7 +328,7 @@ void backup_file<FilePage, pageCount, File, Cache>::do_after_add_index(const pos
     void *page)
 {
 #ifdef OUROBOROS_SYNC_ENABLED
-    sync_backup();
+    ++m_sync_count;
 #endif
 }
 
@@ -368,7 +386,28 @@ template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 void backup_file<FilePage, pageCount, File, Cache>::sync_backup() const
 {
-    m_backup.sync();
+    if (m_sync_count > 0)
+    {
+        m_backup.sync();
+        --m_sync_count;
+    }
+}
+
+/**
+ * Save data of the cache page
+ * @param index the index of the cache page
+ * @param page the cache page
+ */
+//virtual
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::save_page(const pos_type index, void *data)
+{
+    if (TR_CANCELED != base_class::m_trans)
+    {
+        sync_backup();
+    }
+    base_class::save_page(index, data);
 }
 #endif
 

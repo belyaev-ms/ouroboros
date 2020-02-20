@@ -271,7 +271,7 @@ void journal_file<FilePage, pageCount, File, Cache>::do_after_add_index(const po
     status_file_page_type status_page(page);
     status_page.set_status(journal_status_type(s_transaction_id, JS_DIRTY));
 #ifdef OUROBOROS_SYNC_ENABLED
-    base_class::sync_backup();
+    base_class::do_after_add_index(index, page);
 #endif
 }
 
