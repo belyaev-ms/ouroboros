@@ -527,13 +527,10 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_by_index(const field_type& beg, const field_type& end)
 {
     typename base_class::lock_write lock(*this);
-
     const count_type count = unsafe_table::count();
-
     pos_list list;
     do_get_pos_list(list, beg, end);
     std::sort(list.begin(), list.end());
-
     // delete records in parts from the end
     const pos_list::reverse_iterator itend = list.rend();
     for (pos_list::reverse_iterator it = list.rbegin(); it != itend; ++it)
@@ -616,7 +613,6 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     do_get_pos_list(list, beg, end);
     if (list.empty())
@@ -644,7 +640,6 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     do_get_pos_list(list, beg, end);
     if (list.empty())
@@ -671,11 +666,9 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_get_pos_list(pos_
 {
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
-
     const pos_type beg_pos = unsafe_table::beg_pos();
     const pos_type end_pos = unsafe_table::end_pos();
     const count_type count = unsafe_table::count();
-
     ///@todo doesn't work for unordered table
     if (beg_pos < end_pos)
     {
@@ -708,14 +701,12 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_index(pos
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
-
     do_get_pos_list(dest, beg, end);
     std::sort(dest.begin(), dest.end());
     if (size != 0 && size < dest.size())
     {
         dest.resize(size);
     }
-
     const count_type count = unsafe_table::rec_count();
     std::transform(dest.begin(), dest.end(), dest.begin(), std::bind2nd(std::modulus<pos_type>(), count));
     return dest.size();
@@ -734,14 +725,12 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_index(po
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
-
     do_get_pos_list(dest, beg, end);
     std::sort(dest.begin(), dest.end(), std::greater<pos_type>());
     if (size != 0 && size < dest.size())
     {
         dest.resize(size);
     }
-
     const count_type count = unsafe_table::rec_count();
     std::transform(dest.begin(), dest.end(), dest.begin(), std::bind2nd(std::modulus<pos_type>(), count));
     return dest.size();
@@ -760,7 +749,6 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_li
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     records.resize(read_index(list, beg, end, size));
     pos_list::const_iterator pos = list.begin();
@@ -785,7 +773,6 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread(record_l
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     records.resize(rread_index(list, beg, end, size));
     pos_list::const_reverse_iterator pos = list.rbegin();
@@ -810,10 +797,8 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_by_index(
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
-
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
-
     count_type count = 0;
     for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
     {
@@ -841,13 +826,10 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_by_index
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
-
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
-
     typename tree_type::const_reverse_iterator ritbeg(itend);
     typename tree_type::const_reverse_iterator ritend(itbeg);
-
     count_type count = 0;
     for (typename tree_type::const_reverse_iterator it = ritbeg; it != ritend; ++it)
     {
@@ -875,10 +857,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     find_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
-
     for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
     {
         const pos_type pos = it->second;
@@ -904,13 +884,10 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
-
     typename tree_type::const_reverse_iterator ritbeg(itend);
     typename tree_type::const_reverse_iterator ritend(itbeg);
-
     for (typename tree_type::const_reverse_iterator it = ritbeg; it != ritend; ++it)
     {
         const pos_type pos = it->second;
@@ -936,11 +913,9 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     find(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     do_get_pos_list(list, beg, end);
     std::sort(list.begin(), list.end());
-
     const count_type count = unsafe_table::count();
     const pos_list::const_iterator itend = list.end();
     for (pos_list::const_iterator it = list.begin(); it != itend; ++it)
@@ -968,11 +943,9 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     rfind(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     do_get_pos_list(list, beg, end);
     std::sort(list.begin(), list.end());
-
     const count_type count = unsafe_table::count();
     const pos_list::reverse_iterator itend = list.rend();
     for (pos_list::reverse_iterator it = list.rbegin(); it != itend; ++it)

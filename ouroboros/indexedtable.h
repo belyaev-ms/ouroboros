@@ -258,7 +258,6 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_add(const r
 {
     const pos_type beg = unsafe_table::beg_pos();
     const pos_type end = unsafe_table::end_pos();
-
     ///@todo repace count == MaxCount
     if (end == beg && !unsafe_table::empty())
     {
@@ -266,7 +265,6 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_add(const r
         base_class::unsafe_read(replaced_record, beg);
         remove_index(replaced_record, beg);
     }
-
     const pos_type pos = base_class::unsafe_add(record);
     add_index(record, end);
     return pos;
@@ -345,13 +343,10 @@ template <template <typename, typename, typename> class Table, typename Record,
 count_type indexed_table<Table, Record, Index, Key, Interface>::remove_by_index(const field_type& beg, const field_type& end)
 {
     typename base_class::lock_write lock(*this);
-
     const count_type count = unsafe_table::count();
-
     pos_list list;
     do_get_pos_list(list, beg, end);
     std::sort(list.begin(), list.end());
-
     // delete records in parts from the end
     const pos_list::reverse_iterator itend = list.rend();
     for (pos_list::reverse_iterator it = list.rbegin(); it != itend; ++it)
@@ -371,7 +366,6 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::remove_by_index(
         }
         unsafe_table::remove(pbeg, pcount);
     }
-
     return count;
 }
 
@@ -421,7 +415,6 @@ template <template <typename, typename, typename> class Table, typename Record,
 pos_type indexed_table<Table, Record, Index, Key, Interface>::read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     do_get_pos_list(list, beg, end);
     if (list.empty())
@@ -449,7 +442,6 @@ template <template <typename, typename, typename> class Table, typename Record,
 pos_type indexed_table<Table, Record, Index, Key, Interface>::read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     do_get_pos_list(list, beg, end);
     if (list.empty())
@@ -515,7 +507,6 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::read(record_list
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     records.resize(read_index(list, beg, end, size));
     pos_list::const_iterator pos = list.begin();
@@ -542,7 +533,6 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::rread(record_lis
 {
     ///@todo why is size here???
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     records.resize(rread_index(list, beg, end, size));
     pos_list::const_reverse_iterator pos = list.rbegin();
@@ -568,17 +558,14 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::read_index(pos_l
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
-
     do_get_pos_list(dest, beg, end);
     std::sort(dest.begin(), dest.end());
     if (size != 0 && size < dest.size())
     {
         dest.resize(size);
     }
-
     const count_type count = unsafe_table::rec_count();
     std::transform(dest.begin(), dest.end(), dest.begin(), std::bind2nd(std::modulus<pos_type>(), count));
-
     return dest.size();
 }
 
@@ -596,17 +583,14 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::rread_index(pos_
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
-
     do_get_pos_list(dest, beg, end);
     std::sort(dest.begin(), dest.end(), std::greater<pos_type>());
     if (size != 0 && size < dest.size())
     {
         dest.resize(size);
     }
-
     const count_type count = unsafe_table::rec_count();
     std::transform(dest.begin(), dest.end(), dest.begin(), std::bind2nd(std::modulus<pos_type>(), count));
-
     return dest.size();
 }
 
@@ -624,10 +608,8 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::read_by_index(re
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
-
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
     typename index_list::const_iterator itend = m_indexes.upper_bound(end);
-
     count_type count = 0;
     for (typename index_list::const_iterator it = itbeg; it != itend; ++it)
     {
@@ -639,7 +621,6 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::read_by_index(re
             break;
         }
     }
-
     return count;
 }
 
@@ -657,13 +638,10 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::rread_by_index(r
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
-
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
     typename index_list::const_iterator itend = m_indexes.upper_bound(end);
-
     typename index_list::const_reverse_iterator ritbeg(itend);
     typename index_list::const_reverse_iterator ritend(itbeg);
-
     count_type count = 0;
     for (typename index_list::const_reverse_iterator it = ritbeg; it != ritend; ++it)
     {
@@ -675,7 +653,6 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::rread_by_index(r
             break;
         }
     }
-
     return count;
 }
 
@@ -693,10 +670,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
     find_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
     typename index_list::const_iterator itend = m_indexes.upper_bound(end);
-
     for (typename index_list::const_iterator it = itbeg; it != itend; ++it)
     {
         const pos_type pos = it->second;
@@ -706,7 +681,6 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
             return pos;
         }
     }
-
     return NIL;
 }
 
@@ -724,13 +698,10 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
     rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
     typename index_list::const_iterator itend = m_indexes.upper_bound(end);
-
     typename index_list::const_reverse_iterator ritbeg(itend);
     typename index_list::const_reverse_iterator ritend(itbeg);
-
     for (typename index_list::const_reverse_iterator it = ritbeg; it != ritend; ++it)
     {
         const pos_type pos = it->second;
@@ -740,7 +711,6 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
             return pos;
         }
     }
-
     return NIL;
 }
 
@@ -758,11 +728,9 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
     find(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     do_get_pos_list(list, beg, end);
     std::sort(list.begin(), list.end());
-
     const count_type count = unsafe_table::count();
     const pos_list::const_iterator itend = list.end();
     for (pos_list::const_iterator it = list.begin(); it != itend; ++it)
@@ -774,7 +742,6 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
             return pos;
         }
     }
-
     return NIL;
 }
 
@@ -792,11 +759,9 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
     rfind(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
-
     pos_list list;
     do_get_pos_list(list, beg, end);
     std::sort(list.begin(), list.end());
-
     const count_type count = unsafe_table::count();
     const pos_list::reverse_iterator itend = list.rend();
     for (pos_list::reverse_iterator it = list.rbegin(); it != itend; ++it)
@@ -808,7 +773,6 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
             return pos;
         }
     }
-
     return NIL;
 }
 
@@ -832,13 +796,11 @@ template <template <typename, typename, typename> class Table, typename Record,
 inline void indexed_table<Table, Record, Index, Key, Interface>::build_indexes()
 {
     typename base_class::lock_write lock(*this);
-
     m_indexes.clear();
     if (unsafe_table::empty())
     {
         return;
     }
-
     ///@todo doesn't work for unordered table
     const count_type count = unsafe_table::count();
     const pos_type beg = unsafe_table::beg_pos();
