@@ -676,7 +676,7 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_get_pos_list(pos_
     {
         for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
         {
-            const pos_type pos = it->second;
+            const pos_type pos = it->get().pos();
             dest.push_back(pos);
         }
     }
@@ -684,8 +684,8 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_get_pos_list(pos_
     {
         for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
         {
-            const pos_type pos = it->second >= beg_pos ? it->second : it->second + count;
-            dest.push_back(pos);
+            const pos_type pos = it->get().pos();
+            dest.push_back(pos >= beg_pos ? pos : pos + count);
         }
     }
 }
