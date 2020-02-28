@@ -802,9 +802,7 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_by_index(
     count_type count = 0;
     for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
     {
-        record_type record;
-        unsafe_read(record, it->second);
-        records.push_back(record);
+        records.push_back(it->get().body());
         if (++count == size)
         {
             break;
@@ -833,9 +831,7 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_by_index
     count_type count = 0;
     for (typename tree_type::const_reverse_iterator it = ritbeg; it != ritend; ++it)
     {
-        record_type record;
-        unsafe_read(record, it->second);
-        records.push_back(record);
+        records.push_back(it->get().body());
         if (++count == size)
         {
             break;
@@ -861,8 +857,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
     for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
     {
-        const pos_type pos = it->second;
-        unsafe_read(finder.record(pos), pos);
+        const pos_type pos = it->get().pos();
+        finder.record(pos) = it->get().body();
         if (!finder())
         {
             return pos;
@@ -890,8 +886,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     typename tree_type::const_reverse_iterator ritend(itbeg);
     for (typename tree_type::const_reverse_iterator it = ritbeg; it != ritend; ++it)
     {
-        const pos_type pos = it->second;
-        unsafe_read(finder.record(pos), pos);
+        const pos_type pos = it->get().pos();
+        finder.record(pos) = it->get().body();
         if (!finder())
         {
             return pos;
