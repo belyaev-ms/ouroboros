@@ -76,6 +76,8 @@ public:
     count_type read(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< read records that have an index in range [beg, end)
     count_type rread(record_list& records, const field_type& beg, const field_type& end, const count_type size = 0) const; ///< reverse read records that have an index in range [beg, end)
 
+    pos_type get(const field_type& field, record_type& record) const; ///< get a record that has an index
+
     template <typename Finder>
     pos_type find_by_index(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record by index [beg, end)
     template <typename Finder>
@@ -782,6 +784,26 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread(record_l
         unsafe_read(*it, *pos++);
     }
     return records.size();
+}
+
+/**
+ * Get a record that has an index
+ * @param field the value of index
+ * @param record the record that has an index
+ * @return the position of the record
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::get(const field_type& field,
+    record_type& record) const
+{
+    typename base_class::lock_read lock(*this);
+    const typename tree_type::iterator it = m_tree.find(field);
+    if (it != m_tree.end())
+    {
+        record = it->get().body();
+        return it->pos();
+    }
+    return NIL;
 }
 
 /**
