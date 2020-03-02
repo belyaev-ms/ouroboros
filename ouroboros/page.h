@@ -97,7 +97,6 @@ private:
             return pregion != NULL;
         }
         offset_type offset;
-        offset_type raw_offset;
         const file_region *pregion;
     };
     typedef std::pair<offset_type, cached_region> result_type;
@@ -105,6 +104,8 @@ private:
     size_type align_size(const size_type size) const;
     result_type get_offset(const pos_type index, count_type& count, offset_type offset) const;
     result_type get_offset(offset_type& raw_offset, offset_type offset) const;
+    result_type do_make_cache(cache_type& cache, offset_type max_size, offset_type& raw_offset,
+            offset_type offset) const;
 private:
     count_type m_count;
     size_type m_size;
@@ -693,16 +694,59 @@ typename file_region<FilePage>::result_type file_region<FilePage>::
 
 /**
  * Make a cache
+ * @param cache the cache
+ * @param max_size the size of the file region
+ * @param raw_offset the raw offset
+ * @param offset the current offset
+ * @return the real offset in the file
+ */
+template <typename FilePage>
+typename file_region<FilePage>::result_type file_region<FilePage>::
+    do_make_cache(cache_type& cache, offset_type max_size, offset_type& raw_offset, offset_type offset) const
+{
+    if (m_size > 0)
+    {
+        const size_type size = file_page_type::static_align_size(m_size);
+        if (raw_offset < m_count * m_size || 0 == m_count)
+        {
+            const count_type count = raw_offset / m_size;
+            return std::make_pair(count * size +
+                file_page_type::static_convert(raw_offset % m_size) + offset,
+                cached_region(offset, this));
+        }
+        cache.insert(std::make_pair(max_size - raw_offset, cached_region(offset, this)));
+        raw_offset -= m_count * m_size;
+        return std::make_pair(m_count * size + offset, cached_region());
+    }
+    else
+    {
+        for (size_t i = 0; i < m_count || 0 == m_count; ++i)
+        {
+            for (typename region_list::const_iterator it = m_regions.begin();
+                    it != m_regions.end(); ++it)
+            {
+                const result_type result = it->do_make_cache(cache, max_size, raw_offset, offset);
+                if (result.second.valid())
+                {
+                    return result;
+                }
+                offset = result.first;
+            }
+        }
+        return std::make_pair(offset, cached_region());
+    }
+}
+
+/**
+ * Make a cache
  * @param size the size of the file region
  */
 template <typename FilePage>
 void file_region<FilePage>::make_cache(const size_type size) const
 {
     m_cache.clear();
-    for (offset_type offset = 0; offset < size; ++offset)
-    {
-        convert_offset(offset);
-    }
+    offset_type offset = size;
+    do_make_cache(m_cache, size, offset, 0);
 }
 
 //==============================================================================
