@@ -83,9 +83,9 @@ public:
     template <typename Finder>
     pos_type rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record by index [beg, end)
     template <typename Finder>
-    pos_type find(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record that has index in range [beg, end)
+    pos_type find_in_range(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record that has index in range [beg, end)
     template <typename Finder>
-    pos_type rfind(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record that has index in range [beg, end)
+    pos_type rfind_in_range(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record that has index in range [beg, end)
     template <typename Finder>
     pos_type find(Finder& finder, const pos_type beg, const count_type count) const; ///< find a record [beg, end)
     template <typename Finder>
@@ -95,6 +95,8 @@ public:
     inline void update(); ///< update the key by the metadata of the table
     inline void recovery(); ///< recovery the metadata of the table by the key
 
+    void clear(); ///< clear the table
+
 #ifdef OUROBOROS_TEST_TOOLS_ENABLED
     void test() const; ///< test the table
     pos_type get_root() const; ///< get the position of the root
@@ -103,7 +105,7 @@ protected:
     virtual void do_before_remove(const pos_type pos); ///< perform an action before deleting record
     virtual void do_before_move(const pos_type source, const pos_type dest); ///< perform an action before moving record
     void do_get_pos_list(pos_list& dest, const field_type& beg, const field_type& end) const; ///< get positions of the records that have an index in range [beg, end)
-    void do_clear(); ///< clear the table
+    virtual void do_clear(); ///< clear the table
     /* the methods don't use any locking */
     inline pos_type unsafe_read(record_type& record, const pos_type pos) const; ///< read a record
     inline pos_type unsafe_read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
@@ -529,19 +531,20 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_by_index(const field_type& beg, const field_type& end)
 {
     typename base_class::lock_write lock(*this);
-    const count_type count = unsafe_table::count();
+    const count_type limit = unsafe_table::limit();
     pos_list list;
     do_get_pos_list(list, beg, end);
     std::sort(list.begin(), list.end());
     // delete records in parts from the end
+    count_type count = 0;
     const pos_list::reverse_iterator itend = list.rend();
     for (pos_list::reverse_iterator it = list.rbegin(); it != itend; ++it)
     {
-        pos_type pbeg = *it % count;
+        pos_type pbeg = *it % limit;
         count_type pcount = 1;
         for (pos_list::reverse_iterator ait = it + 1 ; ait != itend; ++ait)
         {
-            const pos_type pos = *ait % count;
+            const pos_type pos = *ait % limit;
             if (unsafe_table::distance(pos, pbeg) > 1)
             {
                 break;
@@ -551,6 +554,7 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_by_inde
             ++pcount;
         }
         unsafe_table::remove(pbeg, pcount);
+        count += pcount;
     }
     return count;
 }
@@ -624,7 +628,7 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     else
     {
         pos_list::const_iterator it = std::min_element(list.begin(), list.end());
-        const pos_type pos = *it % unsafe_table::count();
+        const pos_type pos = *it % unsafe_table::limit();
         unsafe_read(record, pos);
         return pos;
     }
@@ -651,7 +655,7 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     else
     {
         pos_list::const_iterator it = std::max_element(list.begin(), list.end());
-        const pos_type pos = *it % unsafe_table::count();
+        const pos_type pos = *it % unsafe_table::limit();
         unsafe_read(record, pos);
         return pos;
     }
@@ -670,7 +674,6 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_get_pos_list(pos_
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
     const pos_type beg_pos = unsafe_table::beg_pos();
     const pos_type end_pos = unsafe_table::end_pos();
-    const count_type count = unsafe_table::count();
     ///@todo doesn't work for unordered table
     if (beg_pos < end_pos)
     {
@@ -682,10 +685,11 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_get_pos_list(pos_
     }
     else
     {
+        const count_type limit = unsafe_table::limit();
         for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
         {
             const pos_type pos = it->pos();
-            dest.push_back(pos >= beg_pos ? pos : pos + count);
+            dest.push_back(pos >= beg_pos ? pos : pos + limit);
         }
     }
 }
@@ -709,8 +713,8 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_index(pos
     {
         dest.resize(size);
     }
-    const count_type count = unsafe_table::rec_count();
-    std::transform(dest.begin(), dest.end(), dest.begin(), std::bind2nd(std::modulus<pos_type>(), count));
+    const count_type limit = unsafe_table::limit();
+    std::transform(dest.begin(), dest.end(), dest.begin(), std::bind2nd(std::modulus<pos_type>(), limit));
     return dest.size();
 }
 
@@ -733,8 +737,8 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_index(po
     {
         dest.resize(size);
     }
-    const count_type count = unsafe_table::rec_count();
-    std::transform(dest.begin(), dest.end(), dest.begin(), std::bind2nd(std::modulus<pos_type>(), count));
+    const count_type limit = unsafe_table::limit();
+    std::transform(dest.begin(), dest.end(), dest.begin(), std::bind2nd(std::modulus<pos_type>(), limit));
     return dest.size();
 }
 
@@ -928,17 +932,17 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 template <typename Finder>
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
-    find(Finder& finder, const field_type& beg, const field_type& end) const
+    find_in_range(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
     pos_list list;
     do_get_pos_list(list, beg, end);
     std::sort(list.begin(), list.end());
-    const count_type count = unsafe_table::count();
+    const count_type limit = unsafe_table::limit();
     const pos_list::const_iterator itend = list.end();
     for (pos_list::const_iterator it = list.begin(); it != itend; ++it)
     {
-        const pos_type pos = *it % count;
+        const pos_type pos = *it % limit;
         unsafe_read(finder.record(pos), pos);
         if (!finder())
         {
@@ -958,17 +962,17 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 template <typename Finder>
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
-    rfind(Finder& finder, const field_type& beg, const field_type& end) const
+    rfind_in_range(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
     pos_list list;
     do_get_pos_list(list, beg, end);
     std::sort(list.begin(), list.end());
-    const count_type count = unsafe_table::count();
+    const count_type limit = unsafe_table::limit();
     const pos_list::reverse_iterator itend = list.rend();
     for (pos_list::reverse_iterator it = list.rbegin(); it != itend; ++it)
     {
-        const pos_type pos = *it % count;
+        const pos_type pos = *it % limit;
         unsafe_read(finder.record(pos), pos);
         if (!finder())
         {
@@ -1031,6 +1035,16 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
         }
     }
     return NIL;
+}
+
+/**
+ * Clear the table
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+void tree_data_table<Table, IndexedRecord, Key, Interface>::clear()
+{
+    typename base_class::lock_write lock(*this);
+    tree_data_table<Table, IndexedRecord, Key, Interface>::do_clear();
 }
 
 /**
