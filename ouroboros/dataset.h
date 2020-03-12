@@ -893,8 +893,8 @@ inline void data_set<Key, Record, Index, Interface>::update_info()
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
 void data_set<Key, Record, Index, Interface>::get_key_list(key_list& list) const
 {
-    const typename skey_list::t_type::const_iterator itend = m_skeys->end();
-    for (typename skey_list::t_type::const_iterator it = m_skeys->begin();
+    const typename skey_list::const_iterator itend = m_skeys->end();
+    for (typename skey_list::const_iterator it = m_skeys->begin();
         it != itend; ++it)
     {
         list.push_back(it->first);
@@ -946,7 +946,7 @@ revision_type data_set<Key, Record, Index, Interface>::version()
     if (0 == ver)
     {
         info_type info;
-        m_info_table.read(&info, 0);
+        m_info_table.read(info, 0);
         ver = info.version;
     }
     return ver;
@@ -968,7 +968,7 @@ size_type data_set<Key, Record, Index, Interface>::get_user_data(void *buffer, c
     }
     else
     {
-        m_info_table.read(&info, 0);
+        m_info_table.read(info, 0);
         return info.get_data(buffer, size);
     }
 }
@@ -985,7 +985,7 @@ size_type data_set<Key, Record, Index, Interface>::set_user_data(const void *buf
     const size_type count = m_info.set_data(buffer, size);
     if (count > 0)
     {
-        m_info_table.write(&m_info, 0);
+        m_info_table.write(m_info, 0);
     }
     return count;
 }

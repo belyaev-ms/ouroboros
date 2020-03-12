@@ -562,7 +562,7 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::get(const field_ty
     if (it != m_indexes.end())
     {
         base_class::unsafe_read(record, it->second);
-        return it->pos();
+        return it->second;
     }
     return NIL;
 }

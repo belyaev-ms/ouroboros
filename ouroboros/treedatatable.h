@@ -676,7 +676,7 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_get_pos_list(pos_
     {
         for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
         {
-            const pos_type pos = it->get().pos();
+            const pos_type pos = it->pos();
             dest.push_back(pos);
         }
     }
@@ -684,7 +684,7 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_get_pos_list(pos_
     {
         for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
         {
-            const pos_type pos = it->get().pos();
+            const pos_type pos = it->pos();
             dest.push_back(pos >= beg_pos ? pos : pos + count);
         }
     }
@@ -879,7 +879,7 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
     for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
     {
-        const pos_type pos = it->get().pos();
+        const pos_type pos = it->pos();
         finder.record(pos) = it->get().body();
         if (!finder())
         {
@@ -908,7 +908,7 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     typename tree_type::const_reverse_iterator ritend(itbeg);
     for (typename tree_type::const_reverse_iterator it = ritbeg; it != ritend; ++it)
     {
-        const pos_type pos = it->get().pos();
+        const pos_type pos = it->pos();
         finder.record(pos) = it->get().body();
         if (!finder())
         {
