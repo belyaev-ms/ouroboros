@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include <string>
+#include <vector>
 
 #include "ouroboros/global.h"
 #include "ouroboros/object.h"
@@ -113,7 +114,7 @@ public:
     pos_type test_page_index(page_type *page) const; ///< test the index of the cache page
 #endif
 private:
-    page_type m_pages[pageCount];
+    std::vector<page_type> m_pages;
     page_type *m_beg;
     page_type *m_end;
 };
@@ -504,7 +505,8 @@ inline void cache_page<Cache, pageSize>::reset()
  * Constructor
  */
 template <typename Cache, int pageSize, int pageCount>
-inline cache_pool<Cache, pageSize, pageCount>::cache_pool()
+inline cache_pool<Cache, pageSize, pageCount>::cache_pool() :
+    m_pages(COUNT)
 {
     init();
 }
