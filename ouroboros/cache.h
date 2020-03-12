@@ -611,7 +611,7 @@ count_type cache_pool<Cache, pageSize, pageCount>::test_page_count() const
 template <typename Cache, int pageSize, int pageCount>
 pos_type cache_pool<Cache, pageSize, pageCount>::test_page_index(page_type *page) const
 {
-    return pos_type(page - m_pages);
+    return pos_type(page - &m_pages[0]);
 }
 #endif
 
