@@ -225,6 +225,9 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name) :
         skey_type::static_size(), 0))
 {
     m_file_region.make_cache(m_info_source.size());
+    m_info_source.set_file_region(m_file_region);
+    m_key_source.set_file_region(m_file_region);
+    m_source.set_file_region(m_file_region);
 }
 
 /**
