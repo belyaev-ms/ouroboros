@@ -272,14 +272,14 @@ public:
 
     iterator base() const;
 
-    self_type operator++ ();
+    self_type& operator++ ();
     self_type operator++ (int );
-    self_type operator-- ();
+    self_type& operator-- ();
     self_type operator-- (int );
 
-    const self_type operator++ () const;
+    const self_type& operator++ () const;
     const self_type operator++ (int ) const;
-    const self_type operator-- () const;
+    const self_type& operator-- () const;
     const self_type operator-- (int ) const;
 
     bool operator== (const self_type& iter) const;
@@ -1832,7 +1832,7 @@ typename node_reverseiterator<Iterator>::iterator
  * @return the reverse iterator to next node
  */
 template <typename Iterator>
-typename node_reverseiterator<Iterator>::self_type
+typename node_reverseiterator<Iterator>::self_type&
     node_reverseiterator<Iterator>::operator++ ()
 {
     --m_current;
@@ -1857,7 +1857,7 @@ typename node_reverseiterator<Iterator>::self_type
  * @return the reverse iterator to previous node
  */
 template <typename Iterator>
-typename node_reverseiterator<Iterator>::self_type
+typename node_reverseiterator<Iterator>::self_type&
     node_reverseiterator<Iterator>::operator-- ()
 {
     ++m_current;
@@ -1882,10 +1882,11 @@ typename node_reverseiterator<Iterator>::self_type
  * @return the reverse iterator to next node
  */
 template <typename Iterator>
-const typename node_reverseiterator<Iterator>::self_type
+const typename node_reverseiterator<Iterator>::self_type&
     node_reverseiterator<Iterator>::operator++ () const
 {
-    return iterator::operator--();
+    --m_current;
+    return *this;
 }
 
 /**
@@ -1896,7 +1897,9 @@ template <typename Iterator>
 const typename node_reverseiterator<Iterator>::self_type
     node_reverseiterator<Iterator>::operator++ (int ) const
 {
-    return iterator::operator--(1);
+    self_type temp = *this;
+    --m_current;
+    return temp;
 }
 
 /**
@@ -1904,10 +1907,11 @@ const typename node_reverseiterator<Iterator>::self_type
  * @return the reverse iterator to previous node
  */
 template <typename Iterator>
-const typename node_reverseiterator<Iterator>::self_type
+const typename node_reverseiterator<Iterator>::self_type&
     node_reverseiterator<Iterator>::operator-- () const
 {
-   return iterator::operator++();
+    ++m_current;
+    return *this;
 }
 
 /**
@@ -1918,7 +1922,9 @@ template <typename Iterator>
 const typename node_reverseiterator<Iterator>::self_type
     node_reverseiterator<Iterator>::operator-- (int ) const
 {
-    return iterator::operator++(1);
+    self_type temp = *this;
+    ++m_current;
+    return temp;
 }
 
 /**
