@@ -391,7 +391,7 @@ pos_type table<Source, Key>::remove(const pos_type beg, const count_type count)
         const skey_type& cast_skey = base_class::cast_skey();
         if (base_class::count() == count)
         {
-            base_class::do_clear();
+            this->do_clear();
             return cast_skey.beg;
         }
         else if (beg == cast_skey.beg)
@@ -430,7 +430,7 @@ count_type table<Source, Key>::remove_back(const count_type count)
 {
     if (count >= base_class::count())
     {
-        base_class::do_clear();
+        this->do_clear();
         return 0;
     }
     else
