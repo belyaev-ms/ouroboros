@@ -510,7 +510,7 @@ count_type data_set<Key, Record, Index, Interface>::remove_table(const key_type 
     skey_type& skey = m_skeys()[key];
     const spos_type pos = skey.pos;
     skey.pos = -pos - 1;
-    session_key->write(&skey, pos);
+    session_key->write(skey, pos);
     ++m_hole_count();
     return session_key->end_pos();
 }
