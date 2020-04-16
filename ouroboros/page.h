@@ -129,6 +129,12 @@ private:
         cache_type() :
             m_valid(false)
         {
+                for (size_t i = 0; i < REGIONS_COUNT; ++i)
+                {
+                    m_pregions[i] = NULL;
+                    m_raw_sizes[i] = 0;
+                    m_alligned_sizes[i] = 0;
+                }
         }
         void make(const file_region& region)
         {
