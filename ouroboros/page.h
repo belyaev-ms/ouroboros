@@ -1,6 +1,6 @@
 /**
  * @file    page.h
- * The page is a part fo a data file
+ * The page is a part of a data file
  */
 
 #ifndef OUROBOROS_PAGE_H
@@ -9,6 +9,7 @@
 #include "ouroboros/global.h"
 #include <vector>
 #include <map>
+#include <string.h>
 
 namespace ouroboros
 {
@@ -82,6 +83,20 @@ public:
     size_type convert_size(const size_type raw_size) const;
     void make_cache(const size_type size) const;
 private:
+#if OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+    struct cache_type
+    {
+        cache_type() :
+            valid(false),
+            raw_size(0),
+            alligned_size(0)
+        {}
+        bool valid;
+        size_type raw_size;
+        size_type alligned_size;
+    };
+    typedef std::pair<offset_type, bool> result_type;
+#else
     struct cached_region
     {
         cached_region() :
@@ -100,12 +115,77 @@ private:
         const file_region *pregion;
     };
     typedef std::pair<offset_type, cached_region> result_type;
+#endif
+#if !defined(OUROBOROS_FILE_REGION_CACHE_TYPE) || (OUROBOROS_FILE_REGION_CACHE_TYPE == 0)
     typedef std::map<offset_type, cached_region> cache_type;
+#elif OUROBOROS_FILE_REGION_CACHE_TYPE == 1
+    class cache_type
+    {
+        enum
+        {
+            REGIONS_COUNT = 3
+        };
+    public:
+        cache_type() :
+            m_valid(false)
+        {
+        }
+        void make(const file_region& region)
+        {
+            if (region.m_count != 1 || region.m_size > 0 ||
+                region.m_regions.size() != 2 || region.m_regions[0].m_count != 1 ||
+                0 == region.m_regions[0].m_size || region.m_regions[1].m_regions.size() != 2 ||
+                region.m_regions[1].m_regions[0].m_count != 1 || 0 == region.m_regions[1].m_regions[0].m_size ||
+                region.m_regions[1].m_regions[1].m_count != 1 || 0 == region.m_regions[1].m_regions[1].m_size)
+            {
+                m_valid = false;
+                return;
+            }
+            m_pregions[0] = &region.m_regions[0];
+            m_pregions[1] = &region.m_regions[1].m_regions[0];
+            m_pregions[2] = &region.m_regions[1].m_regions[1];
+            for (size_t i = 0; i < REGIONS_COUNT; ++i)
+            {
+                m_raw_sizes[i] = m_pregions[i]->m_size;
+                m_alligned_sizes[i] = file_page_type::static_align_size(m_raw_sizes[i]);
+            }
+            m_valid = true;
+        }
+        result_type get_cached_region(const offset_type raw_offset) const
+        {
+            if (raw_offset < m_raw_sizes[0])
+            {
+                return std::make_pair(0, cached_region(0, m_pregions[0]));
+            }
+            const size_type s1 = (raw_offset - m_raw_sizes[0]);
+            const size_type s2 = (m_raw_sizes[1] + m_raw_sizes[2]);
+            const size_t n = s1 / s2;
+            return (s1 - n * s2 < m_raw_sizes[1]) ?
+                std::make_pair(m_raw_sizes[0] + n * s2,
+                    cached_region(m_alligned_sizes[0] +
+                    n * (m_alligned_sizes[1] + m_alligned_sizes[2]), m_pregions[1])) :
+                std::make_pair(m_raw_sizes[0] + n * s2 + m_raw_sizes[1],
+                    cached_region(m_alligned_sizes[0] + m_alligned_sizes[1] +
+                    n * (m_alligned_sizes[1] + m_alligned_sizes[2]), m_pregions[2]));
+        }
+        inline bool valid() const
+        {
+            return m_valid;
+        }
+    private:
+        const file_region *m_pregions[REGIONS_COUNT];
+        size_type m_raw_sizes[REGIONS_COUNT];
+        size_type m_alligned_sizes[REGIONS_COUNT];
+        bool m_valid;
+    };
+#endif
     size_type align_size(const size_type size) const;
     result_type get_offset(const pos_type index, count_type& count, offset_type offset) const;
     result_type get_offset(offset_type& raw_offset, offset_type offset) const;
+#if !defined(OUROBOROS_FILE_REGION_CACHE_TYPE) || (OUROBOROS_FILE_REGION_CACHE_TYPE == 0)
     result_type do_make_cache(cache_type& cache, offset_type max_size, offset_type& raw_offset,
             offset_type offset) const;
+#endif
 private:
     count_type m_count;
     size_type m_size;
@@ -550,12 +630,20 @@ typename file_region<FilePage>::range_type file_region<FilePage>::
     if (index > 0)
     {
         result = get_offset(index, count, 0);
+#if OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+        OUROBOROS_ASSERT(result.second);
+#else
         OUROBOROS_ASSERT(result.second.valid());
+#endif
         range.first = result.first;
     }
     count = 0;
     result = get_offset(index + 1, count, 0);
+#if OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+    OUROBOROS_ASSERT(result.second);
+#else
     OUROBOROS_ASSERT(result.second.valid());
+#endif
     range.second = result.first;
     return range;
 }
@@ -574,29 +662,45 @@ typename file_region<FilePage>::result_type file_region<FilePage>::
     if (m_size > 0)
     {
         const size_type size = file_page_type::static_align_size(m_size);
-        if (m_count + count >= index || m_count == 0)
+        if (0 == m_count || m_count + count >= index)
         {
+#if OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+            return std::make_pair(size * (index - count) + offset, true);
+#else
             return std::make_pair(size * (index - count) + offset, cached_region(offset, this));
+#endif
         }
         count += m_count;
+#if OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+        return std::make_pair(m_count * size + offset, false);
+#else
         return std::make_pair(m_count * size + offset, cached_region());
+#endif
     }
     else
     {
-        for (size_t i = 0; i < m_count || 0 == m_count; ++i)
+        for (size_t i = 0; 0 == m_count || i < m_count; ++i)
         {
             for (typename region_list::const_iterator it = m_regions.begin();
                     it != m_regions.end(); ++it)
             {
                 const result_type result = it->get_offset(index, count, offset);
+#if OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+                if (result.second)
+#else
                 if (result.second.valid())
+#endif
                 {
                     return result;
                 }
                 offset = result.first;
             }
         }
+#if OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+        return std::make_pair(offset, false);
+#else
         return std::make_pair(offset, cached_region());
+#endif
     }
 }
 
@@ -608,6 +712,7 @@ typename file_region<FilePage>::result_type file_region<FilePage>::
 template <typename FilePage>
 offset_type file_region<FilePage>::convert_offset(const offset_type raw_offset) const
 {
+#if !defined(OUROBOROS_FILE_REGION_CACHE_TYPE) || (OUROBOROS_FILE_REGION_CACHE_TYPE == 0)
     typename cache_type::iterator it = m_cache.lower_bound(raw_offset);
     if (it != m_cache.end() && (it->first == raw_offset || --it != m_cache.end()))
     {
@@ -634,6 +739,26 @@ offset_type file_region<FilePage>::convert_offset(const offset_type raw_offset) 
         m_cache.insert(it, std::make_pair(offset, result.second));
     }
     return result.first;
+#elif OUROBOROS_FILE_REGION_CACHE_TYPE == 1
+    if (!m_cache.valid())
+    {
+        offset_type offset = raw_offset;
+        const result_type result = get_offset(offset, 0);
+        OUROBOROS_ASSERT(result.second.valid());
+        return result.first;
+    }
+    else
+    {
+        result_type cached_region = m_cache.get_cached_region(raw_offset);
+        offset_type offset = raw_offset - cached_region.first;
+        return cached_region.second.pregion->get_offset(offset, cached_region.second.offset).first;
+    }
+#elif OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+    offset_type offset = raw_offset;
+    const result_type result = get_offset(offset, 0);
+    OUROBOROS_ASSERT(result.second);
+    return result.first;
+#endif
 }
 
 /**
@@ -646,7 +771,11 @@ size_type file_region<FilePage>::convert_size(const size_type raw_size) const
 {
     offset_type offset = raw_size;
     const result_type result = get_offset(offset, 0);
+#if OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+    OUROBOROS_ASSERT(offset == 0 || result.second);
+#else
     OUROBOROS_ASSERT(offset == 0 || result.second.valid());
+#endif
     return result.first;
 }
 
@@ -663,18 +792,65 @@ typename file_region<FilePage>::result_type file_region<FilePage>::
     if (m_size > 0)
     {
         const size_type size = file_page_type::static_align_size(m_size);
-        if (raw_offset < m_count * m_size || 0 == m_count)
+        if (0 == m_count || raw_offset < m_count * m_size)
         {
             const count_type count = raw_offset / m_size;
             return std::make_pair(count * size +
                 file_page_type::static_convert(raw_offset % m_size) + offset,
+#if OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+                true);
+#else
                 cached_region(offset, this));
+#endif
         }
         raw_offset -= m_count * m_size;
+#if OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+        return std::make_pair(m_count * size + offset, false);
+#else
         return std::make_pair(m_count * size + offset, cached_region());
+#endif
     }
     else
     {
+#if OUROBOROS_FILE_REGION_CACHE_TYPE == 2
+        size_t regions_count = m_count;
+        if (!m_cache.valid)
+        {
+            const offset_type prev_raw_offset = raw_offset;
+            const offset_type prev_offset = offset;
+            for (typename region_list::const_iterator it = m_regions.begin();
+                    it != m_regions.end(); ++it)
+            {
+                const result_type result = it->get_offset(raw_offset, offset);
+                if (result.second)
+                {
+                    return result;
+                }
+                offset = result.first;
+            }
+            m_cache.raw_size = prev_raw_offset - raw_offset;
+            m_cache.alligned_size = offset - prev_offset;
+            --regions_count;
+        }
+        if (0 == m_count || raw_offset < regions_count * m_cache.raw_size)
+        {
+            const count_type count = raw_offset / m_cache.raw_size;
+            offset += count * m_cache.alligned_size;
+            raw_offset -= count * m_cache.raw_size;
+            for (typename region_list::const_iterator it = m_regions.begin();
+                    it != m_regions.end(); ++it)
+            {
+                const result_type result = it->get_offset(raw_offset, offset);
+                if (result.second)
+                {
+                    return result;
+                }
+                offset = result.first;
+            }
+            OUROBOROS_THROW_BUG("error: wrong result");
+        }
+        return std::make_pair(regions_count * m_cache.alligned_size + offset, false);
+#else
         for (size_t i = 0; i < m_count || 0 == m_count; ++i)
         {
             for (typename region_list::const_iterator it = m_regions.begin();
@@ -689,9 +865,11 @@ typename file_region<FilePage>::result_type file_region<FilePage>::
             }
         }
         return std::make_pair(offset, cached_region());
+#endif
     }
 }
 
+#if !defined(OUROBOROS_FILE_REGION_CACHE_TYPE) || (OUROBOROS_FILE_REGION_CACHE_TYPE == 0)
 /**
  * Make a cache
  * @param cache the cache
@@ -736,6 +914,7 @@ typename file_region<FilePage>::result_type file_region<FilePage>::
         return std::make_pair(offset, cached_region());
     }
 }
+#endif
 
 /**
  * Make a cache
@@ -744,9 +923,13 @@ typename file_region<FilePage>::result_type file_region<FilePage>::
 template <typename FilePage>
 void file_region<FilePage>::make_cache(const size_type size) const
 {
+#if !defined(OUROBOROS_FILE_REGION_CACHE_TYPE) || (OUROBOROS_FILE_REGION_CACHE_TYPE == 0)
     m_cache.clear();
     offset_type offset = size;
     do_make_cache(m_cache, size, offset, 0);
+#elif OUROBOROS_FILE_REGION_CACHE_TYPE == 1
+    m_cache.make(*this);
+#endif
 }
 
 //==============================================================================
@@ -800,4 +983,3 @@ typename status_file_page<FilePage, Status>::status_type
 }   //namespace ouroboros
 
 #endif /* OUROBOROS_PAGE_H */
-

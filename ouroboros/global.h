@@ -21,6 +21,8 @@
 #define OUROBOROS_OPTIMIZATION_NODE_RW ///< optimize i/o opeartions of rbtree
 #define OUROBOROS_FASTRBTREE_ENABLED ///< use fastrbtree
 #define OUROBOROS_NODECACHE_ENABLED ///< use cache of nodes for rbtree
+#define OUROBOROS_FILE_REGION_CACHE_TYPE 1 ///< use the first type of file region cache
+//#define OUROBOROS_SYNC_ENABLED ///< use sync operation for fixation of file data
 //#define OUROBOROS_SHOW_MEMORY_INFO ///< show information about the status of shared memory
 #endif
 
