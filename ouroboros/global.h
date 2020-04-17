@@ -10,7 +10,7 @@
 #include <stdint.h>
 
 #ifdef OUROBOROS_PORT
-#include "../port/port.h"
+#include "ouroboros_port.h"
 #endif
 
 #include "ouroboros/log.h"
