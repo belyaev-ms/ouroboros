@@ -167,12 +167,15 @@ void base_file::write(const void *buffer, size_type size, const offset_type pos)
 //virtual
 size_type base_file::do_resize(const size_type size)
 {
+#ifdef OUROBOROS_SECURE_FILE_SIZEUP
     const size_type current_size = base_file::do_size();
+#endif
     if (ftruncate(m_fd, size) == -1)
     {
         OUROBOROS_THROW_ERROR(io_error, "error of changing size: " << 
             PR(m_fd) << PR(m_name) << PR(size) << PE(errno));
     }
+#ifdef OUROBOROS_SECURE_FILE_SIZEUP
     if (current_size < size)
     {
         char buffer[OUROBOROS_PAGE_SIZE] = { 0 };
@@ -182,6 +185,7 @@ size_type base_file::do_resize(const size_type size)
             base_file::do_write(buffer, count, pos);
         }
     }
+#endif
     return size;
 }
 
