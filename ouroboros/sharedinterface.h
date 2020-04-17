@@ -15,6 +15,7 @@
 #include "ouroboros/sharedcontainer.h"
 #include "ouroboros/sharedlocker.h"
 #include "ouroboros/interface.h"
+#include <boost/interprocess/sync/interprocess_mutex.hpp>
 
 namespace ouroboros
 {
@@ -34,6 +35,7 @@ struct base_table_shared_interface
             locker<mutex_lock>(name, scoped_count, sharable_count)
         {}
     };
+    typedef gateway<boost::interprocess::interprocess_mutex> gateway_type;
 };
 
 /**

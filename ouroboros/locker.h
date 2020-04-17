@@ -60,7 +60,7 @@ class guard
 {
 public:
     typedef Locker locker_type;
-    explicit guard(const locker_type& locker) :
+    explicit guard(locker_type& locker) :
         m_locker(locker)
     {
         m_locker.lock();
@@ -73,7 +73,7 @@ private:
     guard(guard&);
     guard& operator=(guard&);
 private:
-    const locker_type& m_locker;
+    locker_type& m_locker;
 };
 
 /**

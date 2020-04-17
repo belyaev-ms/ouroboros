@@ -23,8 +23,10 @@ class table_lock
 {
 public:
     static inline void lock_sharable(const Table& table); ///< lock the table for reading
+    static inline void lock_sharable(const Table& table, const size_t timeout); ///< lock the table for reading with a timeout
     static inline void unlock_sharable(const Table& table); ///< unlock the table for reading
     static inline void lock_scoped(const Table& table); ///< lock the table for writing
+    static inline void lock_scoped(const Table& table, const size_t timeout); ///< lock the table for writing with a timeout
     static inline void unlock_scoped(const Table& table); ///< unlock the table for writing
 };
 
@@ -33,8 +35,10 @@ class table_lock<Table, internal_locker>
 {
 public:
     static inline void lock_sharable(const Table& table); ///< lock the table for reading
+    static inline void lock_sharable(const Table& table, const size_t timeout); ///< lock the table for reading with a timeout
     static inline void unlock_sharable(const Table& table); ///< unlock the table for reading
     static inline void lock_scoped(const Table& table); ///< lock the table for writing
+    static inline void lock_scoped(const Table& table, const size_t timeout); ///< lock the table for writing with a timeout
     static inline void unlock_scoped(const Table& table); ///< unlock the table for writing
 };
 
@@ -47,9 +51,11 @@ class sharable_table_lock
 public:
     typedef Table table_type;
     explicit inline sharable_table_lock(const table_type& table);
+    inline sharable_table_lock(const table_type& table, const size_t timeout);
     inline ~sharable_table_lock();
 protected:
     inline void lock() const;
+    inline void lock(const size_t timeout) const;
     inline void unlock() const;
 private:
     const table_type& m_table;
@@ -64,9 +70,11 @@ class scoped_table_lock
 public:
     typedef Table table_type;
     explicit inline scoped_table_lock(const table_type& table);
+    inline scoped_table_lock(const table_type& table, const size_t timeout);
     inline ~scoped_table_lock();
 protected:
     inline void lock() const;
+    inline void lock(const size_t timeout) const;
     inline void unlock() const;
 private:
     const table_type& m_table;
@@ -82,11 +90,13 @@ public:
     typedef Table table_type;
     table_guard();
     explicit table_guard(const bool lock);
+    explicit table_guard(const bool lock, const size_t timeout);
     ~table_guard();
     inline void lock(table_type& table) const;
     inline void unlock() const;
 public:
     const bool m_lock;
+    const size_t m_timeout;
     mutable table_type *m_table;
 };
 
@@ -152,8 +162,10 @@ public:
     inline void recovery(); ///< recovery the metadata of the table by the key
 
     inline void lock_sharable() const; ///< lock the table for reading
+    inline void lock_sharable(const size_t timeout) const; ///< lock the table for reading with a timeout
     inline void unlock_sharable() const; ///< unlock the table for reading
     inline void lock_scoped() const; ///< lock the table for writing
+    inline void lock_scoped(const size_t timeout) const; ///< lock the table for writing with a timeout
     inline void unlock_scoped() const; ///< unlock the table for writing
 
     inline count_type sharable_count() const; ///< get the count of the reading lock
@@ -232,6 +244,25 @@ inline void table_lock<Table, Locker>::lock_sharable(const Table& table)
 }
 
 /**
+ * Lock the table for reading with a timeout
+ * @param table the table
+ * @param timeout the timeout
+ */
+//static
+template <typename Table, typename Locker>
+inline void table_lock<Table, Locker>::lock_sharable(const Table& table, const size_t timeout)
+{
+    if (0 == timeout)
+    {
+        table.locker().lock_sharable();
+    }
+    else
+    {
+        table.locker().lock_sharable(timeout);
+    }
+}
+
+/**
  * Unlock the table for reading
  * @param table the table
  */
@@ -251,6 +282,25 @@ template <typename Table, typename Locker>
 inline void table_lock<Table, Locker>::lock_scoped(const Table& table)
 {
     table.locker().lock();
+}
+
+/**
+ * Lock the table for writing with a timeout
+ * @param table the table
+ * @param timeout the timeout
+ */
+//static
+template <typename Table, typename Locker>
+inline void table_lock<Table, Locker>::lock_scoped(const Table& table, const size_t timeout)
+{
+    if (0 == timeout)
+    {
+        table.locker().lock();
+    }
+    else
+    {
+        table.locker().lock(timeout);
+    }
 }
 
 /**
@@ -282,6 +332,19 @@ inline void table_lock<Table, internal_locker>::lock_sharable(const Table& table
 }
 
 /**
+ * Lock the table for reading with a timeout
+ * @param table the table
+ * @param timeout the timeout
+ */
+//static
+template <typename Table>
+inline void table_lock<Table, internal_locker>::lock_sharable(const Table& table,
+    const size_t timeout)
+{
+    lock_sharable();
+}
+
+/**
  * Unlock the table for reading
  * @param table the table
  */
@@ -307,6 +370,19 @@ inline void table_lock<Table, internal_locker>::lock_scoped(const Table& table)
     {
         table.source().lock(table.index());
     }
+}
+
+/**
+ * Lock the table for writing with a timeout
+ * @param table the table
+ * @param timeout the timeout
+ */
+//static
+template <typename Table>
+inline void table_lock<Table, internal_locker>::lock_scoped(const Table& table,
+    const size_t timeout)
+{
+    lock_scoped();
 }
 
 /**
@@ -338,6 +414,26 @@ inline sharable_table_lock<Table>::sharable_table_lock(const table_type& table) 
 }
 
 /**
+ * Constructor
+ * @param table the table
+ * @param timeout the timeout
+ */
+template <typename Table>
+inline sharable_table_lock<Table>::sharable_table_lock(const table_type& table,
+    const size_t timeout) :
+    m_table(table)
+{
+    if (0 == timeout)
+    {
+        lock();
+    }
+    else
+    {
+        lock(timeout);
+    }
+}
+
+/**
  * Destructor
  */
 template <typename Table>
@@ -353,6 +449,16 @@ template <typename Table>
 inline void sharable_table_lock<Table>::lock() const
 {
     m_table.lock_sharable();
+}
+
+/**
+ * Lock the table with a timeout
+ * @param timeout the timeout
+ */
+template <typename Table>
+inline void sharable_table_lock<Table>::lock(const size_t timeout) const
+{
+    m_table.lock_sharable(timeout);
 }
 
 /**
@@ -379,6 +485,26 @@ inline scoped_table_lock<Table>::scoped_table_lock(const table_type& table) :
 }
 
 /**
+ * Constructor
+ * @param table the table
+ * @param timeout the timeout
+ */
+template <typename Table>
+inline scoped_table_lock<Table>::scoped_table_lock(const table_type& table,
+    const size_t timeout) :
+    m_table(table)
+{
+    if (0 == timeout)
+    {
+        lock();
+    }
+    else
+    {
+        lock(timeout);
+    }
+}
+
+/**
  * Destructor
  */
 template <typename Table>
@@ -394,6 +520,16 @@ template <typename Table>
 inline void scoped_table_lock<Table>::lock() const
 {
     m_table.lock_scoped();
+}
+
+/**
+ * Lock the table with a timeout
+ * @param timeout the timeout
+ */
+template <typename Table>
+inline void scoped_table_lock<Table>::lock(const size_t timeout) const
+{
+    m_table.lock_scoped(timeout);
 }
 
 /**
@@ -414,6 +550,7 @@ inline void scoped_table_lock<Table>::unlock() const
 template <typename Table>
 table_guard<Table>::table_guard() :
     m_lock(true),
+    m_timeout(0),
     m_table(NULL)
 {
 }
@@ -425,6 +562,20 @@ table_guard<Table>::table_guard() :
 template <typename Table>
 table_guard<Table>::table_guard(const bool lock) :
     m_lock(lock),
+    m_timeout(0),
+    m_table(NULL)
+{
+}
+
+/**
+ * Constructor
+ * @param lock the flag for immediately lock the table
+ * @param timeout the timeout
+ */
+template <typename Table>
+table_guard<Table>::table_guard(const bool lock, const size_t timeout) :
+    m_lock(lock),
+    m_timeout(timeout),
     m_table(NULL)
 {
 }
@@ -447,7 +598,14 @@ inline void table_guard<Table>::lock(table_type& table) const
 {
     if (m_lock)
     {
-        table.lock_scoped();
+        if (0 == m_timeout)
+        {
+            table.lock_scoped();
+        }
+        else
+        {
+            table.lock_scoped(m_timeout);
+        }
         m_table = &table;
     }
 }
@@ -909,6 +1067,16 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::lock_sharable()
 }
 
 /**
+ * Lock the table for reading with a timeout
+ * @param timeout the timeout
+ */
+template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
+inline void locked_table<Table, Source, Key, Interface, Locker>::lock_sharable(const size_t timeout) const
+{
+    table_lock<table_type, locker_type>::lock_sharable(*this, timeout);
+}
+
+/**
  * Unlock the table for reading
  */
 template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
@@ -924,6 +1092,16 @@ template <template <typename, typename, typename> class Table, typename Source, 
 inline void locked_table<Table, Source, Key, Interface, Locker>::lock_scoped() const
 {
     table_lock<table_type, locker_type>::lock_scoped(*this);
+}
+
+/**
+ * Lock the table for writing with a timeout
+ * @param timeout the timeout
+ */
+template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
+inline void locked_table<Table, Source, Key, Interface, Locker>::lock_scoped(const size_t timeout) const
+{
+    table_lock<table_type, locker_type>::lock_scoped(*this, timeout);
 }
 
 /**

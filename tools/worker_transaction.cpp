@@ -49,6 +49,7 @@ struct test_table_interface
             locker<mutex_lock>(name, scoped_count, sharable_count)
         {}
     };
+    typedef gateway<boost::interprocess::interprocess_mutex> gateway_type;
 };
 struct test_interface : public base_interface<test_table_interface, tree_data_table_adapter> {};
 

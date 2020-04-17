@@ -32,6 +32,7 @@ struct test_table_interface
             locker<mutex_lock>(name, scoped_count, sharable_count)
         {}
     };
+    typedef gateway<boost::interprocess::interprocess_mutex> gateway_type;
 };
 
 typedef record3< FIELD_INT32, FIELD_FLOAT, FIELD_INT32 > record_type;

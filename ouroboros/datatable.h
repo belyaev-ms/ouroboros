@@ -58,6 +58,7 @@ class data_table : public interface_locked_table<Table, data_source<Table, Recor
 {
     typedef interface_locked_table<Table, data_source<Table, Record, Interface>, Key, Interface> base_class;
     typedef data_table<Table, Record, Key, Interface> self_type;
+    template <typename, typename, template <typename> class, typename> friend class data_set;
     template <typename, typename, typename> friend class table_pnode;
     template <typename, typename> friend class node_cache;
     template <typename> friend class rbtree;

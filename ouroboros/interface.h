@@ -14,6 +14,7 @@
 #include "ouroboros/indexedtable.h"
 #include "ouroboros/locker.h"
 #include "ouroboros/page.h"
+#include "ouroboros/gateway.h"
 
 namespace ouroboros
 {
@@ -28,6 +29,7 @@ struct base_table_memory_interface
     typedef memory_file file_type;
     typedef file_page<1> file_page_type;
     typedef stub_locker locker_type;
+    typedef gateway<locker_type> gateway_type;
 };
 
 /**

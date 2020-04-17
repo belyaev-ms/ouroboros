@@ -121,6 +121,7 @@ protected:
     typedef typename info_table_type::unsafe_table unsafe_table_info;
     typedef typename table_type::raw_record_type raw_record_type;
     typedef ouroboros::lazy_transaction<data_set> lazy_transaction_type;
+    typedef typename interface_type::gateway_type gateway_type;
 
     void init(const info_type& info); ///< initialize the dataset
     inline table_type* table(const key_type key); ///< get the table by the key
@@ -151,6 +152,7 @@ protected:
     object<pos_type, interface_type::template object_type> m_hole_count; ///< the count of removed keys
     lazy_transaction_type *m_lazy_transaction; ///< the pointer to current lazy transaction
     file_region_type m_file_region; ///< the file region
+    object<gateway_type, interface_type::template object_type> m_gateway; ///< the gateway for initialization of dataset
 };
 
 /**
@@ -213,16 +215,17 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name) :
     m_info(0, 0),
     m_info_source(m_file, 1, 1),
     m_skey_info(make_object_name(m_info_source.name(), "info")),
-    m_info_table(m_info_source, m_skey_info(), typename info_table_type::guard_type()),
+    m_info_table(m_info_source, m_skey_info(), typename info_table_type::guard_type(true, 5 * OUROBOROS_LOCK_TIMEOUT)),
     m_source(m_file, options_type(m_info_source.size() + skey_type::static_size(), 0, NIL)),
     m_key_source(m_file, 1, options_type(m_info_source.size(), NIL, 0)),
     m_skey_key(make_object_name(m_key_source.name(), "key")),
-    m_key_table(m_key_source, m_skey_key(), typename key_table_type::guard_type()),
+    m_key_table(m_key_source, m_skey_key(), typename key_table_type::guard_type(true, 5 * OUROBOROS_LOCK_TIMEOUT)),
     m_skeys(make_object_name(name, "keyList")),
     m_hole_count(make_object_name(name, "cntHole"), 0),
     m_lazy_transaction(NULL),
     m_file_region(make_file_regions<file_region_type>(m_info_source.size(),
-        skey_type::static_size(), 0))
+        skey_type::static_size(), 0)),
+    m_gateway(make_object_name(name, "gateway"))
 {
     m_file_region.make_cache(m_info_source.size());
     m_info_source.set_file_region(m_file_region);
@@ -258,7 +261,8 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name, const
     m_hole_count(make_object_name(name, "cntHole"), 0),
     m_lazy_transaction(NULL),
     m_file_region(make_file_regions<file_region_type>(m_info_source.size(), skey_type::static_size(),
-        (raw_record_type::static_size() + table_type::REC_SPACE) * rec_count))
+        (raw_record_type::static_size() + table_type::REC_SPACE) * rec_count)),
+    m_gateway(make_object_name(name, "gateway"))
 {
     OUROBOROS_DEBUG("create the dataset " << PR(name) << PR(tbl_count) << PE(rec_count));
     m_info_source.set_file_region(m_file_region);
@@ -322,7 +326,7 @@ data_set<Key, Record, Index, Interface>::~data_set()
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
 void data_set<Key, Record, Index, Interface>::init(const info_type& info)
 {
-    OUROBOROS_DEBUG("init db " << PR(m_name) << PE(info));
+    lock_write lock(m_key_table, 5 * OUROBOROS_LOCK_TIMEOUT);
     OUROBOROS_DEBUG("init dataset " << PR(m_name) << PE(info));
     if (!m_opened)
     {
@@ -386,30 +390,36 @@ void data_set<Key, Record, Index, Interface>::open()
     m_info_source.set_file_region(m_file_region);
     m_key_source.set_file_region(m_file_region);
     m_source.set_file_region(m_file_region);
-    // set the global lock until the end of the initialization
-    lock_type glock(5 * OUROBOROS_LOCK_TIMEOUT);
-    m_info_table.recovery();
-    m_key_table.recovery();
+    // set the global lazy lock until the end of the initialization
+    lazy_lock_type glock(5 * OUROBOROS_LOCK_TIMEOUT);
+    static_cast<typename info_table_type::unsafe_table&>(m_info_table).recovery();
+    static_cast<typename key_table_type::unsafe_table&>(m_key_table).recovery();
     // read the information about the dataset
     info_type info;
-    m_info_table.read(info, 0);
+    m_info_table.unsafe_read(info, 0);
     if (0 == info.tbl_count || 0 == info.rec_count)
     {
         OUROBOROS_THROW_BUG("error opening the dataset " << PE(m_name));
     }
     // initialize the dataset
     m_info = info;
+    m_file_region = make_file_regions<file_region_type>(m_info_source.size(),
+        skey_type::static_size(),
+        (raw_record_type::static_size() + table_type::REC_SPACE) * m_info.rec_count);
+    m_file_region.make_cache(m_info_source.size() + (skey_type::static_size() +
+        (raw_record_type::static_size() + table_type::REC_SPACE) * m_info.rec_count) * m_info.tbl_count);
     m_source.m_options.rec_space = table_type::REC_SPACE;
     m_source.m_options.tbl_space = skey_type::static_size();
     m_source.init(info.tbl_count, info.rec_count);
     m_key_source.m_options.rec_space = m_source.table_size();
     m_key_source.init(1, info.tbl_count);
-    m_file_region = make_file_regions<file_region_type>(m_info_source.size(),
-        skey_type::static_size(),
-        (raw_record_type::static_size() + table_type::REC_SPACE) * info.rec_count);
-    m_file_region.make_cache(m_info_source.size() + (skey_type::static_size() +
-        (raw_record_type::static_size() + table_type::REC_SPACE) * m_info.rec_count) * m_info.tbl_count);
-    init(info);
+    m_gateway->go_first_room();
+    if (m_gateway->go_middle_room() == 1)
+    {
+        init(info);
+    }
+    m_gateway->go_last_room();
+    m_gateway->leave_last_room();
 }
 
 /**
@@ -854,11 +864,11 @@ inline typename data_set<Key, Record, Index, Interface>::skey_type&
     skey_type skey;
     m_key_table.read(skey, pos);
     const key_type key = skey.key;
-    OUROBOROS_DEBUG(PR(skey) << "initialize the table");
+    OUROBOROS_DEBUG(PR(m_name) << PR(skey) << "initialize the table");
     // check the key is unique
     if (do_key_exists(key))
     {
-        OUROBOROS_THROW_BUG(PR(key) << "another table has the key");
+        OUROBOROS_THROW_BUG(PR(m_name) << PR(m_info) << PR(key) << "another table has the key");
     }
     // add the key to the list of the keys
     return m_skeys->insert(typename skey_list::value_type(key, skey)).first->second;
