@@ -273,7 +273,7 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name, const
     m_info_table.read(info, 0);
     if (m_info.version > 0 && info.version > 0 && info.version != m_info.version)
     {
-        OUROBOROS_THROW_ERROR(version_error, PR(m_info.version) << PR(info.version) << "the version of the dataset is not supported");
+        OUROBOROS_THROW_ERROR(version_error, PR(m_name) << PR(m_info.version) << PR(info.version) << "the version of the dataset is not supported");
     }
     // check the current information about the dataset
     if (info.tbl_count > 0)
@@ -281,7 +281,7 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name, const
         // check the count of the records in the tables
         if (m_info.rec_count != info.rec_count)
         {
-            OUROBOROS_THROW_ERROR(compatibility_error, PR(m_info.rec_count) << PR(info.rec_count) << "the count of the records is different");
+            OUROBOROS_THROW_ERROR(compatibility_error, PR(m_name) << PR(m_info.rec_count) << PR(info.rec_count) << "the count of the records is different");
         }
         m_info.tbl_count = std::max(m_info.tbl_count, info.tbl_count);
         m_info.key_count = info.key_count;
@@ -302,7 +302,7 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name, const
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
 data_set<Key, Record, Index, Interface>::~data_set()
 {
-    OUROBOROS_DEBUG("close db " << PE(m_name));
+    OUROBOROS_DEBUG("close dataset " << PE(m_name));
     if (m_opened)
     {
         // remove the objects of the tables
@@ -323,6 +323,7 @@ template <typename Key, typename Record, template <typename> class Index, typena
 void data_set<Key, Record, Index, Interface>::init(const info_type& info)
 {
     OUROBOROS_DEBUG("init db " << PR(m_name) << PE(info));
+    OUROBOROS_DEBUG("init dataset " << PR(m_name) << PE(info));
     if (!m_opened)
     {
         m_opened = true;
@@ -334,7 +335,7 @@ void data_set<Key, Record, Index, Interface>::init(const info_type& info)
             // if the incomplete transaction is found
             if (!success)
             {
-                OUROBOROS_INFO("recovery db " <<  PR(m_name) << PE(info));
+                OUROBOROS_INFO("recovery dataset " << PR(m_name) << PE(info));
                 //... then roll back the transaction
                 recovery();
             }
@@ -351,7 +352,7 @@ void data_set<Key, Record, Index, Interface>::init(const info_type& info)
         // check the key is valid
         if (!skey.valid())
         {
-            OUROBOROS_THROW_BUG(PR(skey) << "the key is damaged");
+            OUROBOROS_THROW_BUG(PR(m_name) << PR(skey) << "the key is damaged");
         }
         // check the key is removed
         if (skey.pos < 0)
@@ -381,7 +382,7 @@ void data_set<Key, Record, Index, Interface>::init(const info_type& info)
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
 void data_set<Key, Record, Index, Interface>::open()
 {
-    OUROBOROS_DEBUG("open db " << PE(m_name));
+    OUROBOROS_DEBUG("open dataset " << PE(m_name));
     m_info_source.set_file_region(m_file_region);
     m_key_source.set_file_region(m_file_region);
     m_source.set_file_region(m_file_region);
@@ -423,8 +424,8 @@ inline const std::string& data_set<Key, Record, Index, Interface>::name() const
 
 /**
  * Add the table to the dataset
- * @param key the key of the tabel
- * @return the postion of the table
+ * @param key the key of the table
+ * @return the position of the table
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
 pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
@@ -432,11 +433,11 @@ pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
     session_write_key session_key(*this);
     if (do_key_exists(key))
     {
-        OUROBOROS_THROW_BUG(PR(key) << "another table has the key");
+        OUROBOROS_THROW_BUG(PR(m_name) << PR(key) << "another table has the key");
     }
     if (m_skeys->size() >= m_info.tbl_count && 0 == m_hole_count())
     {
-        OUROBOROS_THROW_ERROR(range_error, PR(key) << PR(m_info.tbl_count) << "the count of the table is too large");
+        OUROBOROS_THROW_ERROR(range_error, PR(m_name) << PR(key) << PR(m_info.tbl_count) << "the count of the table is too large");
     }
 
     // check the removed keys are exists
@@ -462,7 +463,7 @@ pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
                 return session_key->back_pos();
             }
         }
-        OUROBOROS_THROW_BUG("the sign of removed key is exists, but the key is not found!");
+        OUROBOROS_THROW_BUG(PR(m_name) << "the sign of removed key is exists, but the key is not found!");
     }
 
     // add the key and the table to the dataset
@@ -473,6 +474,7 @@ pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
     m_tables.insert(typename table_list::value_type(key, table));
     table->clear();
     table->recovery();
+    OUROBOROS_DEBUG(PR(m_name) << "add table has " << PE(skey));
     const pos_type result = session_key->add(skey);
     return result;
 }
@@ -488,7 +490,7 @@ count_type data_set<Key, Record, Index, Interface>::remove_table(const key_type 
     session_write_key session_key(*this);
     if (!do_key_exists(key))
     {
-        OUROBOROS_THROW_BUG(PR(key) << "the key is not found");
+        OUROBOROS_THROW_BUG(PR(m_name) << PR(key) << "the key is not found");
     }
 
     // check the table is exists
@@ -561,7 +563,7 @@ inline typename data_set<Key, Record, Index, Interface>::table_type*
     // check the table is not removed
     if (!check_table(key))
     {
-        OUROBOROS_ERROR(PR(key) << "the table is removed");
+        OUROBOROS_ERROR(PR(m_name) << PR(key) << "the table is removed");
         return NULL;
     }
     // check the table is exists
@@ -572,7 +574,7 @@ inline typename data_set<Key, Record, Index, Interface>::table_type*
     }
     else if (!do_key_exists(key))
     {
-        OUROBOROS_ERROR(PR(key) << "the key is not found");
+        OUROBOROS_ERROR(PR(m_name) << PR(key) << "the key is not found");
         return NULL;
     }
     else
@@ -842,7 +844,7 @@ inline void data_set<Key, Record, Index, Interface>::recovery()
 
 /**
  * Load the key
- * @param pos the position of the ket
+ * @param pos the position of the key
  * @return the data of the key
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
