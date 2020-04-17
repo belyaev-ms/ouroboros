@@ -287,7 +287,7 @@ std::ostream& operator << (std::ostream& s, const record1<F1>& record)
 template <typename F1>
 std::istream& operator >> (std::istream& s, record1<F1>& record)
 {
-    typename F1::data_type field;
+    typename F1::data_type field = typename F1::data_type();
     s >> field;
     record.field1(field);
     return s;
@@ -379,7 +379,7 @@ std::istream& operator >> (std::istream& s, record2<F1, F2>& record)
     s >> static_cast< record1<F1>& >(record);
     std::string delim;
     s >> delim;
-    typename F2::data_type field;
+    typename F2::data_type field = typename F2::data_type();
     s >> field;
     record.field2(field);
     return s;
@@ -473,7 +473,7 @@ std::istream& operator >> (std::istream& s, record3<F1, F2, F3>& record)
     s >> static_cast< record2<F1, F2>& >(record);
     std::string delim;
     s >> delim;
-    typename F3::data_type field;
+    typename F3::data_type field = typename F3::data_type();
     s >> field;
     record.field3(field);
     return s;
@@ -568,7 +568,7 @@ std::istream& operator >> (std::istream& s, record4<F1, F2, F3, F4>& record)
     s >> static_cast< record3<F1, F2, F3>& >(record);
     std::string delim;
     s >> delim;
-    typename F4::data_type field;
+    typename F4::data_type field = typename F4::data_type();
     s >> field;
     record.field4(field);
     return s;
@@ -664,7 +664,7 @@ std::istream& operator >> (std::istream& s, record5<F1, F2, F3, F4, F5>& record)
     s >> static_cast< record4<F1, F2, F3, F4>& >(record);
     std::string delim;
     s >> delim;
-    typename F5::data_type field;
+    typename F5::data_type field = typename F5::data_type();
     s >> field;
     record.field5(field);
     return s;
@@ -761,7 +761,7 @@ std::istream& operator >> (std::istream& s, record6<F1, F2, F3, F4, F5, F6>& rec
     s >> static_cast< record5<F1, F2, F3, F4, F5>& >(record);
     std::string delim;
     s >> delim;
-    typename F6::data_type field;
+    typename F6::data_type field = typename F6::data_type();
     s >> field;
     record.field6(field);
     return s;
