@@ -90,6 +90,7 @@ public:
     pos_type find(Finder& finder, const pos_type beg, const count_type count) const; ///< find a record [beg, end)
     template <typename Finder>
     pos_type rfind(Finder& finder, const pos_type end, const count_type count) const; ///< reverse find a record [beg, end)
+    count_type get_range_size(const field_type& beg, const field_type& end) const; ///< get a count of records that have index in range [beg, end)
 
     inline bool refresh(); ///< refresh the metadata of the table by the key
     inline void update(); ///< update the key by the metadata of the table
@@ -1035,6 +1036,26 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
         }
     }
     return NIL;
+}
+
+/**
+ * Get a count of records that have index in range [beg, end)
+ * @param beg the begin value of the index field
+ * @param end the end value of the index field
+ * @return the count of records that have index in range [beg, end)
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+count_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+    get_range_size(const field_type& beg, const field_type& end) const
+{
+    typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
+    typename tree_type::const_iterator itend = m_tree.upper_bound(end);
+    count_type count = 0;
+    for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
+    {
+        ++count;
+    }
+    return count;
 }
 
 /**

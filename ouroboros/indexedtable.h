@@ -76,6 +76,7 @@ public:
     pos_type find_in_range(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record that has index in range [beg, end)
     template <typename Finder>
     pos_type rfind_in_range(Finder& finder, const field_type& beg, const field_type& end) const; ///< reverse find a record that has index in range [beg, end)
+    count_type get_range_size(const field_type& beg, const field_type& end) const; ///< get a count of records that have index in range [beg, end)
 
     void clear(); ///< clear the table
     inline void build_indexes(); ///< build the indexes of the records
@@ -798,6 +799,27 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
         }
     }
     return NIL;
+}
+
+/**
+ * Get a count of records that have index in range [beg, end)
+ * @param beg the begin value of the index field
+ * @param end the end value of the index field
+ * @return the count of records that have index in range [beg, end)
+ */
+template <template <typename, typename, typename> class Table, typename Record,
+        template <typename> class Index, typename Key, typename Interface>
+count_type indexed_table<Table, Record, Index, Key, Interface>::
+    get_range_size(const field_type& beg, const field_type& end) const
+{
+    typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
+    typename index_list::const_iterator itend = m_indexes.upper_bound(end);
+    count_type count = 0;
+    for (typename index_list::const_iterator it = itbeg; it != itend; ++it)
+    {
+        ++count;
+    }
+    return count;
 }
 
 /**
