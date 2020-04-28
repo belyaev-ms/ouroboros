@@ -329,12 +329,17 @@ template <typename Key, typename Record, template <typename> class Index, typena
 void data_set<Key, Record, Index, Interface>::synchro_init(const info_type& info, const bool verify)
 {
     m_gateway->go_first_room();
+    m_gateway->skip_step();
     if (m_gateway->go_middle_room() == 1)
     {
+        m_gateway->skip_step();
         init(info, verify);
     }
+    m_gateway->skip_step();
     m_gateway->go_last_room();
+    m_gateway->skip_step();
     m_gateway->leave_last_room();
+    m_gateway->skip_step();
 }
 
 /**
