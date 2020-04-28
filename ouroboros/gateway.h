@@ -49,7 +49,7 @@ namespace ouroboros
  *  door4   +---+   +---+
  *            |       |
  *
- *  The third door is allways opened:
+ *  The third door is always opened:
  *            |
  *  door1   +---+
  *  room1   |   |
@@ -94,6 +94,7 @@ public:
     size_t go_middle_room();
     void go_last_room();
     void leave_last_room();
+    void skip_step() const;
 private:
     bool try_go_first_room();
     size_t try_go_middle_room();
@@ -112,7 +113,8 @@ public:
     void go_first_room() {}
     size_t go_middle_room() { return 1; }
     void go_last_room() {}
-    void leave_last_room() {};
+    void leave_last_room() {}
+    void skip_step() const {}
 };
 
 //==============================================================================
@@ -178,6 +180,15 @@ void gateway<Locker>::leave_last_room()
     {
         sched_yield();
     }
+}
+
+/**
+ * Skip the next step
+ */
+template <typename Locker>
+void gateway<Locker>::skip_step() const
+{
+    sched_yield();
 }
 
 /**
