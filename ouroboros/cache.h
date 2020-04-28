@@ -55,7 +55,7 @@ class cache_page
 {
     template <typename, int, int> friend class cache;
 public:
-    enum {SIZE = pageSize};
+    enum { SIZE = pageSize };
     typedef Cache cache_type;
     typedef typename cache_type::page_status_type page_status_type;
 
@@ -84,12 +84,12 @@ protected:
     inline void clean(const iterator& it); ///< clean the page in the cache
     inline void reset(); ///< reset the page
 private:
+    char m_data[SIZE]; ///< data of the page
     cache_page *m_prev; ///< the previous page
     cache_page *m_next; ///< the next page
     cache_type *m_cache; ///< the cache
     pos_type m_index; ///< the index of the page
     bool m_dirty; ///< the sign of dirty data
-    char m_data[SIZE]; ///< data of the page
 };
 
 /**
