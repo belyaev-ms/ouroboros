@@ -76,7 +76,7 @@ public:
     data_set(const std::string& name, const count_type tbl_count, const count_type rec_count,
         const count_type ver = 0, const void *user_data = NULL, const size_type user_size = 0);
     ~data_set();
-    void open(); ///< open the dataset
+    void open(const bool verify = true); ///< open the dataset
     inline const std::string& name() const; ///< get the name of the dataset
 
     pos_type add_table(const key_type key); ///< add the table to the dataset
@@ -123,7 +123,8 @@ protected:
     typedef ouroboros::lazy_transaction<data_set> lazy_transaction_type;
     typedef typename interface_type::gateway_type gateway_type;
 
-    void init(const info_type& info); ///< initialize the dataset
+    void init(const info_type& info, const bool verify); ///< initialize the dataset
+    void synchro_init(const info_type& info, const bool verify); ///< initialize the dataset synchronously
     inline table_type* table(const key_type key); ///< get the table by the key
     bool check_table(const key_type key); ///< check the table is not removed
 
@@ -295,7 +296,7 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name, const
     m_file_region.make_cache(m_info_source.size() + (skey_type::static_size() +
         (raw_record_type::static_size() + table_type::REC_SPACE) * m_info.rec_count) * m_info.tbl_count);
     // initialize the dataset
-    init(m_info);
+    init(m_info, true);
     // update the information about the dataset
     update_info();
 }
@@ -320,19 +321,37 @@ data_set<Key, Record, Index, Interface>::~data_set()
 }
 
 /**
- * Initialize the dataset
+ * Initialize the dataset synchronously
  * @param info the information about the dataset
+ * @param vefify the flag if the verification is required
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-void data_set<Key, Record, Index, Interface>::init(const info_type& info)
+void data_set<Key, Record, Index, Interface>::synchro_init(const info_type& info, const bool verify)
+{
+    m_gateway->go_first_room();
+    if (m_gateway->go_middle_room() == 1)
+    {
+        init(info, verify);
+    }
+    m_gateway->go_last_room();
+    m_gateway->leave_last_room();
+}
+
+/**
+ * Initialize the dataset
+ * @param info the information about the dataset
+ * @param vefify the flag if the verification is required
+ */
+template <typename Key, typename Record, template <typename> class Index, typename Interface>
+void data_set<Key, Record, Index, Interface>::init(const info_type& info, const bool verify)
 {
     lock_write lock(m_key_table, 5 * OUROBOROS_LOCK_TIMEOUT);
-    OUROBOROS_DEBUG("init dataset " << PR(m_name) << PE(info));
+    OUROBOROS_DEBUG("init dataset " << PR(m_name) << PR(verify) << PE(info));
     if (!m_opened)
     {
         m_opened = true;
         // initialize the file of the dataset
-        const bool success = m_file.init();
+        const bool success = verify ? m_file.init() : true;
         // check the need to generate a list of keys
         if (!m_skeys->empty())
         {
@@ -382,9 +401,10 @@ void data_set<Key, Record, Index, Interface>::init(const info_type& info)
 
 /**
  * Open the dataset
+ * @param vefify the flag if the verification is required
  */
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
-void data_set<Key, Record, Index, Interface>::open()
+void data_set<Key, Record, Index, Interface>::open(const bool verify)
 {
     OUROBOROS_DEBUG("open dataset " << PE(m_name));
     m_info_source.set_file_region(m_file_region);
@@ -413,13 +433,7 @@ void data_set<Key, Record, Index, Interface>::open()
     m_source.init(info.tbl_count, info.rec_count);
     m_key_source.m_options.rec_space = m_source.table_size();
     m_key_source.init(1, info.tbl_count);
-    m_gateway->go_first_room();
-    if (m_gateway->go_middle_room() == 1)
-    {
-        init(info);
-    }
-    m_gateway->go_last_room();
-    m_gateway->leave_last_room();
+    synchro_init(info, verify);
 }
 
 /**
