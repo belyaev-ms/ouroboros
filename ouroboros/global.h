@@ -24,6 +24,7 @@
 #define OUROBOROS_FILE_REGION_CACHE_TYPE 1 ///< use the first type of file region cache
 //#define OUROBOROS_SYNC_ENABLED ///< use sync operation for fixation of file data
 //#define OUROBOROS_SHOW_MEMORY_INFO ///< show information about the status of shared memory
+//#define OUROBOROS_STRICT_ASSERT_ENABLED ///< use strict assert
 #endif
 
 namespace ouroboros
