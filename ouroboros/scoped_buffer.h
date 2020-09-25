@@ -24,9 +24,11 @@ class scoped_buffer
 public:
     typedef T value_type;
     typedef value_type* pointer_type;
-    inline explicit scoped_buffer(const size_t size = sizeof(T)) :
-        m_buffer(malloc(size))
+    inline explicit scoped_buffer(const size_t size = sizeof(T))
     {
+        OUROBOROS_ASSERT(size > 0);
+        m_buffer = malloc(size);
+        assert(m_buffer != NULL);
     }
     inline ~scoped_buffer()
     {
