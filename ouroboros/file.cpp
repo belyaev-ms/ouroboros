@@ -25,17 +25,35 @@ void base_file::remove(const std::string& name)
 }
 
 /**
+ * Open a file
+ * @param name the name of the file
+ * @return the file descriptor
+ */
+static int open_file(const std::string& name)
+{
+    size_t count = 0;
+    int result = open(name.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    while (-1 == result)
+    {
+        const int err = errno;
+        if (err != EINTR && ++count >= OUROBOROS_IO_ERROR_MAX)
+        {
+            OUROBOROS_THROW_ERROR(io_error, "error of opening: " << PR(name) << PE(err));
+        }
+        usleep(OUROBOROS_IO_ERROR_DELAY);
+        result = open(name.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    }
+    return result;
+}
+
+/**
  * Constructor
  * @param name the name of the base_file
  */
 base_file::base_file(const std::string& name) :
     m_name(name),
-    m_fd(open(name.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR))
+    m_fd(open_file(name))
 {
-    if (-1 == m_fd)
-    {
-        OUROBOROS_THROW_ERROR(io_error, "error of opening: " << PR(m_name) << PE(errno));
-    }
 }
 
 /**
@@ -44,9 +62,15 @@ base_file::base_file(const std::string& name) :
 //virtual
 base_file::~base_file()
 {
-    if (close(m_fd) == -1)
+    size_t count = 0;
+    while (close(m_fd) == -1)
     {
-        OUROBOROS_ERROR("error of closing: " << PR(m_fd) << PR(m_name) << PE(errno));
+        const int err = errno;
+        if (err != EINTR && ++count >= OUROBOROS_IO_ERROR_MAX)
+        {
+            OUROBOROS_ERROR("error of closing: " << PR(m_fd) << PR(m_name) << PE(err));
+        }
+        usleep(OUROBOROS_IO_ERROR_DELAY);
     }
 }
 
