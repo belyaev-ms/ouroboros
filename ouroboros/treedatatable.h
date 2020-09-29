@@ -78,6 +78,8 @@ public:
 
     pos_type get(const field_type& field, record_type& record) const; ///< get a record that has an index
 
+    pos_type find(const record_type& record, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
+    pos_type rfind(const record_type& record, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
     template <typename Finder>
     pos_type find_by_index(Finder& finder, const field_type& beg, const field_type& end) const; ///< find a record by index [beg, end)
     template <typename Finder>
@@ -137,6 +139,8 @@ protected:
     pos_type read_back(indexed_record_list& records) const;
     pos_type read_front_by_index(indexed_record_type& record, const field_type& beg, const field_type& end) const;
     pos_type read_back_by_index(indexed_record_type& record, const field_type& beg, const field_type& end) const;
+    pos_type find(const indexed_record_type& record, const pos_type beg, const count_type count) const;
+    pos_type rfind(const indexed_record_type& record, const pos_type end, const count_type count) const;
 private:
 #ifdef OUROBOROS_FASTRBTREE_ENABLED
     typedef node_cache<node_type, base_class> cache_type;
@@ -239,6 +243,7 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_rr
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read(record_list& records, const pos_type pos) const
 {
+    OUROBOROS_RANGE_ASSERT(records.size() > 0);
     pos_type result = pos;
     const typename record_list::iterator end = records.end();
     for (typename record_list::iterator it = records.begin(); it != end; ++it)
@@ -285,6 +290,7 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_rw
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_write(const record_list& records, const pos_type pos)
 {
+    OUROBOROS_RANGE_ASSERT(records.size() > 0);
     pos_type result = pos;
     const typename record_list::iterator end = records.end();
     for (typename record_list::const_iterator it = records.begin(); it != end; ++it)
@@ -335,6 +341,7 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_ad
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_add(const record_list& records)
 {
+    OUROBOROS_RANGE_ASSERT(records.size() > 0);
     pos_type result = unsafe_table::end_pos();
     const typename record_list::const_iterator end = records.end();
     for (typename record_list::const_iterator it = records.begin(); it != end; ++it)
@@ -995,6 +1002,7 @@ template <typename Finder>
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     find(Finder& finder, const pos_type beg, const count_type count) const
 {
+    OUROBOROS_RANGE_ASSERT(count > 0);
     typename base_class::lock_read lock(*this);
     if (!unsafe_table::empty())
     {
@@ -1024,15 +1032,79 @@ template <typename Finder>
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     rfind(Finder& finder, const pos_type end, const count_type count) const
 {
+    OUROBOROS_RANGE_ASSERT(count > 0);
     typename base_class::lock_read lock(*this);
-    pos_type pos = unsafe_table::dec_pos(end);
-    for (count_type i = 0; i < count; ++i)
+    if (!unsafe_table::empty())
     {
-        const pos_type result = pos;
-        pos = unsafe_rread(finder.record(result), result);
-        if (!finder())
+        pos_type pos = unsafe_table::dec_pos(end);
+        for (count_type i = 0; i < count; ++i)
         {
-            return result;
+            const pos_type result = pos;
+            pos = unsafe_rread(finder.record(result), result);
+            if (!finder())
+            {
+                return result;
+            }
+        }
+    }
+    return NIL;
+}
+
+/**
+ * Find a record in the range [beg, beg + count)
+ * @param record data of the record
+ * @param beg the begin position of the records
+ * @param count the count of the find records
+ * @return the position of the found record
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+    find(const record_type& record, const pos_type beg, const count_type count) const
+{
+    OUROBOROS_RANGE_ASSERT(count > 0);
+    typename base_class::lock_read lock(*this);
+    if (!unsafe_table::empty())
+    {
+        pos_type pos = beg;
+        for (count_type i = 0; i < count; ++i)
+        {
+            record_type buffer;
+            const pos_type result = pos;
+            pos = unsafe_read(buffer, result);
+            if (record == buffer)
+            {
+                return result;
+            }
+        }
+    }
+    return NIL;
+}
+
+/**
+ * Reverse find a record in the range [end - count, end)
+ * @param record data of the record
+ * @param end the end position of the records
+ * @param count the count of the find records
+ * @return the position of the found record
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+    rfind(const record_type& record, const pos_type end, const count_type count) const
+{
+    OUROBOROS_RANGE_ASSERT(count > 0);
+    typename base_class::lock_read lock(*this);
+    if (!unsafe_table::empty())
+    {
+        pos_type pos = unsafe_table::dec_pos(end);;
+        for (count_type i = 0; i < count; ++i)
+        {
+            record_type buffer;
+            const pos_type result = pos;
+            pos = unsafe_rread(buffer, result);
+            if (record == buffer)
+            {
+                return result;
+            }
         }
     }
     return NIL;

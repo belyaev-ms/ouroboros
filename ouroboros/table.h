@@ -183,6 +183,7 @@ pos_type table<Source, Key>::read(void *data, const pos_type pos) const
 template <typename Source, typename Key>
 pos_type table<Source, Key>::read(void *data, const pos_type beg, const count_type count) const
 {
+    OUROBOROS_RANGE_ASSERT(count > 0);
     const pos_type end = base_class::inc_pos(beg, count);
     if (0 == base_class::rec_space())
     {
@@ -268,6 +269,7 @@ pos_type table<Source, Key>::write(const void *data, const pos_type pos)
 template <typename Source, typename Key>
 pos_type table<Source, Key>::write(const void *data, const pos_type beg, const count_type count)
 {
+    OUROBOROS_RANGE_ASSERT(count > 0);
     const pos_type end = base_class::inc_pos(beg, count);
     if (0 == base_class::rec_space())
     {
@@ -385,6 +387,7 @@ pos_type table<Source, Key>::remove(const pos_type pos)
 template <typename Source, typename Key>
 pos_type table<Source, Key>::remove(const pos_type beg, const count_type count)
 {
+    OUROBOROS_RANGE_ASSERT(count > 0);
     const pos_type end = base_class::inc_pos(beg, count);
     if (valid_range(beg, end))
     {
@@ -428,6 +431,7 @@ pos_type table<Source, Key>::remove(const pos_type beg, const count_type count)
 template <typename Source, typename Key>
 count_type table<Source, Key>::remove_back(const count_type count)
 {
+    OUROBOROS_RANGE_ASSERT(count > 0);
     if (count >= base_class::count())
     {
         this->do_clear();
@@ -550,6 +554,7 @@ pos_type table<Source, Key>::read_back(void* data, const count_type count) const
     pos_type pos = base_class::back_pos();
     if (pos != NIL && count <= base_class::count())
     {
+        OUROBOROS_RANGE_ASSERT(count > 0);
         const size_type rec_size = base_class::rec_size();
         char *buffer = static_cast<char *>(data);
         for (count_type i = 0; i < count; ++i)
@@ -619,6 +624,7 @@ inline pos_type table<Source, Key>::do_rfind(const void *data, const pos_type be
 template <typename Source, typename Key>
 pos_type table<Source, Key>::find(const void *data, const pos_type beg, const count_type count) const
 {
+    OUROBOROS_RANGE_ASSERT(count > 0);
     const pos_type end = base_class::inc_pos(beg, count);
     if (end > beg)
     {
@@ -642,6 +648,7 @@ pos_type table<Source, Key>::find(const void *data, const pos_type beg, const co
 template <typename Source, typename Key>
 pos_type table<Source, Key>::rfind(const void *data, const pos_type end, const count_type count) const
 {
+    OUROBOROS_RANGE_ASSERT(count > 0);
     const pos_type beg = base_class::dec_pos(end, count);
     if (end > beg)
     {

@@ -241,6 +241,7 @@ template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
 pos_type indexed_table<Table, Record, Index, Key, Interface>::write(const record_list& records, const pos_type pos)
 {
+    OUROBOROS_RANGE_ASSERT(records.size() > 0);
     typename base_class::lock_write lock(*this);
     pos_type num = pos;
     const typename record_list::const_iterator itend = records.end();
@@ -296,6 +297,7 @@ template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Key, typename Interface>
 pos_type indexed_table<Table, Record, Index, Key, Interface>::add(const record_list& records)
 {
+    OUROBOROS_RANGE_ASSERT(records.size() > 0);
     typename base_class::lock_write lock(*this);
     pos_type pos = unsafe_table::end_pos();
     const typename record_list::const_iterator end = records.end();

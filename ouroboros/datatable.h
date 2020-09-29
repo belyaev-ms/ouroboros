@@ -95,7 +95,7 @@ public:
     pos_type read_back(record_type& record) const; ///< read the last record
     pos_type read_back(record_list& records) const; ///< read the last records
     pos_type find(const record_type& record, const pos_type beg, const count_type count) const; ///< find a record [beg, beg + count)
-    inline pos_type rfind(const record_type& record, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
+    pos_type rfind(const record_type& record, const pos_type end, const count_type count) const; ///< reverse find a record [end - count, end)
     template <typename Finder>
     pos_type find(Finder& finder, const pos_type beg, const count_type count) const; ///< find a record [beg, end)
     template <typename Finder>
@@ -591,6 +591,7 @@ template <typename T>
 inline pos_type data_table<Table, Record, Key, Interface>::do_read(record_list& records, const pos_type pos) const
 {
     const count_type count = records.size();
+    OUROBOROS_RANGE_ASSERT(count > 0);
     scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
     const pos_type result = T::read(buffer.get(), pos, count);
     const void *it = buffer.get();
@@ -641,6 +642,7 @@ template <typename T>
 inline pos_type data_table<Table, Record, Key, Interface>::do_write(const record_list& records, const pos_type pos)
 {
     const count_type count = records.size();
+    OUROBOROS_RANGE_ASSERT(count > 0);
     scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
     void *it = buffer.get();
     for (count_type i = 0; i < count; ++i)
@@ -673,6 +675,7 @@ template <typename T>
 inline pos_type data_table<Table, Record, Key, Interface>::do_add(const record_list& records)
 {
     const count_type count = records.size();
+    OUROBOROS_RANGE_ASSERT(count > 0);
     scoped_buffer<void> buffer(base_class::rec_size() * count);
     void *it = buffer.get();
     for (pos_type i = 0; i < count; ++i)
@@ -708,7 +711,8 @@ template <template <typename, typename, typename> class Table, typename Record, 
 template <typename T>
 inline pos_type data_table<Table, Record, Key, Interface>::do_read_front(record_list& records) const
 {
-   const count_type count = records.size();
+    const count_type count = records.size();
+    OUROBOROS_RANGE_ASSERT(count > 0);
     scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
     const pos_type result = T::read_front(buffer.get(), count);
     if (result != NIL)
@@ -748,7 +752,8 @@ template <template <typename, typename, typename> class Table, typename Record, 
 template <typename T>
 inline pos_type data_table<Table, Record, Key, Interface>::do_read_back(record_list& records) const
 {
-   const count_type count = records.size();
+    const count_type count = records.size();
+    OUROBOROS_RANGE_ASSERT(count > 0);
     scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
     const pos_type result = T::read_back(buffer.get(), count);
     if (result != NIL)

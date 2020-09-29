@@ -48,6 +48,16 @@ BOOST_AUTO_TEST_CASE(simple_error_test)
     BOOST_CHECK_EQUAL(false, testtable.valid_range(table.beg_pos(), table.inc_pos(table.end_pos())));
     BOOST_CHECK_EQUAL(false, testtable.valid_range(table.dec_pos(table.beg_pos()), table.end_pos()));
     BOOST_CHECK_EQUAL(false, testtable.valid_range(table.dec_pos(table.beg_pos()), table.inc_pos(table.end_pos())));
+    record_list records;
+    BOOST_CHECK_THROW(testtable.read(records, 0), ouroboros::range_error);
+    BOOST_CHECK_THROW(testtable.write(records, 0), ouroboros::range_error);
+    BOOST_CHECK_THROW(testtable.add(records), ouroboros::range_error);
+    BOOST_CHECK_THROW(testtable.read_back(records), ouroboros::range_error);
+    BOOST_CHECK_THROW(testtable.read_front(records), ouroboros::range_error);
+    BOOST_CHECK_THROW(testtable.remove(table.beg_pos(), 0), ouroboros::range_error);
+    BOOST_CHECK_THROW(testtable.remove_back(0), ouroboros::range_error);
+    BOOST_CHECK_THROW(testtable.find(record_type(), table.beg_pos(), 0), ouroboros::range_error);
+    BOOST_CHECK_THROW(testtable.rfind(record_type(), table.end_pos(), 0), ouroboros::range_error);
     for (count_type i = 0; i < rec_count; ++i)
     {
         table.add(record);
