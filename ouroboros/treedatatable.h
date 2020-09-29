@@ -292,7 +292,7 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_wr
 {
     OUROBOROS_RANGE_ASSERT(records.size() > 0);
     pos_type result = pos;
-    const typename record_list::iterator end = records.end();
+    const typename record_list::const_iterator end = records.end();
     for (typename record_list::const_iterator it = records.begin(); it != end; ++it)
     {
         result = unsafe_write(*it, result);
