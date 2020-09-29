@@ -30,13 +30,14 @@ const E& where(const E& ex, const char *name, const char *file, const char *func
 #define OUROBOROS_THROW_BUG(message) OUROBOROS_THROW_ERROR(ouroboros::bug_error, message)
 
 /** check the condition */
-#define OUROBOROS_THROW_ERROR_IF(condition, err) do { if (condition) { OUROBOROS_THROW_ERROR(err, "assert failed : " << #condition); } } while(0)
+#define OUROBOROS_THROW_ERROR_IF(condition, err, message) do { if (condition) { OUROBOROS_THROW_ERROR(err, message); } } while(0)
 #if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED || defined OUROBOROS_STRICT_ASSERT_ENABLED)
-#define OUROBOROS_ASSERT(condition) OUROBOROS_THROW_ERROR_IF(!(condition), ouroboros::bug_error)
+#define OUROBOROS_ASSERT(condition) OUROBOROS_THROW_ERROR_IF(!(condition), ouroboros::bug_error, "assert failed : " << #condition)
+#define OUROBOROS_RANGE_ASSERT(condition) OUROBOROS_THROW_ERROR_IF(!(condition), ouroboros::range_error, "assert failed : " << #condition)
 #else
 #define OUROBOROS_ASSERT(condition)
+#define OUROBOROS_RANGE_ASSERT(condition)
 #endif
-#define OUROBOROS_RANGE_ASSERT(condition) OUROBOROS_THROW_ERROR_IF(!(condition), ouroboros::range_error)
 
 /**
  * The base class of exception
