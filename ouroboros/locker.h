@@ -18,7 +18,7 @@ namespace ouroboros
 class base_locker
 {
 public:
-    inline base_locker(const std::string& name, count_type& scoped_count, count_type& sharable_count);
+    inline base_locker(count_type& scoped_count, count_type& sharable_count);
     inline bool lock(); ///< set the exclusive lock
     inline bool lock(const size_t timeout); ///< set the exclusive lock with a timeout
     inline bool unlock(); ///< remove the exclusive lock
@@ -32,12 +32,21 @@ private:
 };
 
 /**
+ * The stub lock (dummy)
+ */
+struct stub_lock {};
+
+/**
  * The stub locker without any locking
  */
 struct stub_locker : public base_locker
 {
+    typedef stub_lock lock_type;
     inline stub_locker(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
-        base_locker(name, scoped_count, sharable_count)
+        base_locker(scoped_count, sharable_count)
+    {}
+    inline stub_locker(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
+        base_locker(scoped_count, sharable_count)
     {}
 };
 
@@ -47,8 +56,12 @@ struct stub_locker : public base_locker
  */
 struct internal_locker : public base_locker
 {
+    typedef stub_lock lock_type;
     inline internal_locker(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
-        base_locker(name, scoped_count, sharable_count)
+        base_locker(scoped_count, sharable_count)
+    {}
+    inline internal_locker(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
+        base_locker(scoped_count, sharable_count)
     {}
 };
 
@@ -82,7 +95,9 @@ private:
 template <typename Locker>
 struct locker : public Locker, private base_locker
 {
+    typedef typename Locker::lock_type lock_type;
     inline locker(const std::string& name, count_type& scoped_count, count_type& sharable_count);
+    inline locker(lock_type& lock, count_type& scoped_count, count_type& sharable_count);
     inline bool lock(); ///< set the exclusive lock
     inline bool lock(const size_t timeout); ///< set the exclusive lock with a timeout
     inline bool unlock(); ///< remove the exclusive lock
@@ -97,11 +112,10 @@ struct locker : public Locker, private base_locker
 //==============================================================================
 /**
  * Constructor
- * @param name the name of the locker
  * @param scoped_count the counter for exclusive lock
  * @param sharable_count the counter for shared lock
  */
-inline base_locker::base_locker(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
+inline base_locker::base_locker(count_type& scoped_count, count_type& sharable_count) :
     m_scoped_count(scoped_count),
     m_sharable_count(sharable_count)
 {
@@ -186,7 +200,20 @@ inline const char* base_locker::name() const
 template <typename Locker>
 inline locker<Locker>::locker(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
     Locker(name),
-    base_locker(name, scoped_count, sharable_count)
+    base_locker(scoped_count, sharable_count)
+{
+}
+
+/**
+ * Constructor
+ * @param lock the lock
+ * @param scoped_count the counter for exclusive lock
+ * @param sharable_count the counter for shared lock
+ */
+template <typename Locker>
+inline locker<Locker>::locker(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
+    Locker(lock),
+    base_locker(scoped_count, sharable_count)
 {
 }
 

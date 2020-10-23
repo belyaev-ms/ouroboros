@@ -24,16 +24,17 @@ namespace ouroboros
  * The interface class adapter for the table that has the indexed records
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-class indexed_table : public data_table<Table, Record, Key, Interface>
+        template <typename> class Index, typename Controlblock>
+class indexed_table : public data_table<Table, Record, Controlblock>
 {
-    typedef data_table<Table, Record, Key, Interface> base_class;
+    typedef data_table<Table, Record, Controlblock> base_class;
 public:
     enum { TABLE_TYPE = TABLE_INDEX };
     typedef typename base_class::unsafe_table unsafe_table; ///< the table that doesn't have locking
     typedef typename base_class::interface_type interface_type;
     typedef typename base_class::record_type record_type;
     typedef typename base_class::record_list record_list;
+    typedef typename base_class::controlblock_type controlblock_type;
     typedef typename base_class::skey_type skey_type;
     typedef record_type raw_record_type;
     typedef Index<record_type> index_type;
@@ -44,6 +45,8 @@ public:
 
     indexed_table(source_type& source, skey_type& skey);
     indexed_table(source_type& source, skey_type& skey, const guard_type& guard);
+    indexed_table(source_type& source, controlblock_type controlblock);
+    indexed_table(source_type& source, controlblock_type controlblock, const guard_type& guard);
 
     inline pos_type read(record_type& record, const pos_type pos) const; ///< read a record
     inline pos_type read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
@@ -99,18 +102,21 @@ private:
 /**
  * The interface class adapter for the table that doesn't have any indexed records
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-class indexed_table<Table, Record, index_null, Key, Interface> : public data_table<Table, Record, Key, Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+class indexed_table<Table, Record, index_null, Controlblock> : public data_table<Table, Record, Controlblock>
 {
-    typedef data_table<Table, Record, Key, Interface> base_class;
+    typedef data_table<Table, Record, Controlblock> base_class;
 public:
     typedef typename base_class::unsafe_table unsafe_table;
-    typedef Record record_type;
-    typedef Key skey_type;
+    typedef typename base_class::controlblock_type controlblock_type;
+    typedef typename base_class::record_type record_type;
+    typedef typename base_class::skey_type skey_type;
     typedef typename base_class::source_type source_type;
     typedef typename base_class::guard_type guard_type;
     indexed_table(source_type& source, skey_type& key) : base_class(source, key) {}
     indexed_table(source_type& source, skey_type& key, const guard_type& guard) : base_class(source, key, guard) {}
+    indexed_table(source_type& source, controlblock_type controlblock) : base_class(source, controlblock) {}
+    indexed_table(source_type& source, controlblock_type controlblock, const guard_type& guard) : base_class(source, controlblock, guard) {}
     inline void build_indexes() {}
 };
 
@@ -123,8 +129,8 @@ public:
  * @param skey the key of the table
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-indexed_table<Table, Record, Index, Key, Interface>::indexed_table(source_type& source,
+        template <typename> class Index, typename Controlblock>
+indexed_table<Table, Record, Index, Controlblock>::indexed_table(source_type& source,
         skey_type& skey) :
     base_class(source, skey)
 {
@@ -145,12 +151,55 @@ indexed_table<Table, Record, Index, Key, Interface>::indexed_table(source_type& 
  * @param guard the guard of the table
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-indexed_table<Table, Record, Index, Key, Interface>::indexed_table(source_type& source,
+        template <typename> class Index, typename Controlblock>
+indexed_table<Table, Record, Index, Controlblock>::indexed_table(source_type& source,
         skey_type& skey, const guard_type& guard) :
     base_class(source, skey, guard)
 {
     if (0 == skey.count)
+    {
+        base_class::clear();
+    }
+    else
+    {
+        build_indexes();
+    }
+}
+
+/**
+ * Constructor
+ * @param source the source of data
+ * @param controlblock the controlblock of the table
+ */
+template <template <typename, typename, typename> class Table, typename Record,
+        template <typename> class Index, typename Controlblock>
+indexed_table<Table, Record, Index, Controlblock>::indexed_table(source_type& source,
+        controlblock_type controlblock) :
+    base_class(source, controlblock)
+{
+    if (0 == controlblock.get_skey().count)
+    {
+        base_class::clear();
+    }
+    else
+    {
+        build_indexes();
+    }
+}
+
+/**
+ * Constructor
+ * @param source the source of data
+ * @param controlblock the controlblock of the table
+ * @param guard the guard of the table
+ */
+template <template <typename, typename, typename> class Table, typename Record,
+        template <typename> class Index, typename Controlblock>
+indexed_table<Table, Record, Index, Controlblock>::indexed_table(source_type& source,
+        controlblock_type controlblock, const guard_type& guard) :
+    base_class(source, controlblock, guard)
+{
+    if (0 == controlblock.get_skey().count)
     {
         base_class::clear();
     }
@@ -167,8 +216,8 @@ indexed_table<Table, Record, Index, Key, Interface>::indexed_table(source_type& 
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::read(record_type& record, const pos_type pos) const
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::read(record_type& record, const pos_type pos) const
 {
     return base_class::read(record, pos);
 }
@@ -180,8 +229,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::read(record_type& 
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::read(record_list& records, const pos_type pos) const
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::read(record_list& records, const pos_type pos) const
 {
     return base_class::read(records, pos);
 }
@@ -193,8 +242,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::read(record_list& 
  * @return the position of the previous record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::rread(record_type& record, const pos_type pos) const
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::rread(record_type& record, const pos_type pos) const
 {
     return base_class::rread(record, pos);
 }
@@ -206,8 +255,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::rread(record_type&
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_write(const record_type& record, const pos_type pos)
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::unsafe_write(const record_type& record, const pos_type pos)
 {
     record_type replaced_record;
     base_class::unsafe_read(replaced_record, pos);
@@ -224,8 +273,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_write(const
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::write(const record_type& record, const pos_type pos)
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::write(const record_type& record, const pos_type pos)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_write(record, pos);
@@ -238,8 +287,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::write(const record
  * @return the position of the next record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::write(const record_list& records, const pos_type pos)
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::write(const record_list& records, const pos_type pos)
 {
     OUROBOROS_RANGE_ASSERT(records.size() > 0);
     typename base_class::lock_write lock(*this);
@@ -258,8 +307,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::write(const record
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_add(const record_type& record)
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::unsafe_add(const record_type& record)
 {
     const pos_type beg = unsafe_table::beg_pos();
     const pos_type end = unsafe_table::end_pos();
@@ -281,8 +330,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::unsafe_add(const r
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::add(const record_type& record)
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::add(const record_type& record)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_add(record);
@@ -294,8 +343,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::add(const record_t
  * @return the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::add(const record_list& records)
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::add(const record_list& records)
 {
     OUROBOROS_RANGE_ASSERT(records.size() > 0);
     typename base_class::lock_write lock(*this);
@@ -314,8 +363,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::add(const record_l
  */
 //virtual
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-void indexed_table<Table, Record, Index, Key, Interface>::do_before_remove(const pos_type pos)
+        template <typename> class Index, typename Controlblock>
+void indexed_table<Table, Record, Index, Controlblock>::do_before_remove(const pos_type pos)
 {
     record_type record;
     base_class::unsafe_read(record, pos);
@@ -329,8 +378,8 @@ void indexed_table<Table, Record, Index, Key, Interface>::do_before_remove(const
  */
 //virtual
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-void indexed_table<Table, Record, Index, Key, Interface>::do_before_move(const pos_type source, const pos_type dest)
+        template <typename> class Index, typename Controlblock>
+void indexed_table<Table, Record, Index, Controlblock>::do_before_move(const pos_type source, const pos_type dest)
 {
     record_type record;
     base_class::unsafe_read(record, source);
@@ -345,8 +394,8 @@ void indexed_table<Table, Record, Index, Key, Interface>::do_before_move(const p
  * @return the count of the deleted records
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-count_type indexed_table<Table, Record, Index, Key, Interface>::remove_by_index(const field_type& beg, const field_type& end)
+        template <typename> class Index, typename Controlblock>
+count_type indexed_table<Table, Record, Index, Controlblock>::remove_by_index(const field_type& beg, const field_type& end)
 {
     typename base_class::lock_write lock(*this);
     const count_type limit = unsafe_table::limit();
@@ -383,8 +432,8 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::remove_by_index(
  * @param pos the position of the record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-inline void indexed_table<Table, Record, Index, Key, Interface>::add_index(const record_type& record, const pos_type pos)
+        template <typename> class Index, typename Controlblock>
+inline void indexed_table<Table, Record, Index, Controlblock>::add_index(const record_type& record, const pos_type pos)
 {
     m_indexes.insert(std::make_pair(index_type::value(record), pos));
 }
@@ -395,8 +444,8 @@ inline void indexed_table<Table, Record, Index, Key, Interface>::add_index(const
  * @param pos the position of the record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-inline void indexed_table<Table, Record, Index, Key, Interface>::remove_index(const record_type& record, const pos_type pos)
+        template <typename> class Index, typename Controlblock>
+inline void indexed_table<Table, Record, Index, Controlblock>::remove_index(const record_type& record, const pos_type pos)
 {
     const std::pair<typename index_list::iterator, typename index_list::iterator> range =
         m_indexes.equal_range(index_type::value(record));
@@ -419,8 +468,8 @@ inline void indexed_table<Table, Record, Index, Key, Interface>::remove_index(co
  * @return the position of the first record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
     pos_list list;
@@ -446,8 +495,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::read_front_by_inde
  * @return the position of the last record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
     pos_list list;
@@ -472,8 +521,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::read_back_by_index
  * @param end the end value of the index field
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-void indexed_table<Table, Record, Index, Key, Interface>::do_get_pos_list(pos_list& dest, const field_type& beg, const field_type& end) const
+        template <typename> class Index, typename Controlblock>
+void indexed_table<Table, Record, Index, Controlblock>::do_get_pos_list(pos_list& dest, const field_type& beg, const field_type& end) const
 {
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
     typename index_list::const_iterator itend = m_indexes.upper_bound(end);
@@ -508,8 +557,8 @@ void indexed_table<Table, Record, Index, Key, Interface>::do_get_pos_list(pos_li
  * @return the count of records
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-count_type indexed_table<Table, Record, Index, Key, Interface>::read(record_list& records,
+        template <typename> class Index, typename Controlblock>
+count_type indexed_table<Table, Record, Index, Controlblock>::read(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -533,8 +582,8 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::read(record_list
  * @return the count of records
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-count_type indexed_table<Table, Record, Index, Key, Interface>::rread(record_list& records,
+        template <typename> class Index, typename Controlblock>
+count_type indexed_table<Table, Record, Index, Controlblock>::rread(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     ///@todo why is size here???
@@ -557,8 +606,8 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::rread(record_lis
  * @return the position of the record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::get(const field_type& field,
+        template <typename> class Index, typename Controlblock>
+pos_type indexed_table<Table, Record, Index, Controlblock>::get(const field_type& field,
     record_type& record) const
 {
     typename base_class::lock_read lock(*this);
@@ -580,8 +629,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::get(const field_ty
  * @return the count of indexes
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-count_type indexed_table<Table, Record, Index, Key, Interface>::read_index(pos_list& dest,
+        template <typename> class Index, typename Controlblock>
+count_type indexed_table<Table, Record, Index, Controlblock>::read_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -605,8 +654,8 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::read_index(pos_l
  * @return the count of indexes
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-count_type indexed_table<Table, Record, Index, Key, Interface>::rread_index(pos_list& dest,
+        template <typename> class Index, typename Controlblock>
+count_type indexed_table<Table, Record, Index, Controlblock>::rread_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -630,8 +679,8 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::rread_index(pos_
  * @return the count of records
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-count_type indexed_table<Table, Record, Index, Key, Interface>::read_by_index(record_list& records,
+        template <typename> class Index, typename Controlblock>
+count_type indexed_table<Table, Record, Index, Controlblock>::read_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -660,8 +709,8 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::read_by_index(re
  * @return the count of records
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-count_type indexed_table<Table, Record, Index, Key, Interface>::rread_by_index(record_list& records,
+        template <typename> class Index, typename Controlblock>
+count_type indexed_table<Table, Record, Index, Controlblock>::rread_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -691,9 +740,9 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::rread_by_index(r
  * @return the position of the found record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
+        template <typename> class Index, typename Controlblock>
 template <typename Finder>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::
+pos_type indexed_table<Table, Record, Index, Controlblock>::
     find_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -719,9 +768,9 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
  * @return the position of the found record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
+        template <typename> class Index, typename Controlblock>
 template <typename Finder>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::
+pos_type indexed_table<Table, Record, Index, Controlblock>::
     rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -749,9 +798,9 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
  * @return the position of the found record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
+        template <typename> class Index, typename Controlblock>
 template <typename Finder>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::
+pos_type indexed_table<Table, Record, Index, Controlblock>::
     find_in_range(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -780,9 +829,9 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
  * @return the position of the found record
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
+        template <typename> class Index, typename Controlblock>
 template <typename Finder>
-pos_type indexed_table<Table, Record, Index, Key, Interface>::
+pos_type indexed_table<Table, Record, Index, Controlblock>::
     rfind_in_range(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -810,8 +859,8 @@ pos_type indexed_table<Table, Record, Index, Key, Interface>::
  * @return the count of records that have index in range [beg, end)
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-count_type indexed_table<Table, Record, Index, Key, Interface>::
+        template <typename> class Index, typename Controlblock>
+count_type indexed_table<Table, Record, Index, Controlblock>::
     get_range_size(const field_type& beg, const field_type& end) const
 {
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
@@ -828,11 +877,11 @@ count_type indexed_table<Table, Record, Index, Key, Interface>::
  * Clear the table
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-void indexed_table<Table, Record, Index, Key, Interface>::clear()
+        template <typename> class Index, typename Controlblock>
+void indexed_table<Table, Record, Index, Controlblock>::clear()
 {
     typename base_class::lock_write lock(*this);
-    indexed_table<Table, Record, Index, Key, Interface>::do_clear();
+    indexed_table<Table, Record, Index, Controlblock>::do_clear();
 }
 
 /**
@@ -840,8 +889,8 @@ void indexed_table<Table, Record, Index, Key, Interface>::clear()
  */
 //virtual
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-void indexed_table<Table, Record, Index, Key, Interface>::do_clear()
+        template <typename> class Index, typename Controlblock>
+void indexed_table<Table, Record, Index, Controlblock>::do_clear()
 {
     base_class::do_clear();
     m_indexes.clear();
@@ -851,8 +900,8 @@ void indexed_table<Table, Record, Index, Key, Interface>::do_clear()
  * Build the indexes of the records
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-inline void indexed_table<Table, Record, Index, Key, Interface>::build_indexes()
+        template <typename> class Index, typename Controlblock>
+inline void indexed_table<Table, Record, Index, Controlblock>::build_indexes()
 {
     typename base_class::lock_write lock(*this);
     m_indexes.clear();
@@ -881,8 +930,8 @@ inline void indexed_table<Table, Record, Index, Key, Interface>::build_indexes()
  * @param end the end position of the records
  */
 template <template <typename, typename, typename> class Table, typename Record,
-        template <typename> class Index, typename Key, typename Interface>
-inline void indexed_table<Table, Record, Index, Key, Interface>::do_build_indexes(const pos_type beg, const pos_type end)
+        template <typename> class Index, typename Controlblock>
+inline void indexed_table<Table, Record, Index, Controlblock>::do_build_indexes(const pos_type beg, const pos_type end)
 {
     for (pos_type pos = beg; pos < end; ++pos)
     {

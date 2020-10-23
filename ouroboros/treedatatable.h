@@ -17,10 +17,10 @@ namespace ouroboros
  * The interface class adapter for the table that has indexed records by
  * red-black tree
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-class tree_data_table : public data_table<Table, IndexedRecord, Key, Interface>
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+class tree_data_table : public data_table<Table, IndexedRecord, Controlblock>
 {
-    typedef data_table<Table, IndexedRecord, Key, Interface> base_class;
+    typedef data_table<Table, IndexedRecord, Controlblock> base_class;
     typedef IndexedRecord indexed_record_type;
     typedef typename indexed_record_type::node_type node_type;
     struct extractor
@@ -37,9 +37,10 @@ public:
         REC_SPACE = base_class::REC_SPACE
     };
     typedef typename base_class::unsafe_table unsafe_table; ///< the table that doesn't have locking
-    typedef Interface interface_type;
+    typedef typename base_class::interface_type interface_type;
     typedef typename indexed_record_type::record_type record_type;
     typedef std::vector<record_type> record_list;
+    typedef typename base_class::controlblock_type controlblock_type;
     typedef typename base_class::skey_type skey_type;
     typedef indexed_record_type raw_record_type;
     typedef std::vector<indexed_record_type> indexed_record_list;
@@ -51,6 +52,8 @@ public:
 
     tree_data_table(source_type& source, skey_type& skey);
     tree_data_table(source_type& source, skey_type& skey, const guard_type& guard);
+    tree_data_table(source_type& source, controlblock_type controlblock);
+    tree_data_table(source_type& source, controlblock_type controlblock, const guard_type& guard);
 
     pos_type read(record_type& record, const pos_type pos) const; ///< read a record
     pos_type read(record_list& records, const pos_type pos) const; ///< read records [pos, pos + count)
@@ -158,21 +161,24 @@ private:
  * indexed_table
  */
 template <template <typename, typename, typename> class Table, typename Record,
-    template <typename> class Index, typename Key, typename Interface>
-class tree_data_table_adapter : public tree_data_table<Table, indexed_record<Record, Index>, Key, Interface>
+    template <typename> class Index, typename Controlblock>
+class tree_data_table_adapter : public tree_data_table<Table, indexed_record<Record, Index>, Controlblock>
 {
 public:
     typedef Record record_type;
     typedef indexed_record<Record, Index> indexed_record_type;
 private:
-    typedef tree_data_table<Table, indexed_record_type, Key, Interface> base_class;
+    typedef tree_data_table<Table, indexed_record_type, Controlblock> base_class;
 public:
     typedef typename base_class::unsafe_table unsafe_table;
+    typedef typename base_class::controlblock_type controlblock_type;
     typedef typename base_class::skey_type skey_type;
     typedef typename base_class::source_type source_type;
     typedef typename base_class::guard_type guard_type;
     tree_data_table_adapter(source_type& source, skey_type& key) : base_class(source, key) {}
     tree_data_table_adapter(source_type& source, skey_type& key, const guard_type& guard) : base_class(source, key, guard) {}
+    tree_data_table_adapter(source_type& source, controlblock_type conrolblock) : base_class(source, conrolblock) {}
+    tree_data_table_adapter(source_type& source, controlblock_type conrolblock, const guard_type& guard) : base_class(source, conrolblock, guard) {}
     inline void build_indexes() {}
 };
 
@@ -184,8 +190,8 @@ public:
  * @param source the source of data
  * @param skey the key of the table
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-tree_data_table<Table, IndexedRecord, Key, Interface>::tree_data_table(source_type& source, skey_type& skey) :
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+tree_data_table<Table, IndexedRecord, Controlblock>::tree_data_table(source_type& source, skey_type& skey) :
     base_class(source, skey),
     m_tree(*this, NIL)
 {
@@ -197,9 +203,34 @@ tree_data_table<Table, IndexedRecord, Key, Interface>::tree_data_table(source_ty
  * @param skey the key of the table
  * @param guard the guard of the table
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-tree_data_table<Table, IndexedRecord, Key, Interface>::tree_data_table(source_type& source, skey_type& skey, const guard_type& guard) :
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+tree_data_table<Table, IndexedRecord, Controlblock>::tree_data_table(source_type& source, skey_type& skey, const guard_type& guard) :
     base_class(source, skey, guard),
+    m_tree(*this, NIL)
+{
+}
+
+/**
+ * Constructor
+ * @param source the source of data
+ * @param controlblock the controlblock of the table
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+tree_data_table<Table, IndexedRecord, Controlblock>::tree_data_table(source_type& source, controlblock_type controlblock) :
+    base_class(source, controlblock),
+    m_tree(*this, NIL)
+{
+}
+
+/**
+ * Constructor
+ * @param source the source of data
+ * @param controlblock the controlblock of the table
+ * @param guard the guard of the table
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+tree_data_table<Table, IndexedRecord, Controlblock>::tree_data_table(source_type& source, controlblock_type controlblock, const guard_type& guard) :
+    base_class(source, controlblock, guard),
     m_tree(*this, NIL)
 {
 }
@@ -210,8 +241,8 @@ tree_data_table<Table, IndexedRecord, Key, Interface>::tree_data_table(source_ty
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read(record_type& record, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_read(record_type& record, const pos_type pos) const
 {
     indexed_record_type indexed_record;
     const pos_type result = base_class::unsafe_read(indexed_record, pos);
@@ -225,8 +256,8 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_re
  * @param pos the position of the record
  * @return the position of the previous record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_rread(record_type& record, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_rread(record_type& record, const pos_type pos) const
 {
     indexed_record_type indexed_record;
     const pos_type result = base_class::unsafe_rread(indexed_record, pos);
@@ -240,8 +271,8 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_rr
  * @param pos the begin position of the records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read(record_list& records, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_read(record_list& records, const pos_type pos) const
 {
     OUROBOROS_RANGE_ASSERT(records.size() > 0);
     pos_type result = pos;
@@ -259,8 +290,8 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_re
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_write(const record_type& record, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_write(const record_type& record, const pos_type pos)
 {
     pnode_type pnode(*this, pos);
     typename tree_type::iterator it(pnode);
@@ -274,8 +305,8 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_wr
  * @param pos the position of the record
  * @return the position of the previous record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_rwrite(const record_type& record, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_rwrite(const record_type& record, const pos_type pos)
 {
     unsafe_write(record, pos);
     return unsafe_table::dec_pos(pos);
@@ -287,8 +318,8 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_rw
  * @param pos the begin position of the records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_write(const record_list& records, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_write(const record_list& records, const pos_type pos)
 {
     OUROBOROS_RANGE_ASSERT(records.size() > 0);
     pos_type result = pos;
@@ -305,8 +336,8 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_wr
  * @param record data of the record
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::do_add(const record_type& record)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline pos_type tree_data_table<Table, IndexedRecord, Controlblock>::do_add(const record_type& record)
 {
     if (unsafe_table::count() < unsafe_table::limit())
     {
@@ -327,8 +358,8 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::do_add(co
  * @param record data of the record
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_add(const record_type& record)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_add(const record_type& record)
 {
     return do_add(record);
 }
@@ -338,8 +369,8 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_ad
  * @param records data of the records
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_add(const record_list& records)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_add(const record_list& records)
 {
     OUROBOROS_RANGE_ASSERT(records.size() > 0);
     pos_type result = unsafe_table::end_pos();
@@ -356,8 +387,8 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_ad
  * @param record data of the first record
  * @return the position of the first record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_front(record_type& record) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_read_front(record_type& record) const
 {
     indexed_record_type indexed_record;
     const pos_type pos = base_class::unsafe_read_front(indexed_record);
@@ -373,8 +404,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_fron
  * @param records data of the first records
  * @return the position of the first record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_front(record_list& records) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_read_front(record_list& records) const
 {
     indexed_record_list indexed_records(records.size());
     const pos_type pos = base_class::unsafe_read_front(indexed_records);
@@ -394,8 +425,8 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_re
  * @param record data of the last record
  * @return the position of the last record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_back(record_type& record) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_read_back(record_type& record) const
 {
     indexed_record_type indexed_record;
     const pos_type pos = base_class::unsafe_read_back(indexed_record);
@@ -411,8 +442,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_back
  * @param records data of the first records
  * @return the position of the first record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_read_back(record_list& records) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline pos_type tree_data_table<Table, IndexedRecord, Controlblock>::unsafe_read_back(record_list& records) const
 {
     indexed_record_list indexed_records(records.size());
     const pos_type pos = base_class::unsafe_read_back(indexed_records);
@@ -433,8 +464,8 @@ inline pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::unsafe_re
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_type& record, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::read(record_type& record, const pos_type pos) const
 {
     typename base_class::lock_read lock(*this);
     return unsafe_read(record, pos);
@@ -446,8 +477,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_type
  * @param pos the begin position of the records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_list& records, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::read(record_list& records, const pos_type pos) const
 {
     typename base_class::lock_read lock(*this);
     return unsafe_read(records, pos);
@@ -459,8 +490,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_list
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::write(const record_type& record, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::write(const record_type& record, const pos_type pos)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_write(record, pos);
@@ -472,8 +503,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::write(const reco
  * @param pos the begin position of the records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::write(const record_list& records, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::write(const record_list& records, const pos_type pos)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_write(records, pos);
@@ -484,8 +515,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::write(const reco
  * @param record data of the record
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::add(const record_type& record)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::add(const record_type& record)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_add(record);
@@ -496,8 +527,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::add(const record
  * @param records data of the records
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::add(const record_list& records)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::add(const record_list& records)
 {
     typename base_class::lock_write lock(*this);
     return unsafe_add(records);
@@ -508,8 +539,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::add(const record
  * @param pos the position of record to be deleted
  */
 //virtual
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-void tree_data_table<Table, IndexedRecord, Key, Interface>::do_before_remove(const pos_type pos)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+void tree_data_table<Table, IndexedRecord, Controlblock>::do_before_remove(const pos_type pos)
 {
     pnode_type pnode(*this, pos);
     typename tree_type::iterator it(pnode);
@@ -522,8 +553,8 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_before_remove(con
  * @param dest the position of record to be deleted
  */
 //virtual
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-void tree_data_table<Table, IndexedRecord, Key, Interface>::do_before_move(const pos_type source, const pos_type dest)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+void tree_data_table<Table, IndexedRecord, Controlblock>::do_before_move(const pos_type source, const pos_type dest)
 {
     pnode_type pnode(*this, source);
     m_tree.move(pnode, dest);
@@ -535,8 +566,8 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_before_move(const
  * @param end the end value of the index field
  * @return the count of the deleted records
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_by_index(const field_type& beg, const field_type& end)
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+count_type tree_data_table<Table, IndexedRecord, Controlblock>::remove_by_index(const field_type& beg, const field_type& end)
 {
     typename base_class::lock_write lock(*this);
     const count_type limit = unsafe_table::limit();
@@ -572,8 +603,8 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_by_inde
  * @param record data of the first record
  * @return the position of the first record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_front(record_type& record) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::read_front(record_type& record) const
 {
     typename base_class::lock_read lock(*this);
     return unsafe_read_front(record);
@@ -584,8 +615,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_front(recor
  * @param records data of the first records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_front(record_list& records) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::read_front(record_list& records) const
 {
     typename base_class::lock_read lock(*this);
     return unsafe_read_front(records);
@@ -596,8 +627,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_front(recor
  * @param record data of the last record
  * @return the position of the last record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_back(record_type& record) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::read_back(record_type& record) const
 {
     typename base_class::lock_read lock(*this);
     return unsafe_read_back(record);
@@ -608,8 +639,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_back(record
  * @param record data of the last records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_back(record_list& records) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::read_back(record_list& records) const
 {
     typename base_class::lock_read lock(*this);
     return unsafe_read_back(records);
@@ -622,8 +653,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_back(record
  * @param end the end value of the index field
  * @return the position of the first record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::
     read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -649,8 +680,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  * @param end the end value of the index field
  * @return the position of the last record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::
     read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -675,8 +706,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  * @param beg the begin value of the index field
  * @param end the end value of the index field
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-void tree_data_table<Table, IndexedRecord, Key, Interface>::do_get_pos_list(pos_list& dest, const field_type& beg, const field_type& end) const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+void tree_data_table<Table, IndexedRecord, Controlblock>::do_get_pos_list(pos_list& dest, const field_type& beg, const field_type& end) const
 {
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
@@ -710,8 +741,8 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_get_pos_list(pos_
  * @param size the maximum count of records (if size = 0 then the count of records is unlimited)
  * @return the count of indexes
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_index(pos_list& dest,
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+count_type tree_data_table<Table, IndexedRecord, Controlblock>::read_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -734,8 +765,8 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_index(pos
  * @param size the maximum count of records (if size = 0 then the count of records is unlimited)
  * @return the count of indexes
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_index(pos_list& dest,
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+count_type tree_data_table<Table, IndexedRecord, Controlblock>::rread_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -758,8 +789,8 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_index(po
  * @param size the maximum count of records (if size = 0 then the count of records is unlimited)
  * @return the count of records
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_list& records,
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+count_type tree_data_table<Table, IndexedRecord, Controlblock>::read(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -782,8 +813,8 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_li
  * @param size the maximum count of records (if size = 0 then the count of records is unlimited)
  * @return the count of records
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread(record_list& records,
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+count_type tree_data_table<Table, IndexedRecord, Controlblock>::rread(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -804,8 +835,8 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread(record_l
  * @param record the record that has an index
  * @return the position of the record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::get(const field_type& field,
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::get(const field_type& field,
     record_type& record) const
 {
     typename base_class::lock_read lock(*this);
@@ -826,8 +857,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::get(const field_
  * @param size the maximum count of records (if size = 0 then the count of records is unlimited)
  * @return the count of records
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_by_index(record_list& records,
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+count_type tree_data_table<Table, IndexedRecord, Controlblock>::read_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -853,8 +884,8 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_by_index(
  * @param size the maximum count of records (if size = 0 then the count of records is unlimited)
  * @return the count of records
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_by_index(record_list& records,
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+count_type tree_data_table<Table, IndexedRecord, Controlblock>::rread_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
     typename base_class::lock_read lock(*this);
@@ -881,9 +912,9 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_by_index
  * @param end the end value of the index field
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
 template <typename Finder>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::
     find_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -908,9 +939,9 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  * @param end the end value of the index field
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
 template <typename Finder>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::
     rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -937,9 +968,9 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  * @param end the end value of the index field
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
 template <typename Finder>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::
     find_in_range(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -967,9 +998,9 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  * @param end the end value of the index field
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
 template <typename Finder>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::
     rfind_in_range(Finder& finder, const field_type& beg, const field_type& end) const
 {
     typename base_class::lock_read lock(*this);
@@ -997,9 +1028,9 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  * @param count the count of the find records
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
 template <typename Finder>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::
     find(Finder& finder, const pos_type beg, const count_type count) const
 {
     OUROBOROS_RANGE_ASSERT(count > 0);
@@ -1027,9 +1058,9 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  * @param count the count of the find records
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
 template <typename Finder>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::
     rfind(Finder& finder, const pos_type end, const count_type count) const
 {
     OUROBOROS_RANGE_ASSERT(count > 0);
@@ -1057,8 +1088,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  * @param count the count of the find records
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::
     find(const record_type& record, const pos_type beg, const count_type count) const
 {
     OUROBOROS_RANGE_ASSERT(count > 0);
@@ -1087,8 +1118,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  * @param count the count of the find records
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::
     rfind(const record_type& record, const pos_type end, const count_type count) const
 {
     OUROBOROS_RANGE_ASSERT(count > 0);
@@ -1116,8 +1147,8 @@ pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
  * @param end the end value of the index field
  * @return the count of records that have index in range [beg, end)
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-count_type tree_data_table<Table, IndexedRecord, Key, Interface>::
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+count_type tree_data_table<Table, IndexedRecord, Controlblock>::
     get_range_size(const field_type& beg, const field_type& end) const
 {
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
@@ -1133,19 +1164,19 @@ count_type tree_data_table<Table, IndexedRecord, Key, Interface>::
 /**
  * Clear the table
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-void tree_data_table<Table, IndexedRecord, Key, Interface>::clear()
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+void tree_data_table<Table, IndexedRecord, Controlblock>::clear()
 {
     typename base_class::lock_write lock(*this);
-    tree_data_table<Table, IndexedRecord, Key, Interface>::do_clear();
+    tree_data_table<Table, IndexedRecord, Controlblock>::do_clear();
 }
 
 /**
  * Clear the table
  */
 //virtual
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-void tree_data_table<Table, IndexedRecord, Key, Interface>::do_clear()
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+void tree_data_table<Table, IndexedRecord, Controlblock>::do_clear()
 {
     m_tree.clear();
 }
@@ -1154,8 +1185,8 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_clear()
  * Refresh the metadata of the table by the key
  * @return the result of the checking
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline bool tree_data_table<Table, IndexedRecord, Key, Interface>::refresh()
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline bool tree_data_table<Table, IndexedRecord, Controlblock>::refresh()
 {
     typename base_class::lock_read lock(*this);
     bool result = unsafe_table::refresh();
@@ -1172,8 +1203,8 @@ inline bool tree_data_table<Table, IndexedRecord, Key, Interface>::refresh()
 /**
  * Update the key by the metadata of the table
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline void tree_data_table<Table, IndexedRecord, Key, Interface>::update()
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline void tree_data_table<Table, IndexedRecord, Controlblock>::update()
 {
     typename base_class::lock_write lock(*this);
 #ifdef OUROBOROS_NODECACHE_ENABLED
@@ -1187,8 +1218,8 @@ inline void tree_data_table<Table, IndexedRecord, Key, Interface>::update()
 /**
  * Recovery the metadata of the table by the key
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-inline void tree_data_table<Table, IndexedRecord, Key, Interface>::recovery()
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+inline void tree_data_table<Table, IndexedRecord, Controlblock>::recovery()
 {
     typename base_class::lock_read lock(*this);
 #ifdef OUROBOROS_NODECACHE_ENABLED
@@ -1202,8 +1233,8 @@ inline void tree_data_table<Table, IndexedRecord, Key, Interface>::recovery()
 /**
  * Test the table
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-void tree_data_table<Table, IndexedRecord, Key, Interface>::test() const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+void tree_data_table<Table, IndexedRecord, Controlblock>::test() const
 {
     m_tree.test();
 }
@@ -1212,8 +1243,8 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::test() const
  * Get the position of the table
  * @return the position of the table
  */
-template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
-pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::get_root() const
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Controlblock>
+pos_type tree_data_table<Table, IndexedRecord, Controlblock>::get_root() const
 {
     return m_tree.get_root();
 }

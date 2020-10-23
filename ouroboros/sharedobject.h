@@ -27,9 +27,11 @@ public:
 
     inline static object_type* construct(const std::string& name, const object_type& obj); ///< construct the object
     inline static object_type* construct(const std::string& name); ///< construct the object
-    inline static object_type* allocate(const object_type& obj); ///< allocate the object
+    inline static object_type* construct_array(const std::string& name, const size_t size); ///< construct the array of the objects
     inline static void destruct(object_type* ptr); ///< destruct the object
     inline static void destruct(pointer& ptr); ///< destruct the object
+    inline static void destruct_array(object_type* ptr); ///< destruct the array of the objects
+    inline static void destruct_array(pointer& ptr); ///< destruct the array of the objects
     inline static const char* name(const pointer& ptr); ///< get the name of the object
 };
 
@@ -70,19 +72,20 @@ inline typename shared_object<T>::object_type* shared_object<T>::construct(const
 }
 
 /**
- * Allocate the object
- * @param obj the initial value of the object
- * @return the pointer to the object
+ * Construct the array of the objects
+ * @param name the name of the array
+ * @param size the size of the array
+ * @return the pointer to the array
  */
 //static
 template <typename T>
-inline typename shared_object<T>::object_type* shared_object<T>::allocate(const object_type& obj)
+inline typename shared_object<T>::object_type* shared_object<T>::construct_array(const std::string& name, const size_t size)
 {
-    void *ptr = shared_memory::instance().mem().allocate(sizeof(T));
+    object_type* ptr = shared_memory::instance().mem().find_or_construct<object_type>(name.c_str())[size]();
 #ifdef OUROBOROS_SHOW_MEMORY_INFO
-    show_sharedmem_info();
+    show_sharedmem_info(name);
 #endif
-    return new(ptr) T(obj);
+    return ptr;
 }
 
 /**
@@ -102,6 +105,26 @@ inline void shared_object<T>::destruct(object_type* ptr)
 //static
 template <typename T>
 inline void shared_object<T>::destruct(pointer& ptr)
+{
+}
+
+/**
+ * Destruct the array of the objects
+ * @param ptr the pointer to the array
+ */
+//static
+template <typename T>
+inline void shared_object<T>::destruct_array(object_type* ptr)
+{
+}
+
+/**
+ * Destruct the array of the objects
+ * @param ptr the pointer to the array
+ */
+//static
+template <typename T>
+inline void shared_object<T>::destruct_array(pointer& ptr)
 {
 }
 

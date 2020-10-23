@@ -56,24 +56,28 @@ public:
 
     inline static pointer construct(const std::string& name, const object_type& obj); ///< construct the object
     inline static pointer construct(const std::string& name); ///< construct the object
-    inline static pointer allocate(const object_type& obj); ///< allocate the object
+    inline static pointer construct_array(const std::string& name, const size_t size); ///< construct the array of the objects
     inline static void destruct(pointer ptr); ///< destruct the object
+    inline static void destruct_array(pointer ptr); ///< destruct the array of the objects
     inline static const char* name(const pointer ptr); ///< get the name of the object
 };
+
+struct object_adopt {};
 
 /**
  * Interface class adapter for working with an object
  */
-template <typename T, template <typename> class TInterface = local_object>
+template <typename T, template <typename> class Interface = local_object>
 class object
 {
-    typedef TInterface<T> interface_type;
+    typedef Interface<T> interface_type;
 public:
     typedef T object_type;
     typedef typename interface_type::pointer pointer;
 
     explicit inline object(const std::string& name);
     inline object(const std::string& name, const object_type& obj);
+    inline object(const object_adopt&, object_type& obj);
     ~object();
     inline object_type& operator() ();
     inline const object_type& operator() () const;
@@ -84,6 +88,7 @@ private:
     object();
 private:
     pointer m_ptr;
+    bool m_owner;
 };
 
 /**
@@ -108,6 +113,149 @@ private:
 private:
     object_type m_obj;
 };
+
+template <typename T>
+class reserved_place
+{
+    typedef reserved_place<T> self_type;
+public:
+    typedef T value_type;
+    reserved_place() :
+        m_initialized(false)
+    {}
+    ~reserved_place()
+    {
+        destruct();
+    }
+    value_type& get()
+    {
+        construct();
+        return *get_ptr();
+    }
+    const value_type& get() const
+    {
+        construct();
+        return *get_ptr();
+    }
+    void reset()
+    {
+        destruct();
+    }
+    value_type* operator->()
+    {
+        return &get();
+    }
+    const value_type* operator->() const
+    {
+        return &get();
+    }
+protected:
+    void construct() const
+    {
+        if (!m_initialized)
+        {
+            new(m_data) value_type();
+            m_initialized = true;
+        }
+    }
+    void destruct() const
+    {
+        if (m_initialized)
+        {
+            get_ptr()->~value_type();
+            m_initialized = false;
+        }
+    }
+    value_type* get_ptr() const
+    {
+        return reinterpret_cast<value_type*>(m_data);
+    }
+private:
+    mutable char m_data[sizeof(value_type)];
+    mutable bool m_initialized;
+};
+
+
+template <typename T, template <typename> class Interface = local_object>
+class object_array
+{
+protected:
+    typedef Interface<T> interface_type;
+public:
+    typedef T object_type;
+    typedef typename interface_type::pointer pointer;
+
+    inline object_array(const std::string& name, const size_t size) :
+        m_size(size),
+        m_ptr(interface_type::construct_array(name, size))
+    {}
+    ~object_array()
+    {
+        interface_type::destruct_array(m_ptr);
+    }
+    inline object_type& get(const size_t index)
+    {
+        OUROBOROS_RANGE_ASSERT(index < m_size);
+        return m_ptr[index];
+    }
+    inline const object_type& get(const size_t index) const
+    {
+        OUROBOROS_RANGE_ASSERT(index < m_size);
+        return m_ptr[index];
+    }
+    inline object_type& operator[] (const size_t index)
+    {
+        return get(index);
+    }
+    inline const object_type& operator[] (const size_t index) const
+    {
+        return get(index);
+    }
+    inline size_t size() const
+    {
+        return m_size;
+    }
+    inline const char* name() const
+    {
+        return interface_type::name(m_ptr);
+    }
+private:
+    object_array();
+private:
+    const size_t m_size;
+    pointer m_ptr;
+};
+
+template <typename T, template <typename> class Interface>
+class object_pool : public object_array<reserved_place<T>, Interface>
+{
+    typedef object_array<reserved_place<T>, Interface> base_class;
+    typedef typename base_class::interface_type interface_type;
+    typedef typename base_class::object_type object_type;
+public:
+    typedef typename object_type::value_type value_type;
+    object_pool(const std::string& name, const size_t size) :
+        base_class(name, size)
+    {
+    }
+    inline value_type& get(const size_t index)
+    {
+        return base_class::operator [](index % base_class::size()).get();
+    }
+    inline const value_type& get(const size_t index) const
+    {
+        return base_class::operator [](index % base_class::size()).get();
+    }
+    inline value_type& operator [](const size_t index)
+    {
+        return base_class::operator [](index % base_class::size()).get();
+    }
+    inline const value_type& operator [](const size_t index) const
+    {
+        return base_class::operator [](index % base_class::size()).get();
+    }
+};
+
 
 //==============================================================================
 //  local_object
@@ -138,15 +286,16 @@ inline typename local_object<T>::pointer local_object<T>::construct(const std::s
 }
 
 /**
- * Allocate the object
- * @param obj the initial value of the object
- * @return the pointer to the object
+ * Construct the array of the objects
+ * @param name the name of the array
+ * @param size the size of the array
+ * @return the pointer to the array
  */
 //static
 template <typename T>
-inline typename local_object<T>::pointer local_object<T>::allocate(const object_type& obj)
+inline typename local_object<T>::pointer local_object<T>::construct_array(const std::string& name, const size_t size)
 {
-    return new T(obj);
+    return new object_type[size];
 }
 
 /**
@@ -158,6 +307,17 @@ template <typename T>
 inline void local_object<T>::destruct(pointer ptr)
 {
     delete ptr;
+}
+
+/**
+ * Destruct the array of the objects
+ * @param ptr the pointer to the array
+ */
+//static
+template <typename T>
+inline void local_object<T>::destruct_array(pointer ptr)
+{
+    delete[] ptr;
 }
 
 /**
@@ -179,9 +339,10 @@ inline const char* local_object<T>::name(const pointer ptr)
  * Constructor
  * @param name the name of the object
  */
-template <typename T, template <typename> class TInterface>
-inline object<T, TInterface>::object(const std::string& name) :
-    m_ptr(interface_type::construct(name))
+template <typename T, template <typename> class Interface>
+inline object<T, Interface>::object(const std::string& name) :
+    m_ptr(interface_type::construct(name)),
+    m_owner(true)
 {
 }
 
@@ -190,27 +351,42 @@ inline object<T, TInterface>::object(const std::string& name) :
  * @param name the name of the object
  * @param obj the initial value of the object
  */
-template <typename T, template <typename> class TInterface>
-inline object<T, TInterface>::object(const std::string& name, const object_type& obj) :
-    m_ptr(interface_type::construct(name, obj))
+template <typename T, template <typename> class Interface>
+inline object<T, Interface>::object(const std::string& name, const object_type& obj) :
+    m_ptr(interface_type::construct(name, obj)),
+    m_owner(true)
+{
+}
+
+/**
+ * Constructor
+ * @param obj the initial value of the object
+ */
+template <typename T, template <typename> class Interface>
+inline object<T, Interface>::object(const object_adopt&, object_type& obj) :
+    m_ptr(&obj),
+    m_owner(false)
 {
 }
 
 /**
  * Destructor
  */
-template <typename T, template <typename> class TInterface>
-object<T, TInterface>::~object()
+template <typename T, template <typename> class Interface>
+object<T, Interface>::~object()
 {
-    interface_type::destruct(m_ptr);
+    if (m_owner)
+    {
+        interface_type::destruct(m_ptr);
+    }
 }
 
 /**
  * Get the reference to the object
  * @return the reference to the object
  */
-template <typename T, template <typename> class TInterface>
-inline typename object<T, TInterface>::object_type& object<T, TInterface>::operator() ()
+template <typename T, template <typename> class Interface>
+inline typename object<T, Interface>::object_type& object<T, Interface>::operator() ()
 {
     return *m_ptr;
 }
@@ -219,8 +395,8 @@ inline typename object<T, TInterface>::object_type& object<T, TInterface>::opera
  * Get the reference to the object
  * @return the reference to the object
  */
-template <typename T, template <typename> class TInterface>
-inline const typename object<T, TInterface>::object_type& object<T, TInterface>::operator() () const
+template <typename T, template <typename> class Interface>
+inline const typename object<T, Interface>::object_type& object<T, Interface>::operator() () const
 {
     return *m_ptr;
 }
@@ -229,8 +405,8 @@ inline const typename object<T, TInterface>::object_type& object<T, TInterface>:
  * Get the pointer to the object
  * @return the pointer to the object
  */
-template <typename T, template <typename> class TInterface>
-inline typename object<T, TInterface>::pointer object<T, TInterface>::operator-> ()
+template <typename T, template <typename> class Interface>
+inline typename object<T, Interface>::pointer object<T, Interface>::operator-> ()
 {
     return m_ptr;
 }
@@ -239,8 +415,8 @@ inline typename object<T, TInterface>::pointer object<T, TInterface>::operator->
  * Get the pointer to the object
  * @return the pointer to the object
  */
-template <typename T, template <typename> class TInterface>
-inline const typename object<T, TInterface>::pointer object<T, TInterface>::operator-> () const
+template <typename T, template <typename> class Interface>
+inline const typename object<T, Interface>::pointer object<T, Interface>::operator-> () const
 {
     return m_ptr;
 }
@@ -249,8 +425,8 @@ inline const typename object<T, TInterface>::pointer object<T, TInterface>::oper
  * Get the name of the object
  * @return the name of the object
  */
-template <typename T, template <typename> class TInterface>
-inline const char* object<T, TInterface>::name() const
+template <typename T, template <typename> class Interface>
+inline const char* object<T, Interface>::name() const
 {
     return interface_type::name(m_ptr);
 }

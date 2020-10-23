@@ -13,8 +13,8 @@ typedef record3< FIELD_INT32, FIELD_FLOAT, FIELD_STRING<64> > record_type;
  * @param count count of records
  * @param val initial value
  */
-template <typename TRecords>
-static void fill_records(TRecords& records, const size_t count, const size_t val)
+template <typename Records>
+static void fill_records(Records& records, const size_t count, const size_t val)
 {
     const std::string str("test");
     records.reserve(count);

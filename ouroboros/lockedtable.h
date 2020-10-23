@@ -90,7 +90,7 @@ public:
     typedef Table table_type;
     table_guard();
     explicit table_guard(const bool lock);
-    explicit table_guard(const bool lock, const size_t timeout);
+    table_guard(const bool lock, const size_t timeout);
     ~table_guard();
     inline void lock(table_type& table) const;
     inline void unlock() const;
@@ -103,19 +103,24 @@ public:
 /**
  * The table with support lock i/o operations
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-class locked_table : public Table<Source, Key, Interface>
+///@todo add the special template for stub_locker
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+class locked_table : public Table<Source, typename Controlblock::skey_type, typename Controlblock::interface_type>
 {
-    typedef Table<Source, Key, Interface> base_class;
+    typedef Table<Source, typename Controlblock::skey_type,
+            typename Controlblock::interface_type> base_class;
 public:
     typedef Source source_type;
     typedef base_class unsafe_table;
-    typedef Key skey_type;
-    typedef Interface interface_type;
+    typedef Controlblock controlblock_type;
+    typedef typename controlblock_type::skey_type skey_type;
+    typedef typename controlblock_type::interface_type interface_type;
     typedef table_guard<locked_table> guard_type;
 
     locked_table(source_type& source, skey_type& skey);
     locked_table(source_type& source, skey_type& skey, const guard_type& guard);
+    locked_table(source_type& source, controlblock_type controlblock);
+    locked_table(source_type& source, controlblock_type controlblock, const guard_type& guard);
 
     inline pos_type read(void *data, const pos_type pos) const; ///< read a record
     inline pos_type read(void *data, const pos_type beg, const count_type count) const; ///< read records [beg, beg + count)
@@ -176,7 +181,7 @@ public:
     inline void cancel(); ///< cancel the transaction
 
 protected:
-    typedef locked_table<Table, Source, Key, Interface, Locker> table_type;
+    typedef locked_table<Table, Source, Controlblock, Locker> table_type;
     typedef Locker locker_type;
     typedef sharable_table_lock<table_type> lock_read;
     typedef scoped_table_lock<table_type> lock_write;
@@ -193,16 +198,29 @@ private:
 /**
  * The interface class adapter for locked_table
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface>
-class interface_locked_table : public locked_table<Table, Source, Key, Interface, typename Interface::locker_type>
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock>
+class interface_locked_table : public locked_table<Table, Source, Controlblock,
+        typename Controlblock::interface_type::locker_type>
 {
-    typedef locked_table<Table, Source, Key, Interface, typename Interface::locker_type> base_class;
+    typedef locked_table<Table, Source, Controlblock,
+            typename Controlblock::interface_type::locker_type> base_class;
 public:
+    typedef typename base_class::controlblock_type controlblock_type;
     typedef typename base_class::source_type source_type;
     typedef typename base_class::guard_type guard_type;
     typedef typename base_class::skey_type skey_type;
-    interface_locked_table(source_type& source, skey_type& key) : base_class(source, key) {}
-    interface_locked_table(source_type& source, skey_type& key, const guard_type& guard) : base_class(source, key, guard) {}
+    interface_locked_table(source_type& source, skey_type& key) :
+        base_class(source, key)
+    {}
+    interface_locked_table(source_type& source, skey_type& key, const guard_type& guard) :
+        base_class(source, key, guard)
+    {}
+    interface_locked_table(source_type& source, controlblock_type controlblock) :
+        base_class(source, controlblock)
+    {}
+    interface_locked_table(source_type& source, controlblock_type controlblock, const guard_type& guard) :
+        base_class(source, controlblock, guard)
+    {}
 };
 
 /**
@@ -631,8 +649,8 @@ inline void table_guard<Table>::unlock() const
  * @param source the source of data
  * @param skey the key of the table
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-locked_table<Table, Source, Key, Interface, Locker>::locked_table(source_type& source, skey_type& skey) :
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+locked_table<Table, Source, Controlblock, Locker>::locked_table(source_type& source, skey_type& skey) :
     base_class(source, skey),
     m_scoped_count(0),
     m_sharable_count(0),
@@ -646,12 +664,44 @@ locked_table<Table, Source, Key, Interface, Locker>::locked_table(source_type& s
  * @param skey the key of the table
  * @param guard the guard of the table
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-locked_table<Table, Source, Key, Interface, Locker>::locked_table(source_type& source, skey_type& skey, const guard_type& guard) :
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+locked_table<Table, Source, Controlblock, Locker>::locked_table(source_type& source, skey_type& skey, const guard_type& guard) :
     base_class(source, skey),
     m_scoped_count(0),
     m_sharable_count(0),
     m_locker(make_object_name(source.name(), source.table_offset(skey.pos), "locker").c_str(), m_scoped_count, m_sharable_count)
+{
+    guard.lock(*this);
+}
+
+/**
+ * Constructor
+ * @param source the source of data
+ * @param controlblock the controlblock of the table
+ */
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+locked_table<Table, Source, Controlblock, Locker>::locked_table(source_type& source,
+        controlblock_type controlblock) :
+    base_class(source, controlblock.get_skey()),
+    m_scoped_count(0),
+    m_sharable_count(0),
+    m_locker(controlblock.get_lock(), m_scoped_count, m_sharable_count)
+{
+}
+
+/**
+ * Constructor
+ * @param source the source of data
+ * @param controlblock the controlblock of the table
+ * @param guard the guard of the table
+ */
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+locked_table<Table, Source, Controlblock, Locker>::locked_table(source_type& source,
+        controlblock_type controlblock, const guard_type& guard) :
+    base_class(source, controlblock.get_skey()),
+    m_scoped_count(0),
+    m_sharable_count(0),
+    m_locker(controlblock.get_lock(), m_scoped_count, m_sharable_count)
 {
     guard.lock(*this);
 }
@@ -662,8 +712,8 @@ locked_table<Table, Source, Key, Interface, Locker>::locked_table(source_type& s
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read(void *data, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::read(void *data, const pos_type pos) const
 {
     lock_read lock(*this);
     return base_class::read(data, pos);
@@ -676,8 +726,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read(void *
  * @param count the count of the read records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read(void *data, const pos_type beg, const count_type count) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::read(void *data, const pos_type beg, const count_type count) const
 {
     lock_read lock(*this);
     return base_class::read(data, beg, count);
@@ -689,8 +739,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read(void *
  * @param pos the position of the record
  * @return the position of the previous record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::rread(void *data, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::rread(void *data, const pos_type pos) const
 {
     lock_read lock(*this);
     return base_class::rread(data, pos);
@@ -702,8 +752,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::rread(void 
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::write(const void *data, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::write(const void *data, const pos_type pos)
 {
     lock_write lock(*this);
     return base_class::write(data, pos);
@@ -716,8 +766,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::write(const
  * @param count the count of the read records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::write(const void *data, const pos_type beg, const count_type count)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::write(const void *data, const pos_type beg, const count_type count)
 {
     lock_write lock(*this);
     return base_class::write(data, beg, count);
@@ -729,8 +779,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::write(const
  * @param pos the position of the record
  * @return the position of the previous record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::rwrite(const void *data, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::rwrite(const void *data, const pos_type pos)
 {
     lock_write lock(*this);
     return base_class::rwrite(data, pos);
@@ -741,8 +791,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::rwrite(cons
  * @param data data of the record
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::add(const void *data)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::add(const void *data)
 {
     lock_write lock(*this);
     return base_class::add(data);
@@ -754,8 +804,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::add(const v
  * @param count the count of the records
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::add(const void *data, const count_type count)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::add(const void *data, const count_type count)
 {
     lock_write lock(*this);
     return base_class::add(data, count);
@@ -766,8 +816,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::add(const v
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline count_type locked_table<Table, Source, Key, Interface, Locker>::remove(const pos_type pos)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline count_type locked_table<Table, Source, Controlblock, Locker>::remove(const pos_type pos)
 {
     lock_write lock(*this);
     return base_class::remove(pos);
@@ -779,8 +829,8 @@ inline count_type locked_table<Table, Source, Key, Interface, Locker>::remove(co
  * @param count the count of the delete record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline count_type locked_table<Table, Source, Key, Interface, Locker>::remove(const pos_type beg, const count_type count)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline count_type locked_table<Table, Source, Controlblock, Locker>::remove(const pos_type beg, const count_type count)
 {
     lock_write lock(*this);
     return base_class::remove(beg, count);
@@ -791,8 +841,8 @@ inline count_type locked_table<Table, Source, Key, Interface, Locker>::remove(co
  * @param count the count of deleted records
  * @return the count of remaining records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline count_type locked_table<Table, Source, Key, Interface, Locker>::remove_back(const count_type count)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline count_type locked_table<Table, Source, Controlblock, Locker>::remove_back(const count_type count)
 {
     lock_write lock(*this);
     return base_class::remove_back(count);
@@ -803,8 +853,8 @@ inline count_type locked_table<Table, Source, Key, Interface, Locker>::remove_ba
  * @param data data of the first record
  * @return the position of the first record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_front(void* data) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::read_front(void* data) const
 {
     lock_read lock(*this);
     return base_class::read_front(data);
@@ -816,8 +866,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_front(
  * @param count the count of the read records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_front(void* data, const count_type count) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::read_front(void* data, const count_type count) const
 {
     lock_read lock(*this);
     return base_class::read_front(data, count);
@@ -828,8 +878,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_front(
  * @param data data of the last record
  * @return the position of the last record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_back(void* data) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::read_back(void* data) const
 {
     lock_read lock(*this);
     return base_class::read_back(data);
@@ -841,8 +891,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_back(v
  * @param count the count of the read records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_back(void* data, const count_type count) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::read_back(void* data, const count_type count) const
 {
     lock_read lock(*this);
     return base_class::read_back(data, count);
@@ -855,8 +905,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::read_back(v
  * @param count the count of the find records
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::find(const void *data, const pos_type beg, const count_type count) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::find(const void *data, const pos_type beg, const count_type count) const
 {
     lock_read lock(*this);
     return base_class::find(data, beg, count);
@@ -869,8 +919,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::find(const 
  * @param count the count of the find records
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::rfind(const void *data, const pos_type end, const count_type count) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::rfind(const void *data, const pos_type end, const count_type count) const
 {
     lock_read lock(*this);
     return base_class::rfind(data, end, count);
@@ -880,8 +930,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::rfind(const
  * Get the begin position of records
  * @return the begin position of records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::beg_pos() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::beg_pos() const
 {
     lock_read lock(*this);
     return base_class::beg_pos();
@@ -891,8 +941,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::beg_pos() c
  * Set the begin position of records
  * @param pos the begin position of records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::set_beg_pos(const pos_type pos)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::set_beg_pos(const pos_type pos)
 {
     lock_write lock(*this);
     base_class::set_beg_pos(pos);
@@ -903,8 +953,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::set_beg_pos(con
  * @param count value of the increment
  * @return new begin position of records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::inc_beg_pos(const count_type count)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::inc_beg_pos(const count_type count)
 {
     lock_write lock(*this);
     return base_class::inc_beg_pos(count);
@@ -915,8 +965,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::inc_beg_pos
  * @param count value of the decrement
  * @return new begin position of records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::dec_beg_pos(const count_type count)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::dec_beg_pos(const count_type count)
 {
     lock_write lock(*this);
     return base_class::dec_beg_pos(count);
@@ -926,8 +976,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::dec_beg_pos
  * Get the end position of records
  * @return the end position of records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::end_pos() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::end_pos() const
 {
     lock_read lock(*this);
     return base_class::end_pos();
@@ -937,8 +987,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::end_pos() c
  * Set the end position of records
  * @param pos the end position of records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::set_end_pos(const pos_type pos)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::set_end_pos(const pos_type pos)
 {
     lock_write lock(*this);
     base_class::set_end_pos(pos);
@@ -949,8 +999,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::set_end_pos(con
  * @param count value of the increment
  * @return new end position of records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::inc_end_pos(const count_type count)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::inc_end_pos(const count_type count)
 {
     lock_write lock(*this);
     return base_class::inc_end_pos(count);
@@ -961,8 +1011,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::inc_end_pos
  * @param count value of the decrement
  * @return new end position of records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::dec_end_pos(const count_type count)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::dec_end_pos(const count_type count)
 {
     lock_write lock(*this);
     return base_class::dec_end_pos(count);
@@ -974,8 +1024,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::dec_end_pos
  * @param end the end position of the records
  * @return the count of pages in the range
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline count_type locked_table<Table, Source, Key, Interface, Locker>::distance(const pos_type beg, const pos_type end) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline count_type locked_table<Table, Source, Controlblock, Locker>::distance(const pos_type beg, const pos_type end) const
 {
     lock_read lock(*this);
     return base_class::distance(beg, end);
@@ -985,8 +1035,8 @@ inline count_type locked_table<Table, Source, Key, Interface, Locker>::distance(
  * Get the count of records
  * @return the count of records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline count_type locked_table<Table, Source, Key, Interface, Locker>::count() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline count_type locked_table<Table, Source, Controlblock, Locker>::count() const
 {
     lock_read lock(*this);
     return base_class::count();
@@ -996,8 +1046,8 @@ inline count_type locked_table<Table, Source, Key, Interface, Locker>::count() c
  * Set the count of records
  * @param count the count of records
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::set_count(const count_type count)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::set_count(const count_type count)
 {
     lock_write lock(*this);
     base_class::set_count(count);
@@ -1007,8 +1057,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::set_count(const
  * Check the table is empty
  * @return the result of the checking
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline bool locked_table<Table, Source, Key, Interface, Locker>::empty() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline bool locked_table<Table, Source, Controlblock, Locker>::empty() const
 {
     lock_read lock(*this);
     return base_class::empty();
@@ -1018,8 +1068,8 @@ inline bool locked_table<Table, Source, Key, Interface, Locker>::empty() const
  * Get the position of the first record
  * @return the position of the first record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::front_pos() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::front_pos() const
 {
     lock_read lock(*this);
     return base_class::front_pos();
@@ -1029,8 +1079,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::front_pos()
  * Get the position of the last record
  * @return the position of the last record
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline pos_type locked_table<Table, Source, Key, Interface, Locker>::back_pos() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline pos_type locked_table<Table, Source, Controlblock, Locker>::back_pos() const
 {
     lock_read lock(*this);
     return base_class::back_pos();
@@ -1039,8 +1089,8 @@ inline pos_type locked_table<Table, Source, Key, Interface, Locker>::back_pos() 
 /**
  * Clear the table
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::clear()
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::clear()
 {
     lock_write lock(*this);
     base_class::clear();
@@ -1050,9 +1100,9 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::clear()
  * Get the locker of the table
  * @return the locker of the table
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline typename locked_table<Table, Source, Key, Interface, Locker>::locker_type&
-    locked_table<Table, Source, Key, Interface, Locker>::locker() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline typename locked_table<Table, Source, Controlblock, Locker>::locker_type&
+    locked_table<Table, Source, Controlblock, Locker>::locker() const
 {
     return m_locker;
 }
@@ -1060,8 +1110,8 @@ inline typename locked_table<Table, Source, Key, Interface, Locker>::locker_type
 /**
  * Lock the table for reading
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::lock_sharable() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::lock_sharable() const
 {
     table_lock<table_type, locker_type>::lock_sharable(*this);
 }
@@ -1070,8 +1120,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::lock_sharable()
  * Lock the table for reading with a timeout
  * @param timeout the timeout
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::lock_sharable(const size_t timeout) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::lock_sharable(const size_t timeout) const
 {
     table_lock<table_type, locker_type>::lock_sharable(*this, timeout);
 }
@@ -1079,8 +1129,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::lock_sharable(c
 /**
  * Unlock the table for reading
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::unlock_sharable() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::unlock_sharable() const
 {
     table_lock<table_type, locker_type>::unlock_sharable(*this);
 }
@@ -1088,8 +1138,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::unlock_sharable
 /**
  * Lock the table for writing
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::lock_scoped() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::lock_scoped() const
 {
     table_lock<table_type, locker_type>::lock_scoped(*this);
 }
@@ -1098,8 +1148,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::lock_scoped() c
  * Lock the table for writing with a timeout
  * @param timeout the timeout
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::lock_scoped(const size_t timeout) const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::lock_scoped(const size_t timeout) const
 {
     table_lock<table_type, locker_type>::lock_scoped(*this, timeout);
 }
@@ -1107,8 +1157,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::lock_scoped(con
 /**
  * Unlock the table for writing
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::unlock_scoped() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::unlock_scoped() const
 {
     table_lock<table_type, locker_type>::unlock_scoped(*this);
 }
@@ -1117,8 +1167,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::unlock_scoped()
  * Get the count of the reading lock
  * @return the count of the reading lock
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline count_type locked_table<Table, Source, Key, Interface, Locker>::sharable_count() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline count_type locked_table<Table, Source, Controlblock, Locker>::sharable_count() const
 {
     return m_sharable_count;
 }
@@ -1127,8 +1177,8 @@ inline count_type locked_table<Table, Source, Key, Interface, Locker>::sharable_
  * Get the count of the writing lock
  * @return the count of the writing lock
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline count_type locked_table<Table, Source, Key, Interface, Locker>::scoped_count() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline count_type locked_table<Table, Source, Controlblock, Locker>::scoped_count() const
 {
     return m_scoped_count;
 }
@@ -1137,8 +1187,8 @@ inline count_type locked_table<Table, Source, Key, Interface, Locker>::scoped_co
  * Get the revision of modifying the table
  * @return the revision of modifying the table
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline revision_type locked_table<Table, Source, Key, Interface, Locker>::revision() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline revision_type locked_table<Table, Source, Controlblock, Locker>::revision() const
 {
     lock_read lock(*this);
     return base_class::revision();
@@ -1148,8 +1198,8 @@ inline revision_type locked_table<Table, Source, Key, Interface, Locker>::revisi
  * Set the revision of modifying the table
  * @param rev the revision of modifying the table
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::set_revision(const revision_type rev)
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::set_revision(const revision_type rev)
 {
     lock_write lock(*this);
     base_class::set_revision(rev);
@@ -1159,8 +1209,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::set_revision(co
  * Increment the revision of modifying the table
  * @return new revision of modifying the table
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline revision_type locked_table<Table, Source, Key, Interface, Locker>::inc_revision()
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline revision_type locked_table<Table, Source, Controlblock, Locker>::inc_revision()
 {
     lock_write lock(*this);
     return base_class::inc_revision();
@@ -1170,8 +1220,8 @@ inline revision_type locked_table<Table, Source, Key, Interface, Locker>::inc_re
  * Check the table is relevant
  * @return the result of the checking
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline bool locked_table<Table, Source, Key, Interface, Locker>::relevant() const
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline bool locked_table<Table, Source, Controlblock, Locker>::relevant() const
 {
     lock_read lock(*this);
     return base_class::relevant();
@@ -1181,8 +1231,8 @@ inline bool locked_table<Table, Source, Key, Interface, Locker>::relevant() cons
  * Refresh the metadata of the table by the key
  * @return the result of the checking
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline bool locked_table<Table, Source, Key, Interface, Locker>::refresh()
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline bool locked_table<Table, Source, Controlblock, Locker>::refresh()
 {
     lock_read lock(*this);
     return base_class::refresh();
@@ -1191,8 +1241,8 @@ inline bool locked_table<Table, Source, Key, Interface, Locker>::refresh()
 /**
  * Update the key by the metadata of the table
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::update()
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::update()
 {
     lock_write lock(*this);
     base_class::update();
@@ -1201,8 +1251,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::update()
 /**
  * Recovery the metadata of the table by the key
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::recovery()
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::recovery()
 {
     lock_read lock(*this);
     base_class::recovery();
@@ -1211,8 +1261,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::recovery()
 /**
  * Start the transaction
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::start()
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::start()
 {
     lock_read lock(*this);
     base_class::start();
@@ -1221,8 +1271,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::start()
 /**
  * Stop the transaction
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::stop()
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::stop()
 {
     lock_read lock(*this);
     base_class::stop();
@@ -1231,8 +1281,8 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::stop()
 /**
  * Cancel the transaction
  */
-template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
-inline void locked_table<Table, Source, Key, Interface, Locker>::cancel()
+template <template <typename, typename, typename> class Table, typename Source, typename Controlblock, typename Locker>
+inline void locked_table<Table, Source, Controlblock, Locker>::cancel()
 {
     lock_read lock(*this);
     base_class::cancel();

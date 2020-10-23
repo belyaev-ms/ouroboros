@@ -27,13 +27,15 @@ namespace ouroboros
 {
 
 /**
- * The lock based a mutex which is placed in a shared memory
+ * The locker based a lock which is placed in a shared memory
  */
-template <typename TMutex>
-class base_mutex_lock
+template <typename Lock>
+class base_shared_locker
 {
 public:
-    explicit inline base_mutex_lock(const std::string& name);
+    typedef Lock lock_type;
+    explicit inline base_shared_locker(const std::string& name);
+    explicit inline base_shared_locker(lock_type& lock);
 
     inline bool lock(); ///< set the exclusive lock
     inline bool lock(const size_t timeout); ///< set the exclusive lock with a timeout
@@ -50,41 +52,63 @@ private:
         LS_NONE
     };
 private:
-    typedef TMutex lock_type;
     object<lock_type, shared_object> m_lock;
     lock_state m_locked;
 };
 
 /**
- * The lock based the interprocess_upgradable_mutex
+ * The locker based the interprocess_upgradable_mutex
  */
-struct mutex_lock : public base_mutex_lock<boost::interprocess::interprocess_upgradable_mutex>
+class mutex_locker : public base_shared_locker<boost::interprocess::interprocess_upgradable_mutex>
 {
-    explicit inline mutex_lock(const std::string& name) :
-        base_mutex_lock<boost::interprocess::interprocess_upgradable_mutex>(name)
+    typedef base_shared_locker<boost::interprocess::interprocess_upgradable_mutex> base_class;
+public:
+    typedef base_class::lock_type lock_type;
+    explicit inline mutex_locker(const std::string& name) :
+        base_class(name)
+    {}
+    explicit inline mutex_locker(lock_type& lock) :
+        base_class(lock)
     {}
 };
 
 /**
  * The lock based the shared_lock
  */
-struct simple_mutex_lock : public base_mutex_lock<shared_lock>
+class simple_mutex_locker : public base_shared_locker<shared_lock>
 {
-    explicit inline simple_mutex_lock(const std::string& name) :
-        base_mutex_lock<shared_lock>(name)
+    typedef base_shared_locker<shared_lock> base_class;
+public:
+    typedef base_class::lock_type lock_type;
+    explicit inline simple_mutex_locker(const std::string& name) :
+        base_shared_locker<shared_lock>(name)
+    {}
+    explicit inline simple_mutex_locker(lock_type& lock) :
+        base_shared_locker<shared_lock>(lock)
     {}
 };
 
 //==============================================================================
-//  base_mutex_lock
+//  base_shared_locker
 //==============================================================================
 /**
  * Constructor
- * @param name the name of the lock
+ * @param name the name of the locker
  */
-template <typename TMutex>
-inline base_mutex_lock<TMutex>::base_mutex_lock(const std::string& name) :
+template <typename Lock>
+inline base_shared_locker<Lock>::base_shared_locker(const std::string& name) :
     m_lock(make_object_name(name, "lock")),
+    m_locked(LS_NONE)
+{
+}
+
+/**
+ * Constructor
+ * @param lock the lock of the locker
+ */
+template <typename Lock>
+inline base_shared_locker<Lock>::base_shared_locker(lock_type& lock) :
+    m_lock(object_adopt(), lock),
     m_locked(LS_NONE)
 {
 }
@@ -93,8 +117,8 @@ inline base_mutex_lock<TMutex>::base_mutex_lock(const std::string& name) :
  * Set the exclusive lock
  * @return the result of the setting
  */
-template <typename TMutex>
-inline bool base_mutex_lock<TMutex>::lock()
+template <typename Lock>
+inline bool base_shared_locker<Lock>::lock()
 {
     return lock(OUROBOROS_LOCK_TIMEOUT);
 }
@@ -104,8 +128,8 @@ inline bool base_mutex_lock<TMutex>::lock()
  * @param timeout the timeout
  * @return the result of the setting
  */
-template <typename TMutex>
-inline bool base_mutex_lock<TMutex>::lock(const size_t timeout)
+template <typename Lock>
+inline bool base_shared_locker<Lock>::lock(const size_t timeout)
 {
     assert(LS_NONE == m_locked);
     m_locked = m_lock->timed_lock(boost::get_system_time() + boost::posix_time::millisec(timeout)) ? LS_SCOPED : LS_NONE;
@@ -116,8 +140,8 @@ inline bool base_mutex_lock<TMutex>::lock(const size_t timeout)
  * Remove the exclusive lock
  * @return the result of the removing
  */
-template <typename TMutex>
-inline bool base_mutex_lock<TMutex>::unlock()
+template <typename Lock>
+inline bool base_shared_locker<Lock>::unlock()
 {
     assert(LS_SCOPED == m_locked);
     m_lock->unlock();
@@ -129,8 +153,8 @@ inline bool base_mutex_lock<TMutex>::unlock()
  * Set the shared lock
  * @return the result
  */
-template <typename TMutex>
-inline bool base_mutex_lock<TMutex>::lock_sharable()
+template <typename Lock>
+inline bool base_shared_locker<Lock>::lock_sharable()
 {
     return lock_sharable(OUROBOROS_LOCK_TIMEOUT);
 }
@@ -140,8 +164,8 @@ inline bool base_mutex_lock<TMutex>::lock_sharable()
  * @param timeout the timeout
  * @return the result
  */
-template <typename TMutex>
-inline bool base_mutex_lock<TMutex>::lock_sharable(const size_t timeout)
+template <typename Lock>
+inline bool base_shared_locker<Lock>::lock_sharable(const size_t timeout)
 {
     assert(LS_NONE == m_locked);
     m_locked = m_lock->timed_lock_sharable(boost::get_system_time() + boost::posix_time::millisec(timeout)) ? LS_SHARABLE : LS_NONE;
@@ -152,8 +176,8 @@ inline bool base_mutex_lock<TMutex>::lock_sharable(const size_t timeout)
  * Remove the shared lock
  * @return the result
  */
-template <typename TMutex>
-inline bool base_mutex_lock<TMutex>::unlock_sharable()
+template <typename Lock>
+inline bool base_shared_locker<Lock>::unlock_sharable()
 {
     assert(LS_SHARABLE == m_locked);
     m_lock->unlock_sharable();
@@ -165,8 +189,8 @@ inline bool base_mutex_lock<TMutex>::unlock_sharable()
  * Get the name of the locker
  * @return the name of the locker
  */
-template <typename TMutex>
-inline const char* base_mutex_lock<TMutex>::name() const
+template <typename Lock>
+inline const char* base_shared_locker<Lock>::name() const
 {
     return m_lock.name();
 }

@@ -78,7 +78,7 @@ private:
 template <typename PNode>
 class rbtree
 {
-    template <template <typename, typename, typename> class, typename, typename, typename>
+    template <template <typename, typename, typename> class, typename, typename>
     friend class tree_data_table;
 public:
     typedef PNode pnode_type;
@@ -158,7 +158,7 @@ private:
 template <typename PNode>
 class fast_rbtree : public rbtree<PNode>
 {
-    template <template <typename, typename, typename> class, typename, typename, typename>
+    template <template <typename, typename, typename> class, typename, typename>
     friend class tree_data_table;
     typedef rbtree<PNode> base_class;
 public:

@@ -7,17 +7,19 @@
 #include "ouroboros/field_types.h"
 #include "ouroboros/datatable.h"
 #include "ouroboros/treekey.h"
+#include "ouroboros/controlblock.h"
 #include "ouroboros/rbtree.h"
 #include "ouroboros/interface.h"
 
 using namespace ouroboros;
 
 typedef tree_key skey_type;
+typedef control_block<skey_type, local_interface> controlblock_type;
 typedef std::set<int32_t> sample_tree_type;
 typedef data_node<int32_t, int32_t> node_type;
 typedef record1< data_field<node_type> > record_type;
 typedef data_source<interface_table, record_type, local_interface> datasource_type;
-typedef data_table<interface_table, record_type, skey_type, local_interface> datatable_type;
+typedef data_table<interface_table, record_type, controlblock_type> datatable_type;
 typedef rbtree_table_adapter<datatable_type> table_type;
 typedef table_smart_pnode<node_type, table_type> pnode_type;
 typedef fast_rbtree<pnode_type> test_tree_type;

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include "ouroboros/key.h"
+#include "ouroboros/controlblock.h"
 #include "ouroboros/find.h"
 #include "ouroboros/container.h"
 #include "ouroboros/index.h"
@@ -14,8 +15,9 @@
 
 options_type options;
 typedef simple_key skey_type;
+typedef control_block<skey_type, local_interface> controlblock_type;
 typedef data_source<interface_table, record_type, local_interface> datasource_type;
-typedef indexed_table<interface_table, record_type, index1, skey_type, local_interface> datatable_type;
+typedef indexed_table<interface_table, record_type, index1, controlblock_type> datatable_type;
 
 #include "datatable_test.h"
 //@todo need to add specific test for IndexTable

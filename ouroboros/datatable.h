@@ -53,21 +53,22 @@ public:
  * The interface class adapter for the table that has the records
  */
 template <template <typename, typename, typename> class Table, typename Record, typename Interface> class data_source;
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-class data_table : public interface_locked_table<Table, data_source<Table, Record, Interface>, Key, Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+class data_table : public interface_locked_table<Table, data_source<Table, Record, typename Controlblock::interface_type>, Controlblock>
 {
-    typedef interface_locked_table<Table, data_source<Table, Record, Interface>, Key, Interface> base_class;
-    typedef data_table<Table, Record, Key, Interface> self_type;
+    typedef interface_locked_table<Table, data_source<Table, Record, typename Controlblock::interface_type>, Controlblock> base_class;
+    typedef data_table<Table, Record, Controlblock> self_type;
     template <typename, typename, template <typename> class, typename> friend class data_set;
     template <typename, typename, typename> friend class table_pnode;
     template <typename, typename> friend class node_cache;
     template <typename> friend class rbtree;
 public:
     typedef typename base_class::unsafe_table unsafe_table; ///< the table that doesn't have locking
-    typedef Interface interface_type;
     typedef Record record_type;
     typedef std::vector<record_type> record_list;
-    typedef Key skey_type;
+    typedef Controlblock controlblock_type;
+    typedef typename controlblock_type::skey_type skey_type;
+    typedef typename controlblock_type::interface_type interface_type;
     typedef record_type raw_record_type;
     typedef data_source<Table, record_type, interface_type> source_type;
     typedef typename base_class::guard_type guard_type;
@@ -76,6 +77,8 @@ public:
 
     data_table(source_type& source, skey_type& skey);
     data_table(source_type& source, skey_type& skey, const guard_type& guard);
+    data_table(source_type& source, controlblock_type controlblock);
+    data_table(source_type& source, controlblock_type controlblock, const guard_type& guard);
 
     const_cursor begin() const; ///< get the begin reading cursor
     const_cursor end() const; ///< get the end reading cursor
@@ -259,8 +262,8 @@ cursor_type<Table>& cursor_type<Table>::operator<< (const record_type& record)
  * @param source the source of data
  * @param skey the key of the table
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-data_table<Table, Record, Key, Interface>::data_table(source_type& source, skey_type& skey) :
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+data_table<Table, Record, Controlblock>::data_table(source_type& source, skey_type& skey) :
     base_class(source, skey),
     m_buffer(base_class::rec_size())
 {
@@ -272,9 +275,34 @@ data_table<Table, Record, Key, Interface>::data_table(source_type& source, skey_
  * @param skey the key of the table
  * @param guard the guard of the table
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-data_table<Table, Record, Key, Interface>::data_table(source_type& source, skey_type& skey, const guard_type& guard) :
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+data_table<Table, Record, Controlblock>::data_table(source_type& source, skey_type& skey, const guard_type& guard) :
     base_class(source, skey, guard),
+    m_buffer(base_class::rec_size())
+{
+}
+
+/**
+ * Constructor
+ * @param source the source of data
+ * @param controlblock the controlblock of the table
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+data_table<Table, Record, Controlblock>::data_table(source_type& source, controlblock_type controlblock) :
+    base_class(source, controlblock),
+    m_buffer(base_class::rec_size())
+{
+}
+
+/**
+ * Constructor
+ * @param source the source of data
+ * @param controlblock the controlblock of the table
+ * @param guard the guard of the table
+ */
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+data_table<Table, Record, Controlblock>::data_table(source_type& source, controlblock_type controlblock, const guard_type& guard) :
+    base_class(source, controlblock, guard),
     m_buffer(base_class::rec_size())
 {
 }
@@ -283,9 +311,9 @@ data_table<Table, Record, Key, Interface>::data_table(source_type& source, skey_
  * Get the begin reading cursor
  * @return the begin reading cursor
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-typename data_table<Table, Record, Key, Interface>::const_cursor
-    data_table<Table, Record, Key, Interface>::begin() const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+typename data_table<Table, Record, Controlblock>::const_cursor
+    data_table<Table, Record, Controlblock>::begin() const
 {
     return const_cursor(*this, base_class::beg_pos());
 }
@@ -294,9 +322,9 @@ typename data_table<Table, Record, Key, Interface>::const_cursor
  * Get the end reading cursor
  * @return the end reading cursor
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-typename data_table<Table, Record, Key, Interface>::const_cursor
-    data_table<Table, Record, Key, Interface>::end() const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+typename data_table<Table, Record, Controlblock>::const_cursor
+    data_table<Table, Record, Controlblock>::end() const
 {
     return const_cursor(*this, base_class::end_pos());
 }
@@ -305,9 +333,9 @@ typename data_table<Table, Record, Key, Interface>::const_cursor
  * Get the begin writing cursor
  * @return the begin writing cursor
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-typename data_table<Table, Record, Key, Interface>::cursor
-    data_table<Table, Record, Key, Interface>::begin()
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+typename data_table<Table, Record, Controlblock>::cursor
+    data_table<Table, Record, Controlblock>::begin()
 {
     return cursor(*this, base_class::beg_pos());
 }
@@ -316,9 +344,9 @@ typename data_table<Table, Record, Key, Interface>::cursor
  * Get the end writing cursor
  * @return the end writing cursor
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-typename data_table<Table, Record, Key, Interface>::cursor
-    data_table<Table, Record, Key, Interface>::end()
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+typename data_table<Table, Record, Controlblock>::cursor
+    data_table<Table, Record, Controlblock>::end()
 {
     return cursor(*this, base_class::end_pos());
 }
@@ -329,8 +357,8 @@ typename data_table<Table, Record, Key, Interface>::cursor
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::read(record_type& record, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::read(record_type& record, const pos_type pos) const
 {
     return do_read<base_class>(record, pos);
 }
@@ -341,8 +369,8 @@ pos_type data_table<Table, Record, Key, Interface>::read(record_type& record, co
  * @param pos the begin position of the records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::read(record_list& records, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::read(record_list& records, const pos_type pos) const
 {
     return do_read<base_class>(records, pos);
 }
@@ -353,8 +381,8 @@ pos_type data_table<Table, Record, Key, Interface>::read(record_list& records, c
  * @param pos the position of the record
  * @return the position of the previous record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::rread(record_type& record, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::rread(record_type& record, const pos_type pos) const
 {
     return do_rread<base_class>(record, pos);
 }
@@ -365,8 +393,8 @@ pos_type data_table<Table, Record, Key, Interface>::rread(record_type& record, c
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::write(const record_type& record, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::write(const record_type& record, const pos_type pos)
 {
     return do_write<base_class>(record, pos);
 }
@@ -377,8 +405,8 @@ pos_type data_table<Table, Record, Key, Interface>::write(const record_type& rec
  * @param pos the begin position of the records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::write(const record_list& records, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::write(const record_list& records, const pos_type pos)
 {
     return do_write<base_class>(records, pos);
 }
@@ -389,8 +417,8 @@ pos_type data_table<Table, Record, Key, Interface>::write(const record_list& rec
  * @param pos the position of the record
  * @return the position of the previous record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::rwrite(const record_type& record, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::rwrite(const record_type& record, const pos_type pos)
 {
     return do_rwrite<base_class>(record, pos);
 }
@@ -400,8 +428,8 @@ pos_type data_table<Table, Record, Key, Interface>::rwrite(const record_type& re
  * @param record data of the record
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::add(const record_type& record)
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::add(const record_type& record)
 {
     return do_add<base_class>(record);
 }
@@ -411,8 +439,8 @@ pos_type data_table<Table, Record, Key, Interface>::add(const record_type& recor
  * @param records data of the records
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::add(const record_list& records)
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::add(const record_list& records)
 {
     return do_add<base_class>(records);
 }
@@ -422,8 +450,8 @@ pos_type data_table<Table, Record, Key, Interface>::add(const record_list& recor
  * @param record data of the first record
  * @return the position of the first record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::read_front(record_type& record) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::read_front(record_type& record) const
 {
     return do_read_front<base_class>(record);
 }
@@ -433,8 +461,8 @@ pos_type data_table<Table, Record, Key, Interface>::read_front(record_type& reco
  * @param records data of the first records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::read_front(record_list& records) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::read_front(record_list& records) const
 {
     return do_read_front<base_class>(records);
 }
@@ -444,8 +472,8 @@ pos_type data_table<Table, Record, Key, Interface>::read_front(record_list& reco
  * @param record data of the last record
  * @return the position of the last record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::read_back(record_type& record) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::read_back(record_type& record) const
 {
     return do_read_back<base_class>(record);
 }
@@ -455,8 +483,8 @@ pos_type data_table<Table, Record, Key, Interface>::read_back(record_type& recor
  * @param records data of the last records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::read_back(record_list& records) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::read_back(record_list& records) const
 {
     return do_read_back<base_class>(records);
 }
@@ -468,8 +496,8 @@ pos_type data_table<Table, Record, Key, Interface>::read_back(record_list& recor
  * @param count the count of the find records
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::find(const record_type& record, const pos_type beg, const count_type count) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::find(const record_type& record, const pos_type beg, const count_type count) const
 {
     record.pack(m_buffer.get());
     return base_class::find(m_buffer.get(), beg, count);
@@ -482,8 +510,8 @@ pos_type data_table<Table, Record, Key, Interface>::find(const record_type& reco
  * @param count the count of the find records
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::rfind(const record_type& record, const pos_type end, const count_type count) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::rfind(const record_type& record, const pos_type end, const count_type count) const
 {
     record.pack(m_buffer.get());
     return base_class::rfind(m_buffer.get(), end, count);
@@ -496,10 +524,10 @@ pos_type data_table<Table, Record, Key, Interface>::rfind(const record_type& rec
  * @param count the count of the find records
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 // cppcheck-suppress syntaxError
 template <typename Finder>
-pos_type data_table<Table, Record, Key, Interface>::find(Finder& finder, const pos_type beg, const count_type count) const
+pos_type data_table<Table, Record, Controlblock>::find(Finder& finder, const pos_type beg, const count_type count) const
 {
     typename base_class::lock_read lock(*this);
     if (!unsafe_table::empty())
@@ -527,9 +555,9 @@ pos_type data_table<Table, Record, Key, Interface>::find(Finder& finder, const p
  * @param count the count of the find records
  * @return the position of the found record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename Finder>
-pos_type data_table<Table, Record, Key, Interface>::rfind(Finder& finder, const pos_type end, const count_type count) const
+pos_type data_table<Table, Record, Controlblock>::rfind(Finder& finder, const pos_type end, const count_type count) const
 {
     typename base_class::lock_read lock(*this);
     if (!unsafe_table::empty())
@@ -556,9 +584,9 @@ pos_type data_table<Table, Record, Key, Interface>::rfind(Finder& finder, const 
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-inline pos_type data_table<Table, Record, Key, Interface>::do_read(record_type& record, const pos_type pos) const
+inline pos_type data_table<Table, Record, Controlblock>::do_read(record_type& record, const pos_type pos) const
 {
     const pos_type result = T::read(m_buffer.get(), pos);
     record.unpack(m_buffer.get());
@@ -571,9 +599,9 @@ inline pos_type data_table<Table, Record, Key, Interface>::do_read(record_type& 
  * @param pos the position of the record
  * @return the position of the previous record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-inline pos_type data_table<Table, Record, Key, Interface>::do_rread(record_type& record, const pos_type pos) const
+inline pos_type data_table<Table, Record, Controlblock>::do_rread(record_type& record, const pos_type pos) const
 {
     const pos_type result = T::rread(m_buffer.get(), pos);
     record.unpack(m_buffer.get());
@@ -586,9 +614,9 @@ inline pos_type data_table<Table, Record, Key, Interface>::do_rread(record_type&
  * @param pos the begin position of the records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-inline pos_type data_table<Table, Record, Key, Interface>::do_read(record_list& records, const pos_type pos) const
+inline pos_type data_table<Table, Record, Controlblock>::do_read(record_list& records, const pos_type pos) const
 {
     const count_type count = records.size();
     OUROBOROS_RANGE_ASSERT(count > 0);
@@ -609,9 +637,9 @@ inline pos_type data_table<Table, Record, Key, Interface>::do_read(record_list& 
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-inline pos_type data_table<Table, Record, Key, Interface>::do_write(const record_type& record, const pos_type pos)
+inline pos_type data_table<Table, Record, Controlblock>::do_write(const record_type& record, const pos_type pos)
 {
     record.pack(m_buffer.get());
     return T::write(m_buffer.get(), pos);
@@ -623,9 +651,9 @@ inline pos_type data_table<Table, Record, Key, Interface>::do_write(const record
  * @param pos the position of the record
  * @return the position of the previous record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-inline pos_type data_table<Table, Record, Key, Interface>::do_rwrite(const record_type& record, const pos_type pos)
+inline pos_type data_table<Table, Record, Controlblock>::do_rwrite(const record_type& record, const pos_type pos)
 {
     record.pack(m_buffer.get());
     return T::rwrite(m_buffer.get(), pos);
@@ -637,9 +665,9 @@ inline pos_type data_table<Table, Record, Key, Interface>::do_rwrite(const recor
  * @param pos the begin position of the records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-inline pos_type data_table<Table, Record, Key, Interface>::do_write(const record_list& records, const pos_type pos)
+inline pos_type data_table<Table, Record, Controlblock>::do_write(const record_list& records, const pos_type pos)
 {
     const count_type count = records.size();
     OUROBOROS_RANGE_ASSERT(count > 0);
@@ -657,9 +685,9 @@ inline pos_type data_table<Table, Record, Key, Interface>::do_write(const record
  * @param record data of the record
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-inline pos_type data_table<Table, Record, Key, Interface>::do_add(const record_type& record)
+inline pos_type data_table<Table, Record, Controlblock>::do_add(const record_type& record)
 {
     record.pack(m_buffer.get());
     return T::add(m_buffer.get());
@@ -670,9 +698,9 @@ inline pos_type data_table<Table, Record, Key, Interface>::do_add(const record_t
  * @param records data of the records
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-inline pos_type data_table<Table, Record, Key, Interface>::do_add(const record_list& records)
+inline pos_type data_table<Table, Record, Controlblock>::do_add(const record_list& records)
 {
     const count_type count = records.size();
     OUROBOROS_RANGE_ASSERT(count > 0);
@@ -690,9 +718,9 @@ inline pos_type data_table<Table, Record, Key, Interface>::do_add(const record_l
  * @param record data of the first record
  * @return the position of the first record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-pos_type data_table<Table, Record, Key, Interface>::do_read_front(record_type& record) const
+pos_type data_table<Table, Record, Controlblock>::do_read_front(record_type& record) const
 {
     const pos_type pos = T::read_front(m_buffer.get());
     if (pos != NIL)
@@ -707,9 +735,9 @@ pos_type data_table<Table, Record, Key, Interface>::do_read_front(record_type& r
  * @param records data of the first records
  * @return the position of the next records
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-inline pos_type data_table<Table, Record, Key, Interface>::do_read_front(record_list& records) const
+inline pos_type data_table<Table, Record, Controlblock>::do_read_front(record_list& records) const
 {
     const count_type count = records.size();
     OUROBOROS_RANGE_ASSERT(count > 0);
@@ -731,9 +759,9 @@ inline pos_type data_table<Table, Record, Key, Interface>::do_read_front(record_
  * @param record data of the last record
  * @return the position of the last record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-pos_type data_table<Table, Record, Key, Interface>::do_read_back(record_type& record) const
+pos_type data_table<Table, Record, Controlblock>::do_read_back(record_type& record) const
 {
     const pos_type pos = T::read_back(m_buffer.get());
     if (pos != NIL)
@@ -748,9 +776,9 @@ pos_type data_table<Table, Record, Key, Interface>::do_read_back(record_type& re
  * @param records data of the last records
  * @return the position of the next records
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
 template <typename T>
-inline pos_type data_table<Table, Record, Key, Interface>::do_read_back(record_list& records) const
+inline pos_type data_table<Table, Record, Controlblock>::do_read_back(record_list& records) const
 {
     const count_type count = records.size();
     OUROBOROS_RANGE_ASSERT(count > 0);
@@ -773,8 +801,8 @@ inline pos_type data_table<Table, Record, Key, Interface>::do_read_back(record_l
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_read(record_type& record, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_read(record_type& record, const pos_type pos) const
 {
     return do_read<unsafe_table>(record, pos);
 }
@@ -785,8 +813,8 @@ pos_type data_table<Table, Record, Key, Interface>::unsafe_read(record_type& rec
  * @param pos the position of the record
  * @return the position of the previous record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_rread(record_type& record, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_rread(record_type& record, const pos_type pos) const
 {
     return do_rread<unsafe_table>(record, pos);
 }
@@ -797,8 +825,8 @@ pos_type data_table<Table, Record, Key, Interface>::unsafe_rread(record_type& re
  * @param pos the begin position of the records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_read(record_list& records, const pos_type pos) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_read(record_list& records, const pos_type pos) const
 {
     return do_read<unsafe_table>(records, pos);
 }
@@ -809,8 +837,8 @@ pos_type data_table<Table, Record, Key, Interface>::unsafe_read(record_list& rec
  * @param pos the position of the record
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_write(const record_type& record, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_write(const record_type& record, const pos_type pos)
 {
     return do_write<unsafe_table>(record, pos);
 }
@@ -821,8 +849,8 @@ pos_type data_table<Table, Record, Key, Interface>::unsafe_write(const record_ty
  * @param pos the position of the record
  * @return the position of the previous record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_rwrite(const record_type& record, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_rwrite(const record_type& record, const pos_type pos)
 {
     return do_rwrite<unsafe_table>(record, pos);
 }
@@ -833,8 +861,8 @@ pos_type data_table<Table, Record, Key, Interface>::unsafe_rwrite(const record_t
  * @param pos the begin position of the records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_write(const record_list& records, const pos_type pos)
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_write(const record_list& records, const pos_type pos)
 {
     return do_write<unsafe_table>(records, pos);
 }
@@ -844,8 +872,8 @@ pos_type data_table<Table, Record, Key, Interface>::unsafe_write(const record_li
  * @param record data of the record
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_add(const record_type& record)
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_add(const record_type& record)
 {
     return do_add<unsafe_table>(record);
 }
@@ -855,8 +883,8 @@ pos_type data_table<Table, Record, Key, Interface>::unsafe_add(const record_type
  * @param records data of the records
  * @return the end position of the records
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_add(const record_list& records)
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_add(const record_list& records)
 {
     return do_add<unsafe_table>(records);
 }
@@ -866,8 +894,8 @@ pos_type data_table<Table, Record, Key, Interface>::unsafe_add(const record_list
  * @param record data of the first record
  * @return the position of the first record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_read_front(record_type& record) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_read_front(record_type& record) const
 {
     return do_read_front<unsafe_table>(record);
 }
@@ -877,8 +905,8 @@ pos_type data_table<Table, Record, Key, Interface>::unsafe_read_front(record_typ
  * @param record data of the first records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_read_front(record_list& records) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_read_front(record_list& records) const
 {
     return do_read_front<unsafe_table>(records);
 }
@@ -888,8 +916,8 @@ pos_type data_table<Table, Record, Key, Interface>::unsafe_read_front(record_lis
  * @param record data of the last record
  * @return the position of the last record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_read_back(record_type& record) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_read_back(record_type& record) const
 {
     return do_read_back<unsafe_table>(record);
 }
@@ -899,8 +927,8 @@ pos_type data_table<Table, Record, Key, Interface>::unsafe_read_back(record_type
  * @param records data of the last records
  * @return the position of the next record
  */
-template <template <typename, typename, typename> class Table, typename Record, typename Key, typename Interface>
-pos_type data_table<Table, Record, Key, Interface>::unsafe_read_back(record_list& records) const
+template <template <typename, typename, typename> class Table, typename Record, typename Controlblock>
+pos_type data_table<Table, Record, Controlblock>::unsafe_read_back(record_list& records) const
 {
     return do_read_back<unsafe_table>(records);
 }
