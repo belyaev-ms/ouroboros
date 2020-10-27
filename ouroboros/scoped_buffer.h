@@ -11,9 +11,62 @@
 #else
 #include <malloc.h>
 #endif
+#include "ouroboros/error.h"
 
 namespace ouroboros
 {
+
+/**
+ * The scoped pointer
+ */
+template <typename T>
+class scoped_ptr
+{
+public:
+    typedef T value_type;
+    typedef value_type* pointer_type;
+    scoped_ptr() :
+        m_pvalue(NULL)
+    {}
+    explicit scoped_ptr(pointer_type pvalue) :
+        m_pvalue(pvalue)
+    {}
+    ~scoped_ptr()
+    {
+        if (m_pvalue != NULL)
+        {
+            delete m_pvalue;
+        }
+    }
+    void reset(pointer_type pvalue = NULL)
+    {
+        OUROBOROS_ASSERT(NULL == pvalue || pvalue != m_pvalue);
+        if (m_pvalue != NULL)
+        {
+            delete m_pvalue;
+        }
+        m_pvalue = pvalue;
+    }
+    value_type& operator* () const
+    {
+        OUROBOROS_ASSERT(m_pvalue != 0);
+        return *m_pvalue;
+    }
+    pointer_type operator-> () const
+    {
+        OUROBOROS_ASSERT(m_pvalue != 0);
+        return m_pvalue;
+    }
+    pointer_type get() const
+    {
+        return m_pvalue;
+    }
+private:
+    scoped_ptr(const scoped_ptr& );
+    scoped_ptr& operator= (const scoped_ptr& );
+private:
+    pointer_type m_pvalue;
+};
 
 /**
  * The scoped buffer

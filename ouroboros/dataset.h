@@ -6,7 +6,17 @@
 #ifndef OUROBOROS_DATASET_H
 #define	OUROBOROS_DATASET_H
 
+#include <boost/scoped_ptr.hpp>
+#if __cplusplus >= 201103L
+#include <memory>
+#include <unordered_map>
+#elif defined(OUROBOROS_BOOST_ENABLED)
+#include <boost/scoped_ptr.hpp>
+#include <boost/unordered_map.hpp>
+#else
+#include "ouroboros/scoped_buffer.h"
 #include <map>
+#endif
 #include "ouroboros/key.h"
 #include "ouroboros/info.h"
 #include "ouroboros/object.h"
@@ -116,7 +126,13 @@ protected:
     typedef typename table_type::source_type source_type;
     typedef typename key_table_type::source_type key_source_type;
     typedef typename info_table_type::source_type info_source_type;
+#if __cplusplus >= 201103L
+    typedef std::unordered_map<key_type, table_type*> table_list;
+#elif defined(OUROBOROS_BOOST_ENABLED)
+    typedef boost::unordered_map<key_type, table_type*> table_list;
+#else
     typedef std::map<key_type, table_type*> table_list;
+#endif
     typedef map<key_type, skey_type, interface_type::template skey_list> skey_list;
     typedef sharable_table_lock<key_table_type> lock_read;
     typedef scoped_table_lock<key_table_type> lock_write;
@@ -126,10 +142,15 @@ protected:
     typedef typename table_type::raw_record_type raw_record_type;
     typedef ouroboros::lazy_transaction<data_set> lazy_transaction_type;
     typedef typename interface_type::gateway_type gateway_type;
-    typedef object<typename interface_type::locker_type::lock_type,
-            interface_type::template object_type> lock_table_type;
     typedef object_pool<typename interface_type::locker_type::lock_type,
             interface_type::template object_type> lock_pool_type;
+#if __cplusplus >= 201103L
+    typedef std::unique_ptr<lock_pool_type> lock_pool_pointer;
+#elif defined(OUROBOROS_BOOST_ENABLED)
+    typedef boost::scoped_ptr<lock_pool_type> lock_pool_pointer;
+#else
+    typedef scoped_ptr<lock_pool_type> lock_pool_pointer;
+#endif
 
     void init(const info_type& info, const bool verify); ///< initialize the dataset
     void synchro_init(const info_type& info, const bool verify); ///< initialize the dataset synchronously
@@ -151,20 +172,18 @@ protected:
     info_type m_info; ///< the information about the dataset
     info_source_type m_info_source; ///< the source of the information
     object<skey_type, interface_type::template object_type> m_skey_info; ///< the key of the information table
-    lock_table_type m_info_lock;
     info_table_type m_info_table; ///< the table of the infrormation
     source_type m_source; ///< the datasource
     table_list m_tables; ///< the list of the datatables
     key_source_type m_key_source; ///< the source of the table keys
     object<skey_type, interface_type::template object_type> m_skey_key; ///< the key of the keys table
-    lock_table_type m_key_lock;
     key_table_type m_key_table; ///< the table of the keys
     skey_list m_skeys; ///< the list of the table keys
     object<pos_type, interface_type::template object_type> m_hole_count; ///< the count of removed keys
     lazy_transaction_type *m_lazy_transaction; ///< the pointer to current lazy transaction
     file_region_type m_file_region; ///< the file region
     object<gateway_type, interface_type::template object_type> m_gateway; ///< the gateway for initialization of dataset
-    lock_pool_type *m_plock_pool; ///< the pool of locks
+    lock_pool_pointer m_plock_pool; ///< the pool of locks
 };
 
 /**
@@ -227,20 +246,17 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name) :
     m_info(0, 0),
     m_info_source(m_file, 1, 1),
     m_skey_info(make_object_name(m_info_source.name(), "info")),
-    m_info_lock(make_object_name(m_info_source.name(), "info", "lock")),
-    m_info_table(m_info_source, info_controlblock_type(m_skey_info(), m_info_lock()), typename info_table_type::guard_type(true, 5 * OUROBOROS_LOCK_TIMEOUT)),
+    m_info_table(m_info_source, m_skey_info(), typename info_table_type::guard_type(true, 5 * OUROBOROS_LOCK_TIMEOUT)),
     m_source(m_file, options_type(m_info_source.size() + skey_type::static_size(), 0, NIL)),
     m_key_source(m_file, 1, options_type(m_info_source.size(), NIL, 0)),
     m_skey_key(make_object_name(m_key_source.name(), "key")),
-    m_key_lock(make_object_name(m_info_source.name(), "key", "lock")),
-    m_key_table(m_key_source, key_controlblock_type(m_skey_key(), m_key_lock()), typename key_table_type::guard_type(true, 5 * OUROBOROS_LOCK_TIMEOUT)),
+    m_key_table(m_key_source, m_skey_key(), typename key_table_type::guard_type(true, 5 * OUROBOROS_LOCK_TIMEOUT)),
     m_skeys(make_object_name(name, "keyList")),
     m_hole_count(make_object_name(name, "cntHole"), 0),
     m_lazy_transaction(NULL),
     m_file_region(make_file_regions<file_region_type>(m_info_source.size(),
         skey_type::static_size(), 0)),
-    m_gateway(make_object_name(name, "gateway")),
-    m_plock_pool(NULL)
+    m_gateway(make_object_name(name, "gateway"))
 {
     m_file_region.make_cache(m_info_source.size());
     m_info_source.set_file_region(m_file_region);
@@ -266,21 +282,18 @@ data_set<Key, Record, Index, Interface>::data_set(const std::string& name, const
     m_info(tbl_count, rec_count, 0, ver, user_data, user_size),
     m_info_source(m_file, 1, 1),
     m_skey_info(make_object_name(m_info_source.name(), "info")),
-    m_info_lock(make_object_name(m_info_source.name(), "info", "lock")),
-    m_info_table(m_info_source, info_controlblock_type(m_skey_info(), m_info_lock()), typename info_table_type::guard_type()),
+    m_info_table(m_info_source, m_skey_info(), typename info_table_type::guard_type()),
     m_source(m_file, tbl_count, rec_count, options_type(m_info_source.size() +
         skey_type::static_size(), table_type::REC_SPACE, skey_type::static_size())),
     m_key_source(m_file, 1, tbl_count, options_type(m_info_source.size(), m_source.table_size(), 0)),
     m_skey_key(make_object_name(m_key_source.name(), "key")),
-    m_key_lock(make_object_name(m_info_source.name(), "key", "lock")),
-    m_key_table(m_key_source, key_controlblock_type(m_skey_key(), m_key_lock()), typename key_table_type::guard_type()),
+    m_key_table(m_key_source, m_skey_key(), typename key_table_type::guard_type()),
     m_skeys(make_object_name(name, "keyList")),
     m_hole_count(make_object_name(name, "cntHole"), 0),
     m_lazy_transaction(NULL),
     m_file_region(make_file_regions<file_region_type>(m_info_source.size(), skey_type::static_size(),
         (raw_record_type::static_size() + table_type::REC_SPACE) * rec_count)),
-    m_gateway(make_object_name(name, "gateway")),
-    m_plock_pool(NULL)
+    m_gateway(make_object_name(name, "gateway"))
 {
     OUROBOROS_DEBUG("create the dataset " << PR(name) << PR(tbl_count) << PE(rec_count));
     m_info_source.set_file_region(m_file_region);
@@ -325,10 +338,6 @@ template <typename Key, typename Record, template <typename> class Index, typena
 data_set<Key, Record, Index, Interface>::~data_set()
 {
     OUROBOROS_DEBUG("close dataset " << PE(m_name));
-    if (m_plock_pool != NULL)
-    {
-        delete m_plock_pool;
-    }
     if (m_opened)
     {
         // remove the objects of the tables
@@ -375,7 +384,7 @@ void data_set<Key, Record, Index, Interface>::init(const info_type& info, const 
     OUROBOROS_DEBUG("init dataset " << PR(m_name) << PR(verify) << PE(info));
     if (!m_opened)
     {
-        m_plock_pool = new lock_pool_type(make_object_name(m_name, "locks"), info.tbl_count);
+        m_plock_pool.reset(new lock_pool_type(make_object_name(m_name, "locks"), info.tbl_count));
         m_opened = true;
         // initialize the file of the dataset
         const bool success = verify ? m_file.init() : true;
