@@ -108,7 +108,7 @@ inline base_shared_locker<Lock>::base_shared_locker(const std::string& name) :
  */
 template <typename Lock>
 inline base_shared_locker<Lock>::base_shared_locker(lock_type& lock) :
-    m_lock(object_adopt(), lock),
+    m_lock(object_adoption_tag(), lock),
     m_locked(LS_NONE)
 {
 }
