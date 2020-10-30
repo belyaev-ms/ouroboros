@@ -15,6 +15,7 @@
 #include <vector>
 #include <fstream>
 #include <signal.h>
+#include <boost/lexical_cast.hpp>
 
 #include "ouroboros/treekey.h"
 #include "ouroboros/find.h"
@@ -43,14 +44,13 @@ struct test_table_interface
     typedef journal_file<file_page_type, OUROBOROS_PAGE_COUNT> file_type;
     template <typename Key, typename Field>
     struct skey_list : public shared_map<Key, Field> {};
-    typedef typename locker<mutex_locker>::lock_type lock_type;
-    struct locker_type : public locker<mutex_locker>
+    struct locker_type : public shared_locker<mutex_lock>
     {
         locker_type(const char* name, count_type& scoped_count, count_type& sharable_count) :
-            locker<mutex_locker>(name, scoped_count, sharable_count)
+            shared_locker<mutex_lock>(name, scoped_count, sharable_count)
         {}
         locker_type(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
-            locker<mutex_locker>(lock, scoped_count, sharable_count)
+            shared_locker<mutex_lock>(lock, scoped_count, sharable_count)
         {}
     };
     typedef gateway<boost::interprocess::interprocess_mutex> gateway_type;

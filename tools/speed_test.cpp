@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <vector>
+#include <boost/lexical_cast.hpp>
 #if __APPLE__
 #include <mach/mach_time.h>
 #endif
@@ -26,14 +27,13 @@ struct test_table_interface
     struct skey_list : public shared_map<Key, Field> {};
     typedef file_page<OUROBOROS_PAGE_SIZE, sizeof(journal_status_type)> file_page_type;
     typedef journal_file<file_page_type, OUROBOROS_PAGE_COUNT> file_type;
-    struct locker_type : public locker<mutex_locker>
+    struct locker_type : public shared_locker<mutex_lock>
     {
-        typedef typename locker<mutex_locker>::lock_type lock_type;
         locker_type(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
-            locker<mutex_locker>(name, scoped_count, sharable_count)
+            shared_locker<mutex_lock>(name, scoped_count, sharable_count)
         {}
         locker_type(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
-            locker<mutex_locker>(lock, scoped_count, sharable_count)
+            shared_locker<mutex_lock>(lock, scoped_count, sharable_count)
         {}
     };
     typedef gateway<boost::interprocess::interprocess_mutex> gateway_type;

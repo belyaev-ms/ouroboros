@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include "ouroboros/global.h"
+#include "ouroboros/object.h"
 
 namespace ouroboros
 {
@@ -92,10 +93,11 @@ private:
 /**
  * The locker for recursive locking
  */
-template <typename Locker>
-struct locker : public Locker, private base_locker
+template <typename Lock, template <typename> class Interface>
+class locker : public base_locker
 {
-    typedef typename Locker::lock_type lock_type;
+public:
+    typedef Lock lock_type;
     inline locker(const std::string& name, count_type& scoped_count, count_type& sharable_count);
     inline locker(lock_type& lock, count_type& scoped_count, count_type& sharable_count);
     inline bool lock(); ///< set the exclusive lock
@@ -105,6 +107,31 @@ struct locker : public Locker, private base_locker
     inline bool lock_sharable(const size_t timeout); ///< set the shared lock with a timeout
     inline bool unlock_sharable(); ///< remove the shared lock
     inline const char* name() const; ///< get the name of the locker
+private:
+    enum lock_state
+    {
+        LS_SCOPED,
+        LS_SHARABLE,
+        LS_NONE
+    };
+private:
+    object<lock_type, Interface> m_lock;
+    lock_state m_locked;
+};
+
+/**
+ * The local locker
+ */
+template <typename Lock>
+struct local_locker : public locker<Lock, local_object>
+{
+    typedef Lock lock_type;
+    local_locker(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
+        locker<Lock, local_object>(name, scoped_count, sharable_count)
+    {}
+    local_locker(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
+        locker<Lock, local_object>(lock, scoped_count, sharable_count)
+    {}
 };
 
 //==============================================================================
@@ -197,10 +224,11 @@ inline const char* base_locker::name() const
  * @param scoped_count the counter for exclusive lock
  * @param sharable_count the counter for shared lock
  */
-template <typename Locker>
-inline locker<Locker>::locker(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
-    Locker(name),
-    base_locker(scoped_count, sharable_count)
+template <typename Locker, template <typename> class Interface>
+inline locker<Locker, Interface>::locker(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
+    base_locker(scoped_count, sharable_count),
+    m_lock(make_object_name(name, "lock")),
+    m_locked(LS_NONE)
 {
 }
 
@@ -210,10 +238,11 @@ inline locker<Locker>::locker(const std::string& name, count_type& scoped_count,
  * @param scoped_count the counter for exclusive lock
  * @param sharable_count the counter for shared lock
  */
-template <typename Locker>
-inline locker<Locker>::locker(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
-    Locker(lock),
-    base_locker(scoped_count, sharable_count)
+template <typename Locker, template <typename> class Interface>
+inline locker<Locker, Interface>::locker(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
+    base_locker(scoped_count, sharable_count),
+    m_lock(object_adoption_tag(), lock),
+    m_locked(LS_NONE)
 {
 }
 
@@ -221,8 +250,8 @@ inline locker<Locker>::locker(lock_type& lock, count_type& scoped_count, count_t
  * Set the exclusive lock
  * @return the result of the setting
  */
-template <typename Locker>
-inline bool locker<Locker>::lock()
+template <typename Locker, template <typename> class Interface>
+inline bool locker<Locker, Interface>::lock()
 {
     return lock(OUROBOROS_LOCK_TIMEOUT);
 }
@@ -232,18 +261,20 @@ inline bool locker<Locker>::lock()
  * @param timeout the timeout
  * @return the result of the setting
  */
-template <typename Locker>
-inline bool locker<Locker>::lock(const size_t timeout)
+template <typename Locker, template <typename> class Interface>
+inline bool locker<Locker, Interface>::lock(const size_t timeout)
 {
     if (base_locker::lock())
     {
-        if (!Locker::lock(timeout))
+        assert(LS_NONE == m_locked);
+        if (!m_lock->lock(timeout))
         {
             base_locker::unlock();
             // cppcheck-suppress knownConditionTrueFalse
             OUROBOROS_THROW_ERROR(lock_error, "error installing the exclusive lock "
                     << (NULL == name() ? "" : name()));
         }
+        m_locked = LS_SCOPED;
         return true;
     }
     return false;
@@ -253,18 +284,20 @@ inline bool locker<Locker>::lock(const size_t timeout)
  * Remove the exclusive lock
  * @return the result of the removing
  */
-template <typename Locker>
-inline bool locker<Locker>::unlock()
+template <typename Locker, template <typename> class Interface>
+inline bool locker<Locker, Interface>::unlock()
 {
     if (base_locker::unlock())
     {
-        if (!Locker::unlock())
+        assert(LS_SCOPED == m_locked);
+        if (!m_lock->unlock())
         {
             base_locker::lock();
             // cppcheck-suppress knownConditionTrueFalse
             OUROBOROS_THROW_ERROR(lock_error, "error removing the exclusive lock "
                     << (NULL == name() ? "" : name()));
         }
+        m_locked = LS_NONE;
         return true;
     }
     return false;
@@ -274,8 +307,8 @@ inline bool locker<Locker>::unlock()
  * Set the shared lock
  * @return the result of the setting
  */
-template <typename Locker>
-inline bool locker<Locker>::lock_sharable()
+template <typename Locker, template <typename> class Interface>
+inline bool locker<Locker, Interface>::lock_sharable()
 {
     return lock_sharable(OUROBOROS_LOCK_TIMEOUT);
 }
@@ -285,18 +318,20 @@ inline bool locker<Locker>::lock_sharable()
  * @param timeout the timeout
  * @return the result of the setting
  */
-template <typename Locker>
-inline bool locker<Locker>::lock_sharable(const size_t timeout)
+template <typename Locker, template <typename> class Interface>
+inline bool locker<Locker, Interface>::lock_sharable(const size_t timeout)
 {
     if (base_locker::lock_sharable())
     {
-        if (!Locker::lock_sharable(timeout))
+        assert(LS_NONE == m_locked);
+        if (!m_lock->lock_sharable(timeout))
         {
             base_locker::unlock_sharable();
             // cppcheck-suppress knownConditionTrueFalse
             OUROBOROS_THROW_ERROR(lock_error, "error installing the shared lock "
                     << (NULL == name() ? "" : name()));
         }
+        m_locked = LS_SHARABLE;
         return true;
     }
     return false;
@@ -306,18 +341,20 @@ inline bool locker<Locker>::lock_sharable(const size_t timeout)
  * Remove the shared lock
  * @return the result of the removing
  */
-template <typename Locker>
-inline bool locker<Locker>::unlock_sharable()
+template <typename Locker, template <typename> class Interface>
+inline bool locker<Locker, Interface>::unlock_sharable()
 {
     if (base_locker::unlock_sharable())
     {
-        if (!Locker::unlock_sharable())
+        assert(LS_SHARABLE == m_locked);
+        if (!m_lock->unlock_sharable())
         {
             base_locker::lock_sharable();
             // cppcheck-suppress knownConditionTrueFalse
             OUROBOROS_THROW_ERROR(lock_error, "error removing the shared lock "
                     << (NULL == name() ? "" : name()));
         }
+        m_locked = LS_NONE;
         return true;
     }
     return false;
@@ -327,10 +364,10 @@ inline bool locker<Locker>::unlock_sharable()
  * Get the name of the locker
  * @return the name of the locker
  */
-template <typename Locker>
-inline const char* locker<Locker>::name() const
+template <typename Locker, template <typename> class Interface>
+inline const char* locker<Locker, Interface>::name() const
 {
-    return Locker::name();
+    return m_lock.name();
 }
 
 }   // namespace ouroboros
