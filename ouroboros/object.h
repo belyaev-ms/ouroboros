@@ -361,7 +361,7 @@ inline const typename object<T, Interface>::pointer object<T, Interface>::operat
 template <typename T, template <typename> class Interface>
 inline const char* object<T, Interface>::name() const
 {
-    return interface_type::name(m_ptr);
+    return m_owner ? interface_type::name(m_ptr) : NULL;
 }
 
 //==============================================================================
