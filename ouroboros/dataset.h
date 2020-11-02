@@ -164,7 +164,10 @@ protected:
     inline void update_key(table_type& table); ///< update the key of the table
     inline void lazy_transaction(lazy_transaction_type *transact); ///< set current lazy transaction
     inline void store_session(session_write& session); ///< put the session in the context of the lazy transaction
-
+#ifdef OUROBOROS_TEST_ENABLED
+public:
+    lock_pool_pointer& get_lock_pool() { return m_plock_pool; }
+#endif
 protected:
     const std::string m_name; ///< the name of the dataset
     bool m_opened; ///< the sign that the dataset is open

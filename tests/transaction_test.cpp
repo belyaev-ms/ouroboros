@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(session_blocked_test)
         BOOST_CHECK_EQUAL(db().state(), TR_STOPPED);
     }
     // lock the table 0
-    mutex_locker locker0("ouroboros.dat.812.locker");
+    mutex_lock& locker0 = db().get_lock_pool()->get(0);
     locker0.lock();
     // check that only the table 0 is locked
     for (size_t index = 0; index < tbl_count; ++index)
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(session_blocked_test)
         BOOST_CHECK_EQUAL(db().state(), TR_STOPPED);
     }
     // lock the table 1
-    mutex_locker locker1("ouroboros.dat.8040.locker");
+    mutex_lock& locker1 = db().get_lock_pool()->get(1);
     locker1.lock();
     // check that only the table 1 is locked
     for (size_t index = 0; index < tbl_count; ++index)
@@ -212,8 +212,8 @@ BOOST_AUTO_TEST_CASE(session_blocked_test)
         BOOST_CHECK_EQUAL(db().state(), TR_STOPPED);
     }
     // lock the key table
-    mutex_locker klocker("ouroboros.dat.784.locker");
-    klocker.lock();
+    object<mutex_lock, shared_object> klocker("ouroboros.dat.784.locker");
+    klocker->lock();
     try
     {
         lazy_transaction_type transact(db());
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(session_blocked_test)
     catch (const lock_error&)
     {
     }
-    klocker.unlock();
+    klocker->unlock();
     // check that all tables are unlocked
     for (size_t index = 0; index < tbl_count; ++index)
     {
