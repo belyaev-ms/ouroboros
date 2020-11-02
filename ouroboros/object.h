@@ -124,6 +124,8 @@ template <typename T>
 class reserved_object
 {
     typedef reserved_object<T> self_type;
+    class aligned_object { T f1; bool f2; };
+    class unaligned_object { char f1[sizeof(T)]; bool f2; };
 public:
     typedef T value_type;
     reserved_object();
@@ -140,6 +142,7 @@ protected:
 private:
     mutable char m_data[sizeof(value_type)];
     mutable bool m_initialized;
+    char m_dummy[sizeof(aligned_object) - sizeof(unaligned_object)];
 };
 
 /**
