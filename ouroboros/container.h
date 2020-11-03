@@ -18,42 +18,29 @@ namespace ouroboros
 template <typename T> struct vector { typedef std::vector<T> vector_type; };
 
 /**
- * The base interface class for a map container
- */
-template <typename Key, typename Field>
-class base_map
-{
-public:
-    inline static void update(void *ptr); ///< update data of the container
-    inline static size_type size(const std::string& name, const count_type count); ///< get the size of the container
-};
-
-/**
  * The interface class for a local map container
  */
 template <typename Key, typename Field>
-class local_map : public base_map<Key, Field>
+class local_map
 {
 public:
     typedef std::map<Key, Field> container_type;
 
-    inline static container_type* construct(const std::string& name, const size_type size); ///< construct the container
+    inline static container_type* construct(const std::string& name); ///< construct the container
     inline static void destruct(container_type *ptr); ///< destruct the container
-    inline static container_type* get(const std::string& name, const size_type size); ///< get the pointer to the container
 };
 
 /**
  * The interface class for a local multimap container
  */
 template <typename Key, typename Field>
-class local_multimap : public base_map<Key, Field>
+class local_multimap
 {
 public:
     typedef std::multimap<Key, Field> container_type;
 
-    inline static container_type* construct(const std::string& name, const size_type size); ///< construct the container
+    inline static container_type* construct(const std::string& name); ///< construct the container
     inline static void destruct(container_type *ptr); ///< destruct the container
-    inline static container_type* get(const std::string& name, const size_type size ); ///< get the pointer to the container
 };
 
 /**
@@ -71,7 +58,6 @@ public:
     typedef typename container_type::value_type value_type;
 
     explicit inline map(const std::string& name);
-    inline map(const std::string& name, const count_type count);
     inline ~map();
     inline container_type& operator() ();
     inline const container_type& operator() () const;
@@ -80,7 +66,6 @@ public:
     inline void update() const;
 private:
     const std::string m_name; ///< the name of the container
-    const size_type m_size; ///< the limit of size of the container
     pointer m_pcontainer; ///< the pointer to the container
 };
 
@@ -99,7 +84,6 @@ public:
     typedef typename container_type::value_type value_type;
 
     explicit inline map(const std::string& name);
-    inline map(const std::string& name, const count_type count);
     inline container_type& operator() ();
     inline const container_type& operator() () const;
     inline pointer operator-> ();
@@ -124,7 +108,6 @@ public:
     typedef typename container_type::value_type value_type;
 
     explicit inline map(const std::string& name);
-    inline map(const std::string& name, const count_type count);
     inline container_type& operator() ();
     inline const container_type& operator() () const;
     inline pointer operator-> ();
@@ -135,44 +118,17 @@ private:
 };
 
 //==============================================================================
-//  base_map
-//==============================================================================
-/**
- * Get the size of the container
- * @param name the name of the container
- * @param count maximum value of the number of items in the container
- * @return the size of the container
- */
-//static
-template <typename Key, typename Field>
-inline size_type base_map<Key, Field>::size(const std::string& name, const count_type count)
-{
-    return 0;
-}
-
-/**
- * Update data of the container
- * @param ptr the pointer to the container
- */
-//static
-template <typename Key, typename Field>
-inline void base_map<Key, Field>::update(void *ptr)
-{
-}
-
-//==============================================================================
 //  local_map
 //==============================================================================
 /**
  * Construct the container
  * @param name the name of the container
- * @param size the size of the container
  * @return the pointer to the container
  */
 //static
 template <typename Key, typename Field>
 inline typename local_map<Key, Field>::container_type*
-    local_map<Key, Field>::construct(const std::string& name, const size_type size)
+    local_map<Key, Field>::construct(const std::string& name)
 {
     return new container_type();
 }
@@ -188,34 +144,18 @@ inline void local_map<Key, Field>::destruct(container_type *ptr)
     delete ptr;
 }
 
-/**
- * Get the pointer to the container
- * @param name the name of the container
- * @param size the size of the container
- * @return the pointer to the container
- */
-//static
-template <typename Key, typename Field>
-inline typename local_map<Key, Field>::container_type*
-    local_map<Key, Field>::get(const std::string& name, const size_type size)
-{
-    OUROBOROS_THROW_BUG("method not supported");
-    return NULL;
-}
-
 //==============================================================================
 //  local_multimap
 //==============================================================================
 /**
  * Construct the container
  * @param name the name of the container
- * @param size the size of the container
  * @return the pointer to the container
  */
 //static
 template <typename Key, typename Field>
 inline typename local_multimap<Key, Field>::container_type*
-    local_multimap<Key, Field>::construct(const std::string& name, const size_type size)
+    local_multimap<Key, Field>::construct(const std::string& name)
 {
     return new container_type();
 }
@@ -231,21 +171,6 @@ inline void local_multimap<Key, Field>::destruct(container_type *ptr)
     delete ptr;
 }
 
-/**
- * Get the pointer to the container
- * @param name the name of the container
- * @param size the size of the container
- * @return the pointer to the container
- */
-//static
-template <typename Key, typename Field>
-inline typename local_multimap<Key, Field>::container_type*
-    local_multimap<Key, Field>::get(const std::string& name, const size_type size)
-{
-    OUROBOROS_THROW_BUG("method not supported");
-    return NULL;
-}
-
 //==============================================================================
 //  map
 //==============================================================================
@@ -256,21 +181,7 @@ inline typename local_multimap<Key, Field>::container_type*
 template <typename Key, typename Field, template <typename, typename> class Interface>
 inline map<Key, Field, Interface>::map(const std::string& name) :
     m_name(name),
-    m_size(1024 * 1024),
-    m_pcontainer(interface_type::construct(name, m_size))
-{
-}
-
-/**
- * Constructor
- * @param name the name of the container
- * @param count the maximum value of the number of items in the container
- */
-template <typename Key, typename Field, template <typename, typename> class Interface>
-inline map<Key, Field, Interface>::map(const std::string& name, const count_type count) :
-    m_name(name),
-    m_size(interface_type::size(name, count)),
-    m_pcontainer(interface_type::construct(name, m_size))
+    m_pcontainer(interface_type::construct(name))
 {
 }
 
@@ -292,7 +203,8 @@ template <typename Key, typename Field, template <typename, typename> class Inte
 inline typename map<Key, Field, Interface>::container_type&
     map<Key, Field, Interface>::operator() ()
 {
-    return m_pcontainer != NULL ? *m_pcontainer : *interface_type::get(m_name.c_str(), m_size);
+    assert(m_pcontainer != NULL);
+    return *m_pcontainer;
 }
 
 /**
@@ -303,7 +215,8 @@ template <typename Key, typename Field, template <typename, typename> class Inte
 inline const typename map<Key, Field, Interface>::container_type&
     map<Key, Field, Interface>::operator() () const
 {
-    return m_pcontainer != NULL ? *m_pcontainer : *interface_type::get(m_name.c_str(), m_size);
+    assert(m_pcontainer != NULL);
+    return *m_pcontainer;
 }
 
 /**
@@ -314,7 +227,8 @@ template <typename Key, typename Field, template <typename, typename> class Inte
 inline typename map<Key, Field, Interface>::pointer
     map<Key, Field, Interface>::operator-> ()
 {
-    return m_pcontainer != NULL ? m_pcontainer : interface_type::get(m_name.c_str(), m_size);
+    assert(m_pcontainer != NULL);
+    return m_pcontainer;
 }
 
 /**
@@ -325,7 +239,8 @@ template <typename Key, typename Field, template <typename, typename> class Inte
 inline const typename map<Key, Field, Interface>::pointer
     map<Key, Field, Interface>::operator-> () const
 {
-    return m_pcontainer != NULL ? m_pcontainer : interface_type::get(m_name.c_str(), m_size);
+    assert(m_pcontainer != NULL);
+    return m_pcontainer;
 }
 
 /**
@@ -334,7 +249,8 @@ inline const typename map<Key, Field, Interface>::pointer
 template <typename Key, typename Field, template <typename, typename> class Interface>
 inline void map<Key, Field, Interface>::update() const
 {
-    interface_type::update(m_pcontainer != NULL ? m_pcontainer : interface_type::get(m_name.c_str(), m_size));
+    assert(m_pcontainer != NULL);
+    interface_type::update(m_pcontainer);
 }
 
 //==============================================================================
@@ -346,16 +262,6 @@ inline void map<Key, Field, Interface>::update() const
  */
 template <typename Key, typename Field>
 inline map<Key, Field, local_map>::map(const std::string& name)
-{
-}
-
-/**
- * Constructor
- * @param name the name of the container
- * @param count the maximum value of the number of items in the container
- */
-template <typename Key, typename Field>
-inline map<Key, Field, local_map>::map(const std::string& name, const count_type count)
 {
 }
 
@@ -420,16 +326,6 @@ inline void map<Key, Field, local_map>::update() const
  */
 template <typename Key, typename Field>
 inline map<Key, Field, local_multimap>::map(const std::string& name)
-{
-}
-
-/**
- * Constructor
- * @param name the name of the container
- * @param count the maximum value of the number of items in the container
- */
-template <typename Key, typename Field>
-inline map<Key, Field, local_multimap>::map(const std::string& name, const count_type count)
 {
 }
 
