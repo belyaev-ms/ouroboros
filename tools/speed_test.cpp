@@ -27,15 +27,7 @@ struct test_table_interface
     struct skey_list : public shared_map<Key, Field> {};
     typedef file_page<OUROBOROS_PAGE_SIZE, sizeof(journal_status_type)> file_page_type;
     typedef journal_file<file_page_type, OUROBOROS_PAGE_COUNT> file_type;
-    struct locker_type : public shared_locker<mutex_lock>
-    {
-        locker_type(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
-            shared_locker<mutex_lock>(name, scoped_count, sharable_count)
-        {}
-        locker_type(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
-            shared_locker<mutex_lock>(lock, scoped_count, sharable_count)
-        {}
-    };
+    typedef shared_locker<mutex_lock> locker_type;
     typedef gateway<boost::interprocess::interprocess_mutex> gateway_type;
 };
 

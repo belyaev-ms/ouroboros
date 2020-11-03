@@ -44,15 +44,7 @@ struct test_table_interface
     typedef journal_file<file_page_type, OUROBOROS_PAGE_COUNT> file_type;
     template <typename Key, typename Field>
     struct skey_list : public shared_map<Key, Field> {};
-    struct locker_type : public shared_locker<mutex_lock>
-    {
-        locker_type(const char* name, count_type& scoped_count, count_type& sharable_count) :
-            shared_locker<mutex_lock>(name, scoped_count, sharable_count)
-        {}
-        locker_type(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
-            shared_locker<mutex_lock>(lock, scoped_count, sharable_count)
-        {}
-    };
+    typedef shared_locker<mutex_lock> locker_type;
     typedef gateway<boost::interprocess::interprocess_mutex> gateway_type;
 };
 struct test_interface : public base_interface<test_table_interface, tree_data_table_adapter> {};
