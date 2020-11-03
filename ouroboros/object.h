@@ -89,6 +89,8 @@ public:
     inline const char* name() const;
 private:
     object();
+    object(const object& );
+    object& operator= (const object& );
 private:
     pointer m_ptr;
     bool m_owner;
@@ -113,6 +115,8 @@ public:
     inline const char* name() const;
 private:
     object();
+    object(const object& );
+    object& operator= (const object& );
 private:
     object_type m_obj;
 };
@@ -139,6 +143,9 @@ protected:
     void construct() const;
     void destruct() const;
     value_type* get_ptr() const;
+private:
+    reserved_object(const reserved_object& );
+    reserved_object& operator= (const reserved_object& );
 private:
     mutable char m_data[sizeof(value_type)];
     mutable bool m_initialized;
@@ -167,6 +174,8 @@ public:
     inline const char* name() const;
 private:
     object_array();
+    object_array(const object_array& );
+    object_array& operator= (const object_array& );
 private:
     const size_t m_size;
     pointer m_ptr;
@@ -188,6 +197,10 @@ public:
     inline const value_type& get(const size_t index) const;
     inline value_type& operator [](const size_t index);
     inline const value_type& operator [](const size_t index) const;
+private:
+    object_pool();
+    object_pool(const object_pool& );
+    object_pool& operator= (const object_pool& );
 };
 
 //==============================================================================
