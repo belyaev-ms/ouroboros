@@ -58,16 +58,16 @@ private:
     typedef boost::interprocess::scoped_lock<lock_type> guard_type;
 #endif
     lock_type m_lock;
-    unsigned int m_scoped;
-    unsigned int m_sharable;
+    unsigned int m_scoped_counter;
+    unsigned int m_sharable_counter;
 };
 
 /**
  * Constructor
  */
 inline shared_lock::shared_lock() :
-    m_scoped(0),
-    m_sharable(0)
+    m_scoped_counter(0),
+    m_sharable_counter(0)
 {
 }
 
@@ -86,10 +86,10 @@ inline void shared_lock::delay() const
 inline shared_lock::lock_state shared_lock::try_book_lock()
 {
     guard_type guard(m_lock);
-    if (0 == m_scoped)
+    if (0 == m_scoped_counter)
     {
-        m_scoped = 1;
-        return 0 == m_sharable ? LS_NONE : LS_SHARABLE;
+        m_scoped_counter = 1;
+        return 0 == m_sharable_counter ? LS_NONE : LS_SHARABLE;
     }
     return LS_SCOPED;
 }
@@ -101,7 +101,7 @@ inline shared_lock::lock_state shared_lock::try_book_lock()
 inline unsigned int shared_lock::count_sharable()
 {
     guard_type guard(m_lock);
-    return m_sharable;
+    return m_sharable_counter;
 }
 
 /**
@@ -111,9 +111,9 @@ inline unsigned int shared_lock::count_sharable()
 inline bool shared_lock::try_lock()
 {
     guard_type guard(m_lock);
-    if (0 == m_scoped && 0 == m_sharable)
+    if (0 == m_scoped_counter && 0 == m_sharable_counter)
     {
-        m_scoped = 1;
+        m_scoped_counter = 1;
         return true;
     }
     return false;
@@ -181,8 +181,8 @@ inline bool shared_lock::timed_lock(const boost::posix_time::ptime& abs_time)
 inline void shared_lock::unlock()
 {
     guard_type guard(m_lock);
-    assert(1 == m_scoped);
-    m_scoped = 0;
+    assert(1 == m_scoped_counter);
+    m_scoped_counter = 0;
 }
 
 /**
@@ -192,9 +192,9 @@ inline void shared_lock::unlock()
 inline bool shared_lock::try_lock_sharable()
 {
     guard_type guard(m_lock);
-    if (0 == m_scoped && m_sharable < UINT_MAX)
+    if (0 == m_scoped_counter && m_sharable_counter < UINT_MAX)
     {
-        ++m_sharable;
+        ++m_sharable_counter;
         return true;
     }
     return false;
@@ -239,8 +239,8 @@ inline bool shared_lock::timed_lock_sharable(const boost::posix_time::ptime& abs
 inline void shared_lock::unlock_sharable()
 {
     guard_type guard(m_lock);
-    assert(m_sharable > 0);
-    --m_sharable;
+    assert(m_sharable_counter > 0);
+    --m_sharable_counter;
 }
 
 } // namespace ouroboros

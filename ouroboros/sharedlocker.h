@@ -15,6 +15,7 @@
 #include <boost/interprocess/sync/interprocess_upgradable_mutex.hpp>
 
 #include "ouroboros/global.h"
+#include "ouroboros/locker.h"
 #include "ouroboros/sharedobject.h"
 #include "ouroboros/sharedlock.h"
 
