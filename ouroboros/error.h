@@ -9,6 +9,9 @@
 #include <typeinfo>
 #include <exception>
 #include <sstream>
+#if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
+#include <assert.h>
+#endif
 #include "ouroboros/log.h"
 
 namespace ouroboros
@@ -37,6 +40,11 @@ const E& where(const E& ex, const char *name, const char *file, const char *func
 #else
 #define OUROBOROS_ASSERT(condition)
 #define OUROBOROS_RANGE_ASSERT(condition)
+#endif
+#if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
+#define OUROBOROS_STANDART_ASSERT(condition) OUROBOROS_THROW_ERROR_IF(!(condition), ouroboros::assert_error, "standart assert failed : " << #condition)
+#else
+#define OUROBOROS_STANDART_ASSERT(condition) assert(condition)
 #endif
 
 /**
@@ -76,6 +84,9 @@ private:
 };
 
 /** classes of exceptions */
+#if (defined OUROBOROS_TEST_ENABLED || defined OUROBOROS_TEST_TOOLS_ENABLED)
+struct assert_error : public base_exception { assert_error() : base_exception() {} };
+#endif
 struct bug_error : public base_exception { bug_error() : base_exception() {} };
 struct base_error : public base_exception { base_error() : base_exception() {} };
 struct range_error : public base_error { range_error() : base_error() {} };

@@ -9,14 +9,15 @@
 #error Can not use shared_lock (OUROBOROS_BOOST_ENABLED)
 #endif
 
-#include <assert.h>
 #include <limits.h>
 #include <boost/thread/thread_time.hpp>
 #ifdef OUROBOROS_SPINLOCK_ENABLED
 #include <boost/smart_ptr/detail/spinlock.hpp>
 #else
+#include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/interprocess_mutex.hpp>
 #endif
+#include "ouroboros/error.h"
 
 namespace ouroboros
 {
@@ -181,7 +182,7 @@ inline bool shared_lock::timed_lock(const boost::posix_time::ptime& abs_time)
 inline void shared_lock::unlock()
 {
     guard_type guard(m_lock);
-    assert(1 == m_scoped_counter);
+    OUROBOROS_STANDART_ASSERT(1 == m_scoped_counter);
     m_scoped_counter = 0;
 }
 
@@ -239,7 +240,7 @@ inline bool shared_lock::timed_lock_sharable(const boost::posix_time::ptime& abs
 inline void shared_lock::unlock_sharable()
 {
     guard_type guard(m_lock);
-    assert(m_sharable_counter > 0);
+    OUROBOROS_STANDART_ASSERT(m_sharable_counter > 0);
     --m_sharable_counter;
 }
 
