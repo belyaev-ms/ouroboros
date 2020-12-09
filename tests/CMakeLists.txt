@@ -7,6 +7,7 @@ if (OUROBOROS_COVERAGE_ENABLED)
 else (OUROBOROS_COVERAGE_ENABLED)
     set(CMAKE_CXX_FLAGS "-g3")
 endif (OUROBOROS_COVERAGE_ENABLED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ################################################################################
 # Unit-tests
