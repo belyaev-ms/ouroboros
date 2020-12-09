@@ -195,7 +195,7 @@ private:
 };
 
 typedef std::map<size_t, size_t> event_map;
-void put_events(event_map& events, size_t id, base_thread_test& th)
+void put_events(event_map& events, size_t id, const base_thread_test& th)
 {
     for (auto tv : th.get_events())
     {
