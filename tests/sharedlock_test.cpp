@@ -194,7 +194,7 @@ private:
     }
 };
 
-typedef std::map<size_t, size_t> event_map;
+typedef std::multimap<size_t, size_t> event_map;
 void put_events(event_map& events, size_t id, const base_thread_test& th)
 {
     for (auto tv : th.get_events())
@@ -257,6 +257,12 @@ BOOST_AUTO_TEST_CASE(threads_lock_test)
         { 1 }, { 1 }, { 2 }, { 2 }, { 4, 5 }, { 4, 5 }, { 4, 5 }, { 4, 5},
         { 3 }, { 3 }, { 6, 7 }, { 6, 7 }, { 6, 7 }, { 6, 7 }
     };
+    size_t t0 = events.begin() != events.end() ? events.begin()->first : 0;
+    for (auto ev : events)
+    {
+        size_t tv = ev.first - t0;
+        BOOST_TEST_MESSAGE(ev.second << "\t: " << tv);
+    }
     BOOST_REQUIRE_EQUAL(result.size(), events.size());
     auto rit = result.begin();
     auto eit = events.begin();
