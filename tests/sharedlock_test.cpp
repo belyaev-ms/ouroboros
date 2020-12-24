@@ -1,16 +1,20 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE sharedlock_test
 #include <boost/test/unit_test.hpp>
+#include <boost/mpl/list.hpp>
 
 #include <thread>
 #include <memory>
 #include <atomic>
 #include <functional>
 #include "ouroboros/sharedlock.h"
+#include "ouroboros/sharedorderedlock.h"
 
-BOOST_AUTO_TEST_CASE(simple_lock_test)
+typedef boost::mpl::list<ouroboros::shared_lock, ouroboros::shared_ordered_lock> lock_types;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(simple_lock_test, lock_type, lock_types)
 {
-    ouroboros::shared_lock locker;
+    lock_type locker;
     BOOST_REQUIRE_THROW(locker.unlock(), ouroboros::assert_error);
     BOOST_REQUIRE_NO_THROW(locker.lock());
     BOOST_REQUIRE_NO_THROW(locker.unlock());
@@ -21,9 +25,9 @@ BOOST_AUTO_TEST_CASE(simple_lock_test)
     BOOST_REQUIRE_THROW(locker.unlock(), ouroboros::assert_error);
 }
 
-BOOST_AUTO_TEST_CASE(simple_lock_sharable_test)
+BOOST_AUTO_TEST_CASE_TEMPLATE(simple_lock_sharable_test, lock_type, lock_types)
 {
-    ouroboros::shared_lock locker;
+    lock_type locker;
     BOOST_REQUIRE_THROW(locker.unlock_sharable(), ouroboros::assert_error);
     BOOST_REQUIRE_NO_THROW(locker.lock_sharable());
     BOOST_REQUIRE_NO_THROW(locker.unlock_sharable());
@@ -34,9 +38,9 @@ BOOST_AUTO_TEST_CASE(simple_lock_sharable_test)
     BOOST_REQUIRE_THROW(locker.unlock_sharable(), ouroboros::assert_error);
 }
 
-BOOST_AUTO_TEST_CASE(blocking_lock_test)
+BOOST_AUTO_TEST_CASE_TEMPLATE(blocking_lock_test, lock_type, lock_types)
 {
-    ouroboros::shared_lock locker;
+    lock_type locker;
     BOOST_REQUIRE_NO_THROW(locker.lock());
     BOOST_REQUIRE_NO_THROW(locker.unlock());
     BOOST_REQUIRE_NO_THROW(locker.lock_sharable());
@@ -55,9 +59,9 @@ BOOST_AUTO_TEST_CASE(blocking_lock_test)
     BOOST_REQUIRE_NO_THROW(locker.unlock_sharable());
 }
 
-BOOST_AUTO_TEST_CASE(blocking_lock_sharable_test)
+BOOST_AUTO_TEST_CASE_TEMPLATE(blocking_lock_sharable_test, lock_type, lock_types)
 {
-    ouroboros::shared_lock locker;
+    lock_type locker;
     BOOST_REQUIRE_NO_THROW(locker.lock());
     BOOST_REQUIRE_NO_THROW(locker.unlock());
     BOOST_REQUIRE_NO_THROW(locker.lock_sharable());
@@ -100,12 +104,14 @@ void delay_ms(size_t to)
     }
 }
 
+template <typename Lock>
 class base_thread_test
 {
 public:
+    typedef Lock lock_type;
     typedef std::vector<size_t> event_list;
     typedef std::function<void()> notification_type;
-    explicit base_thread_test(ouroboros::shared_lock& locker) :
+    explicit base_thread_test(lock_type& locker) :
         m_locker(locker)
     {
     }
@@ -151,51 +157,58 @@ private:
         do_execute();
     }
 protected:
-    ouroboros::shared_lock& m_locker;
+    lock_type& m_locker;
 private:
     std::unique_ptr<std::thread> m_pthread;
     notification_type m_notification;
     event_list m_events;
 };
 
-class thread_lock_test : public base_thread_test
+template <typename Lock>
+class thread_lock_test : public base_thread_test<Lock>
 {
+    typedef base_thread_test<Lock> base_class;
 public:
-    explicit thread_lock_test(ouroboros::shared_lock& locker) :
-        base_thread_test(locker)
+    typedef Lock lock_type;
+    explicit thread_lock_test(lock_type& locker) :
+        base_thread_test<Lock>(locker)
     {}
 private:
     void do_execute()
     {
-        m_locker.lock();
-        push_event();
-        notify();
+        base_class::m_locker.lock();
+        base_class::push_event();
+        base_class::notify();
         delay_ms(10);
-        push_event();
-        m_locker.unlock();
+        base_class::push_event();
+        base_class::m_locker.unlock();
     }
 };
 
-class thread_lock_sharable_test : public base_thread_test
+template <typename Lock>
+class thread_lock_sharable_test : public base_thread_test<Lock>
 {
+    typedef base_thread_test<Lock> base_class;
 public:
-    explicit thread_lock_sharable_test(ouroboros::shared_lock& locker) :
-        base_thread_test(locker)
+    typedef Lock lock_type;
+    explicit thread_lock_sharable_test(lock_type& locker) :
+        base_thread_test<Lock>(locker)
     {}
 private:
     void do_execute()
     {
-        m_locker.lock_sharable();
-        push_event();
-        notify();
+        base_class::m_locker.lock_sharable();
+        base_class::push_event();
+        base_class::notify();
         delay_ms(10);
-        push_event();
-        m_locker.unlock_sharable();
+        base_class::push_event();
+        base_class::m_locker.unlock_sharable();
     }
 };
 
 typedef std::multimap<size_t, size_t> event_map;
-void put_events(event_map& events, size_t id, const base_thread_test& th)
+template <typename Lock>
+void put_events(event_map& events, size_t id, const base_thread_test<Lock>& th)
 {
     for (auto tv : th.get_events())
     {
@@ -203,17 +216,17 @@ void put_events(event_map& events, size_t id, const base_thread_test& th)
     }
 }
 
-BOOST_AUTO_TEST_CASE(threads_lock_test)
+BOOST_AUTO_TEST_CASE_TEMPLATE(threads_lock_test, lock_type, lock_types)
 {
     std::atomic<bool> flag(true);
-    ouroboros::shared_lock locker;
-    thread_lock_test th_lock1(locker);
-    thread_lock_test th_lock2(locker);
-    thread_lock_test th_lock3(locker);
-    thread_lock_sharable_test th_lock_sharable1(locker);
-    thread_lock_sharable_test th_lock_sharable2(locker);
-    thread_lock_sharable_test th_lock_sharable3(locker);
-    thread_lock_sharable_test th_lock_sharable4(locker);
+    lock_type locker;
+    thread_lock_test<lock_type> th_lock1(locker);
+    thread_lock_test<lock_type> th_lock2(locker);
+    thread_lock_test<lock_type> th_lock3(locker);
+    thread_lock_sharable_test<lock_type> th_lock_sharable1(locker);
+    thread_lock_sharable_test<lock_type> th_lock_sharable2(locker);
+    thread_lock_sharable_test<lock_type> th_lock_sharable3(locker);
+    thread_lock_sharable_test<lock_type> th_lock_sharable4(locker);
     th_lock1.set_notification([&]{
         th_lock2.run();
     });
