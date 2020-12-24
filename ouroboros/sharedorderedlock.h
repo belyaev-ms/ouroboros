@@ -65,7 +65,7 @@ protected:
     inline unsigned int sharable_counter();
     void register_ticket(ticket_type& ticket);
     void update_ticket(ticket_type& ticket);
-    void remove_ticket(ticket_type& ticket);
+    void remove_ticket(const ticket_type& ticket);
     void refresh_queue();
     inline void delay() const;
 private:
@@ -252,7 +252,7 @@ void shared_ordered_lock::lock()
  * Remove the ticket
  * @param ticket the ticket
  */
-void shared_ordered_lock::remove_ticket(ticket_type& ticket)
+void shared_ordered_lock::remove_ticket(const ticket_type& ticket)
 {
     if (ticket.valid())
     {
