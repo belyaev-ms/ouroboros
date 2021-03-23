@@ -276,6 +276,8 @@ size_type base_file::size() const
 //virtual
 void base_file::do_refresh(size_type size, const pos_type pos)
 {
+    OUROBOROS_UNUSED(size);
+    OUROBOROS_UNUSED(pos);
 //    OUROBOROS_THROW_BUG("method not supported");
 }
 

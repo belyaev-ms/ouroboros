@@ -55,6 +55,7 @@ public:
     self_type& operator++ ();
     self_type operator++ (int );
 
+    self_type& operator= (const self_type& iter);
     const self_type& operator++ () const;
     const self_type operator++ (int ) const;
 
@@ -216,6 +217,19 @@ typename hash_iterator<Map>::self_type hash_iterator<Map>::operator++ (int )
     self_type temp(*this);
     operator++();
     return self_type(temp);
+}
+
+/**
+ * Operator =
+ * @param iter the copied iterator
+ * @return the iterator
+ */
+template <typename Map>
+typename hash_iterator<Map>::self_type& hash_iterator<Map>::operator= (const self_type& iter)
+{
+    m_map = iter.m_map;
+    m_item = iter.m_item;
+    return *this;
 }
 
 /**

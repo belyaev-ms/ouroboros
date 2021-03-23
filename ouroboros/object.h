@@ -78,7 +78,7 @@ public:
     inline object_type& operator() ();
     inline const object_type& operator() () const;
     inline pointer operator-> ();
-    inline const pointer operator-> () const;
+    inline pointer operator-> () const;
     inline const char* name() const;
 private:
     object();
@@ -101,7 +101,7 @@ public:
     inline object_type& operator() ();
     inline const object_type& operator() () const;
     inline pointer operator-> ();
-    inline const pointer operator-> () const;
+    inline pointer operator-> () const;
     inline const char* name() const;
 private:
     object();
@@ -122,6 +122,7 @@ private:
 template <typename T>
 inline typename local_object<T>::pointer local_object<T>::construct(const std::string& name, const object_type& obj)
 {
+    OUROBOROS_UNUSED(name);
     return new object_type(obj);
 }
 
@@ -134,6 +135,7 @@ inline typename local_object<T>::pointer local_object<T>::construct(const std::s
 template <typename T>
 inline typename local_object<T>::pointer local_object<T>::construct(const std::string& name)
 {
+    OUROBOROS_UNUSED(name);
     return new object_type();
 }
 
@@ -240,7 +242,7 @@ inline typename object<T, TInterface>::pointer object<T, TInterface>::operator->
  * @return the pointer to the object
  */
 template <typename T, template <typename> class TInterface>
-inline const typename object<T, TInterface>::pointer object<T, TInterface>::operator-> () const
+inline typename object<T, TInterface>::pointer object<T, TInterface>::operator-> () const
 {
     return m_ptr;
 }
@@ -313,7 +315,7 @@ inline typename object<T, local_object>::pointer object<T, local_object>::operat
  * @return the pointer to the object
  */
 template <typename T>
-inline const typename object<T, local_object>::pointer object<T, local_object>::operator-> () const
+inline typename object<T, local_object>::pointer object<T, local_object>::operator-> () const
 {
     return &m_obj;
 }

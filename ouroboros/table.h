@@ -456,7 +456,7 @@ count_type table<Source, Key>::remove_back(const count_type count)
 template <typename Source, typename Key>
 void table<Source, Key>::do_before_remove(const pos_type pos)
 {
-
+    OUROBOROS_UNUSED(pos);
 }
 
 /**
@@ -468,7 +468,8 @@ void table<Source, Key>::do_before_remove(const pos_type pos)
 template <typename Source, typename Key>
 void table<Source, Key>::do_before_move(const pos_type source, const pos_type dest)
 {
-
+    OUROBOROS_UNUSED(source);
+    OUROBOROS_UNUSED(dest);
 }
 
 /**

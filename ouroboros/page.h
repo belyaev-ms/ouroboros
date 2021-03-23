@@ -254,7 +254,7 @@ size_type file_page<pageSize, serviceSize>::static_align_size(const size_type si
     {
         ++count;
     }
-    return count != 0 ? count * TOTAL_SIZE : TOTAL_SIZE;
+    return count != 0 ? count * TOTAL_SIZE : static_cast<size_type>(TOTAL_SIZE);
 }
 
 /**
@@ -934,6 +934,7 @@ void file_region<FilePage>::make_cache(const size_type size) const
     offset_type offset = size;
     do_make_cache(m_cache, size, offset, 0);
 #elif OUROBOROS_FILE_REGION_CACHE_TYPE == 1
+    OUROBOROS_UNUSED(size);
     m_cache.make(*this);
 #endif
 }

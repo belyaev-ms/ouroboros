@@ -16,6 +16,8 @@
 #include "ouroboros/log.h"
 #include "ouroboros/error.h"
 
+#define OUROBOROS_UNUSED(x) do { (void)(x); } while (0)
+
 #ifndef OUROBOROS_SETTINGS
 #define OUROBOROS_LOCK_TIMEOUT 5000 ///< timeout for unlocking (ms)
 #define OUROBOROS_OPTIMIZATION_NODE_RW ///< optimize i/o opeartions of rbtree

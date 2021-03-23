@@ -313,7 +313,8 @@ template <typename FilePage, int pageCount, typename File,
 void backup_file<FilePage, pageCount, File, Cache>::do_before_add_index(const pos_type index,
     void *page)
 {
-
+    OUROBOROS_UNUSED(index);
+    OUROBOROS_UNUSED(page);
 }
 
 /**
@@ -327,6 +328,8 @@ template <typename FilePage, int pageCount, typename File,
 void backup_file<FilePage, pageCount, File, Cache>::do_after_add_index(const pos_type index,
     void *page)
 {
+    OUROBOROS_UNUSED(index);
+    OUROBOROS_UNUSED(page);
 #ifdef OUROBOROS_SYNC_ENABLED
     ++m_sync_count;
 #endif
@@ -341,7 +344,7 @@ template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 void backup_file<FilePage, pageCount, File, Cache>::do_before_remove_index(const pos_type index)
 {
-
+    OUROBOROS_UNUSED(index);
 }
 
 /**
@@ -353,7 +356,7 @@ template <typename FilePage, int pageCount, typename File,
     template <typename, int, int> class Cache>
 void backup_file<FilePage, pageCount, File, Cache>::do_after_remove_index(const pos_type index)
 {
-
+    OUROBOROS_UNUSED(index);
 }
 
 /**

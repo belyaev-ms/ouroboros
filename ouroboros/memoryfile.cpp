@@ -14,6 +14,7 @@ namespace ouroboros
 //static
 void memory_file::remove(const std::string& name)
 {
+    OUROBOROS_UNUSED(name);
 //    OUROBOROS_THROW_BUG("method not supported");
 }
 
@@ -121,6 +122,8 @@ size_type memory_file::size() const
  */
 void memory_file::refresh(size_type size, const pos_type pos)
 {
+    OUROBOROS_UNUSED(size);
+    OUROBOROS_UNUSED(pos);
 //    OUROBOROS_THROW_BUG("method not supported");
 }
 
