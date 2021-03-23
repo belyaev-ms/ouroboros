@@ -11,6 +11,8 @@ endif (OUROBOROS_COVERAGE_ENABLED)
 ################################################################################
 # Unit-tests
 ################################################################################
+add_compile_options("-fsanitize=address")
+link_libraries("-fsanitize=address")
 add_definitions(-DOUROBOROS_TEST_ENABLED)
 #macros for add an unit-test
 macro(ouroboros_add_test test)
