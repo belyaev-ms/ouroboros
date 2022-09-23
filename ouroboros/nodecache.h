@@ -181,8 +181,8 @@ void node_cache<Node, Table>::end()
     if (m_table != NULL)
     {
         m_cache.free();
+        m_table = NULL;
     }
-    m_table = NULL;
 }
 
 /**
