@@ -69,6 +69,9 @@ inline shared_lock::shared_lock() :
     m_scoped(0),
     m_sharable(0)
 {
+#ifdef OUROBOROS_SPINLOCK_ENABLED
+    m_lock = BOOST_DETAIL_SPINLOCK_INIT;
+#endif
 }
 
 /**
