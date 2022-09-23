@@ -142,8 +142,8 @@ protected:
     pos_type find(const indexed_record_type& record, const pos_type beg, const count_type count) const;
     pos_type rfind(const indexed_record_type& record, const pos_type end, const count_type count) const;
 private:
-#ifdef OUROBOROS_FASTRBTREE_ENABLED
     typedef node_cache<node_type, base_class> cache_type;
+#ifdef OUROBOROS_FASTRBTREE_ENABLED
     typedef table_smart_pnode<node_type, base_class, extractor> pnode_type;
     typedef fast_rbtree<pnode_type> tree_type;
 #else
