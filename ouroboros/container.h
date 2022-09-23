@@ -9,7 +9,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "ouroboros/error.h"
+#include "ouroboros/global.h"
 
 namespace ouroboros
 {

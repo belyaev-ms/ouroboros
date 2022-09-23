@@ -9,7 +9,7 @@
 #include <string>
 
 #include "ouroboros/global.h"
-#include "page.h"
+#include "ouroboros/page.h"
 
 namespace ouroboros
 {
