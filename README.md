@@ -1,4 +1,4 @@
-[![build and test](https://github.com/belyaev-ms/ouroboros/actions/workflows/cmake.yml/badge.svg)](https://github.com/belyaev-ms/ouroboros/actions/workflows/cmake.yml)
+[![build and test](https://github.com/belyaev-ms/ouroboros/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/belyaev-ms/ouroboros/actions/workflows/build_and_test.yml)
 [![codecov](https://codecov.io/gh/belyaev-ms/ouroboros/branch/master/graph/badge.svg)](https://codecov.io/gh/belyaev-ms/ouroboros)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
