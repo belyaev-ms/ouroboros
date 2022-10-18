@@ -83,7 +83,7 @@ For example, if we need to add the new table:
 {
     typedef transaction<dataset_type> transaction_type;
     transaction_type transaction(dataset);
-    if (dataset.table_exists(0))
+    if (!dataset.table_exists(0))
     {
     	dataset.add_table(0);
     }
