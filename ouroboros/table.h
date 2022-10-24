@@ -4,7 +4,7 @@
  */
 
 #ifndef OUROBOROS_TABLE_H
-#define	OUROBOROS_TABLE_H
+#define OUROBOROS_TABLE_H
 
 #include <stddef.h>
 #include <string.h>
@@ -130,6 +130,7 @@ public:
     inline void refresh(const offset_type offset); /// refresh data of the table
 
     static void remove(const std::string& name); ///< remove the source
+    static void copy(const std::string& source, const std::string& dest); ///< copy the source to dest
 protected:
     void resize(); ///< change the file of the source
     const file_type& file() const; ///< get the file of the source
@@ -752,6 +753,18 @@ void source<File>::remove(const std::string& name)
 }
 
 /**
+ * Copy the source to dest
+ * @param source the source name
+ * @param dest the dest name
+ */
+//static
+template <typename File>
+void source<File>::copy(const std::string& source, const std::string& dest)
+{
+    file_type::copy(source, dest);
+}
+
+/**
  * Constructor that is used when parameters of the source are not known
  * @attention after use, you must initialize (method init)
  * @param file the file of the data source
@@ -1134,5 +1147,5 @@ inline const typename source<File>::file_type& source<File>::file() const
 
 }   //namespace ouroboros
 
-#endif	/* OUROBOROS_TABLE_H */
+#endif  /* OUROBOROS_TABLE_H */
 

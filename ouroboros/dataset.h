@@ -4,7 +4,7 @@
  */
 
 #ifndef OUROBOROS_DATASET_H
-#define	OUROBOROS_DATASET_H
+#define OUROBOROS_DATASET_H
 
 #include <map>
 #include "ouroboros/key.h"
@@ -103,6 +103,7 @@ public:
     size_type set_user_data(const void *buffer, const size_type size); ///< set the region of the users data
 
     static void remove(const std::string& name); ///< remove the dataset
+    static void copy(const std::string& source, const std::string& dest); ///< copy the dataset
 protected:
     friend class sharable_session<data_set>;
     friend class scoped_session<data_set>;
@@ -201,6 +202,19 @@ template <typename Key, typename Record, template <typename> class Index, typena
 void data_set<Key, Record, Index, Interface>::remove(const std::string& name)
 {
     source_type::remove(make_dbname(name).c_str());
+}
+
+/**
+ * Copy the dataset
+ * @param source the source dataset name
+ * @param dest the dest dataset name
+ */
+//static
+template <typename Key, typename Record, template <typename> class Index, typename Interface>
+void data_set<Key, Record, Index, Interface>::copy(const std::string& source,
+    const std::string& dest)
+{
+    source_type::copy(make_dbname(source), make_dbname(dest));
 }
 
 /**
@@ -1057,5 +1071,5 @@ inline void data_set<Key, Record, Index, Interface>::store_session(session_write
 }   //namespace ouroboros
 
 
-#endif	/* OUROBOROS_DATASET_H */
+#endif  /* OUROBOROS_DATASET_H */
 

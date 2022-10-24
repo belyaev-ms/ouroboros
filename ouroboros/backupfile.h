@@ -4,7 +4,7 @@
  */
 
 #ifndef OUROBOROS_BUCKUPFILE_H
-#define	OUROBOROS_BUCKUPFILE_H
+#define OUROBOROS_BUCKUPFILE_H
 
 #include <set>
 #include "ouroboros/cachefile.h"
@@ -38,6 +38,7 @@ public:
     void cancel(); ///< cancel the transaction
 
     static void remove(const std::string& name); ///< remove a file by the name
+    static void copy(const std::string& source, const std::string& dest); ///< copy a file
 #ifdef OUROBOROS_SYNC_ENABLED
     virtual void save_page(const pos_type index, void *data); ///< save data of the cache page
 #endif
@@ -84,6 +85,21 @@ void backup_file<FilePage, pageCount, File, Cache>::remove(const std::string& na
 {
     base_class::remove(name + ".bak");
     base_class::remove(name);
+}
+
+/**
+ * Copy a file
+ * @param source the source file name
+ * @param dest the dest file name
+ */
+//static
+template <typename FilePage, int pageCount, typename File,
+    template <typename, int, int> class Cache>
+void backup_file<FilePage, pageCount, File, Cache>::copy(const std::string& source,
+    const std::string& dest)
+{
+    base_class::copy(source + ".bak", dest + ".bak");
+    base_class::copy(source, dest);
 }
 
 /**
@@ -417,5 +433,5 @@ void backup_file<FilePage, pageCount, File, Cache>::save_page(const pos_type ind
 }   //namespace ouroboros
 
 
-#endif	/* OUROBOROS_BUCKUPFILE_H */
+#endif  /* OUROBOROS_BUCKUPFILE_H */
 
