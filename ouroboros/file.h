@@ -4,7 +4,7 @@
  */
 
 #ifndef OUROBOROS_FILE_H
-#define	OUROBOROS_FILE_H
+#define OUROBOROS_FILE_H
 
 #include <string>
 
@@ -55,6 +55,7 @@ public:
     transaction_state state() const; ///< get the state of the transaction
 
     static void remove(const std::string& name); ///< remove a file by the name
+    static void copy(const std::string& source, const std::string& dest); ///< copy a file
 protected:
     virtual void do_read(void *buffer, size_type size, const pos_type pos) const; ///< read data
     virtual void do_write(const void *buffer, size_type size, const pos_type pos); ///< write data
@@ -209,5 +210,5 @@ void file<FilePage>::refresh(size_type size, const pos_type pos)
 
 }   //namespace ouroboros
 
-#endif	/* OUROBOROS_FILE_H */
+#endif  /* OUROBOROS_FILE_H */
 
