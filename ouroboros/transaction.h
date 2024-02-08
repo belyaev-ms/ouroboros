@@ -171,8 +171,8 @@ public:
     // cppcheck-suppress virtualCallInConstructor
     virtual void cancel(); ///< cancel the transaction
 protected:
-    void SessionsStop(); ///< stop all session of the transaction
-    void SessionsCancel(); ///< cancel all session of the transaction
+    void sessions_stop(); ///< stop all session of the transaction
+    void sessions_cancel(); ///< cancel all session of the transaction
 private:
     typedef typename dataset_type::table_type table_type;
     typedef std::list<session_write> session_list;
@@ -608,7 +608,7 @@ void lazy_transaction<Dataset>::stop()
     if (base_class::enabled())
     {
         OUROBOROS_ASSERT(m_dataset.lazy_transaction_exists());
-        SessionsStop();
+        sessions_stop();
         m_dataset.lazy_stop();
         m_dataset.lazy_transaction(NULL);
         base_class::stop();
@@ -621,17 +621,22 @@ void lazy_transaction<Dataset>::stop()
  * Stop all session of the transaction
  */
 template <typename Dataset>
-void lazy_transaction<Dataset>::SessionsStop()
+void lazy_transaction<Dataset>::sessions_stop()
 {
     const typename session_list::iterator end = m_sessions.end();
-    for (typename session_list::iterator it = m_sessions.begin(); it != end; ++it)
+    typename session_list::iterator it = m_sessions.begin();
+    while (it != end)
     {
+        if (m_sessions.size() == 1)
+        {
+            it->m_primary = true;
+        }
         it->stop();
         const table_type& table = static_cast<const table_type&>(it->table());
         assert(table.sharable_count() == 0);
         assert(table.scoped_count() == 0);
+        m_sessions.erase(it++);
     }
-    m_sessions.clear();
 }
 
 /**
@@ -645,7 +650,7 @@ void lazy_transaction<Dataset>::cancel()
     if (base_class::enabled())
     {
         OUROBOROS_ASSERT(m_dataset.lazy_transaction_exists());
-        SessionsCancel();
+        sessions_cancel();
         m_dataset.lazy_cancel();
         m_dataset.lazy_transaction(NULL);
         base_class::cancel();
@@ -658,14 +663,19 @@ void lazy_transaction<Dataset>::cancel()
  * Cancel all session of the transaction
  */
 template <typename Dataset>
-void lazy_transaction<Dataset>::SessionsCancel()
+void lazy_transaction<Dataset>::sessions_cancel()
 {
     const typename session_list::iterator end = m_sessions.end();
-    for (typename session_list::iterator it = m_sessions.begin(); it != end; ++it)
+    typename session_list::iterator it = m_sessions.begin();
+    while (it != end)
     {
+        if (m_sessions.size() == 1)
+        {
+            it->m_primary = true;
+        }
         it->cancel();
+        m_sessions.erase(it++);
     }
-    m_sessions.clear();
 }
 
 //==============================================================================

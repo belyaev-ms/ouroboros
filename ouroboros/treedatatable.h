@@ -538,6 +538,7 @@ void tree_data_table<Table, IndexedRecord, Key, Interface>::do_before_move(const
 template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
 count_type tree_data_table<Table, IndexedRecord, Key, Interface>::remove_by_index(const field_type& beg, const field_type& end)
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_write lock(*this);
     const count_type limit = unsafe_table::limit();
     pos_list list;
@@ -626,6 +627,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     do_get_pos_list(list, beg, end);
@@ -653,6 +655,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     do_get_pos_list(list, beg, end);
@@ -679,10 +682,13 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 void tree_data_table<Table, IndexedRecord, Key, Interface>::do_get_pos_list(pos_list& dest, const field_type& beg, const field_type& end) const
 {
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
+    if (m_tree.end() == itbeg)
+    {
+        return;
+    }
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
     const pos_type beg_pos = unsafe_table::beg_pos();
     const pos_type end_pos = unsafe_table::end_pos();
-    ///@todo doesn't work for unordered table
     if (beg_pos < end_pos)
     {
         for (typename tree_type::const_iterator it = itbeg; it != itend; ++it)
@@ -714,6 +720,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     do_get_pos_list(dest, beg, end);
     std::sort(dest.begin(), dest.end());
@@ -738,6 +745,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     do_get_pos_list(dest, beg, end);
     std::sort(dest.begin(), dest.end(), std::greater<pos_type>());
@@ -762,6 +770,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     records.resize(read_index(list, beg, end, size));
@@ -786,6 +795,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     records.resize(rread_index(list, beg, end, size));
@@ -830,6 +840,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 count_type tree_data_table<Table, IndexedRecord, Key, Interface>::read_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
@@ -857,6 +868,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 count_type tree_data_table<Table, IndexedRecord, Key, Interface>::rread_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
@@ -886,6 +898,7 @@ template <typename Finder>
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     find_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
@@ -913,6 +926,7 @@ template <typename Finder>
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
@@ -942,6 +956,7 @@ template <typename Finder>
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     find_in_range(Finder& finder, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     do_get_pos_list(list, beg, end);
@@ -972,6 +987,7 @@ template <typename Finder>
 pos_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     rfind_in_range(Finder& finder, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     do_get_pos_list(list, beg, end);
@@ -1120,6 +1136,7 @@ template <template <typename, typename, typename> class Table, typename IndexedR
 count_type tree_data_table<Table, IndexedRecord, Key, Interface>::
     get_range_size(const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename tree_type::const_iterator itbeg = m_tree.lower_bound(beg);
     typename tree_type::const_iterator itend = m_tree.upper_bound(end);
     count_type count = 0;

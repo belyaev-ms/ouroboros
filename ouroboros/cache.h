@@ -748,7 +748,7 @@ inline void* cache<Saver, pageSize, pageCount>::get_page(const page_status_type&
 }
 
 /**
- * dirty the page
+ * Dirty the page
  * @param page the page
  */
 template <typename Saver, int pageSize, int pageCount>

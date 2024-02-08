@@ -76,7 +76,7 @@ public:
 
     inline table_type& table(); ///< get the table
     inline const table_type& table() const; ///< get the table
-    inline key_type Key() const; ///< get the key of the table
+    inline key_type key() const; ///< get the key of the table
     void start();  ///< start the transaction
     void stop();   ///< stop the transaction
     void cancel(); ///< cancel the transaction
@@ -215,6 +215,7 @@ template <typename Dataset>
 class scoped_session : public base_scoped_session<typename Dataset::table_type,
         global_lazy_lock<typename Dataset::interface_type> >
 {
+    friend class lazy_transaction<Dataset>;
     typedef base_session<typename Dataset::table_type,
         global_lazy_lock<typename Dataset::interface_type> > raw_class;
     typedef base_scoped_session<typename Dataset::table_type,
@@ -348,7 +349,7 @@ inline const typename base_session<Table, GlobalLock>::table_type&
  */
 template <typename Table, typename GlobalLock>
 inline typename base_session<Table, GlobalLock>::key_type
-    base_session<Table, GlobalLock>::Key() const
+    base_session<Table, GlobalLock>::key() const
 {
     return m_table->skey().key;
 }

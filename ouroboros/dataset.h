@@ -754,6 +754,11 @@ inline void data_set<Key, Record, Index, Interface>::stop()
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
 inline void data_set<Key, Record, Index, Interface>::lazy_stop()
 {
+    if (m_file.state() != TR_STARTED)
+    {
+        m_key_table.unlock_sharable();
+        return;
+    }
     try
     {
         m_file.stop();
@@ -791,6 +796,11 @@ inline void data_set<Key, Record, Index, Interface>::cancel()
 template <typename Key, typename Record, template <typename> class Index, typename Interface>
 inline void data_set<Key, Record, Index, Interface>::lazy_cancel()
 {
+    if (m_file.state() != TR_STARTED)
+    {
+        m_key_table.unlock_sharable();
+        return;
+    }
     try
     {
         m_file.cancel();
