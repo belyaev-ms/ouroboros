@@ -121,8 +121,8 @@ int main(int argc, char *argv[])
     std::cout << std::endl;
     std::cout << "Test the ouroboros: " << std::endl;
 
-    dataset_type::remove(name.c_str());
-    dataset_type dataset(name.c_str(), tbl_count, rec_count);
+    dataset_type::remove(name);
+    dataset_type dataset(name, tbl_count, rec_count);
     for (size_t itr = 0; itr < itrCount; ++itr)
     {
         std::cout << std::endl;

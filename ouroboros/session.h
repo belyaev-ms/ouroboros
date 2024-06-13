@@ -318,7 +318,7 @@ base_session<Table, GlobalLock>::base_session(table_type *table) :
 template <typename Table, typename GlobalLock>
 base_session<Table, GlobalLock>::~base_session()
 {
-    unlock();
+    base_session::unlock();
 }
 
 /**

@@ -30,7 +30,7 @@ const size_t rec_count = 100;
  * @param sample_tree the sample tree (standard)
  * @param test_tree the tested tree
  */
-void check_tree_find(sample_tree_type& sample_tree, test_tree_type& test_tree)
+void check_tree_find(const sample_tree_type& sample_tree, const test_tree_type& test_tree)
 {
     for (size_t i = 0; i < rec_count; ++i)
     {
@@ -56,7 +56,7 @@ void check_tree_find(sample_tree_type& sample_tree, test_tree_type& test_tree)
  * @param sample_tree the sample tree (standard)
  * @param test_tree the tested tree
  */
-void require_equal_tree(sample_tree_type& sample_tree, test_tree_type& test_tree)
+void require_equal_tree(sample_tree_type& sample_tree, const test_tree_type& test_tree)
 {
     test_tree_type::iterator test_it = test_tree.begin();
     sample_tree_type::iterator sample_it = sample_tree.begin();

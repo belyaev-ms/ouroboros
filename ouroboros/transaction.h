@@ -138,9 +138,7 @@ public:
     virtual ~dataset_transaction();
 
     virtual void start(); ///< start the transaction
-    // cppcheck-suppress virtualCallInConstructor
     virtual void stop(); ///< stop the transaction
-    // cppcheck-suppress virtualCallInConstructor
     virtual void cancel(); ///< cancel the transaction
 private:
     dataset_type& m_dataset; ///< the supported dataset
@@ -166,9 +164,7 @@ public:
 
     void push(session_write& session); ///< push a session to context of the transaction
     virtual void start(); ///< start the transaction
-    // cppcheck-suppress virtualCallInConstructor
     virtual void stop(); ///< stop the transaction
-    // cppcheck-suppress virtualCallInConstructor
     virtual void cancel(); ///< cancel the transaction
 protected:
     void sessions_stop(); ///< stop all session of the transaction
@@ -192,9 +188,7 @@ public:
     virtual ~base_global_transaction();
     void attach(transaction_type *transact); ///< attach a transaction
     virtual void start(); ///< start the transaction
-    // cppcheck-suppress virtualCallInConstructor
     virtual void stop(); ///< stop the transaction
-    // cppcheck-suppress virtualCallInConstructor
     virtual void cancel(); ///< cancel the transaction
 protected:
     base_global_transaction();
@@ -474,13 +468,11 @@ dataset_transaction<Dataset>::~dataset_transaction()
 {
     if (std::uncaught_exception())
     {
-        // cppcheck-suppress virtualCallInConstructor
-        cancel();
+        dataset_transaction::cancel();
     }
     else
     {
-        // cppcheck-suppress virtualCallInConstructor
-        stop();
+        dataset_transaction::stop();
     }
 }
 
@@ -556,13 +548,11 @@ lazy_transaction<Dataset>::~lazy_transaction()
 {
     if (std::uncaught_exception())
     {
-        // cppcheck-suppress virtualCallInConstructor
-        cancel();
+        lazy_transaction::cancel();
     }
     else
     {
-        // cppcheck-suppress virtualCallInConstructor
-        stop();
+        lazy_transaction::stop();
     }
 }
 
@@ -698,13 +688,11 @@ base_global_transaction<Interface, Lock, Helper>::~base_global_transaction()
 {
     if (std::uncaught_exception())
     {
-        // cppcheck-suppress virtualCallInConstructor
-        cancel();
+        base_global_transaction::cancel();
     }
     else
     {
-        // cppcheck-suppress virtualCallInConstructor
-        stop();
+        base_global_transaction::stop();
     }
 }
 

@@ -467,6 +467,7 @@ void rbtree<PNode>::erase(const key_type key)
 template <typename PNode>
 inline typename rbtree<PNode>::table_type& rbtree<PNode>::table() const
 {
+    // cppcheck-suppress returnTempReference
     return m_root.table();
 }
 

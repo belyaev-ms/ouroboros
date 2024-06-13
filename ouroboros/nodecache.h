@@ -57,7 +57,7 @@ struct cache_guard
 {
     typedef Cache cache_type;
     typedef typename cache_type::table_type table_type;
-    cache_guard(table_type& table)
+    explicit cache_guard(table_type& table)
     {
         cache_type::static_begin(table);
     }

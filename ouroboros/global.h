@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <limits>
 
 #ifdef OUROBOROS_PORT
 #include "ouroboros_port.h"
@@ -39,7 +40,7 @@ typedef uint32_t revision_type; ///< revision
 typedef uint32_t count_type;    ///< count
 typedef uint32_t size_type;     ///< size
 
-const pos_type NIL = -1; ///< pointer of position NULL
+const pos_type NIL = std::numeric_limits<pos_type>::max(); ///< pointer of position NULL
 
 /** kind of table */
 enum
