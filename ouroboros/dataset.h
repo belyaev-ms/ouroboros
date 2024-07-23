@@ -486,8 +486,25 @@ pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
     // check the removed keys are exists
     if (m_hole_count() > 0)
     {
-        // look for the first removed key
         const typename skey_list::iterator itend = m_skeys->end();
+        // look for the same key
+        {
+            const typename skey_list::iterator it = m_skeys->find(key);
+            if (it != itend)
+            {
+                skey_type& skey = it->second;
+                skey.pos = -skey.pos - 1;
+                table_type *table = new table_type(m_source, skey);
+                m_tables.insert(typename table_list::value_type(key, table));
+                table->clear();
+                table->recovery();
+                session_key->write(skey, skey.pos);
+                --m_hole_count();
+                OUROBOROS_DEBUG(PR(m_name) << "add table has " << PE(skey));
+                return skey.pos;
+            }
+        }
+        // look for the first removed key
         for (typename skey_list::iterator it = m_skeys->begin(); it != itend; ++it)
         {
             const spos_type pos = it->second.pos;
@@ -503,7 +520,8 @@ pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
                 table->recovery();
                 session_key->write(skey, skey.pos);
                 --m_hole_count();
-                return session_key->back_pos();
+                OUROBOROS_DEBUG(PR(m_name) << "add table has " << PE(skey));
+                return skey.pos;
             }
         }
         OUROBOROS_THROW_BUG(PR(m_name) << "the sign of removed key is exists, but the key is not found!");

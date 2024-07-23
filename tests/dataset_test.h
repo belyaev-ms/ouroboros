@@ -316,7 +316,6 @@ BOOST_AUTO_TEST_CASE(session_wr_except_cancel)
 
     const size_t tbl_count = 10;
     const size_t rec_count = 100;
-    typedef dataset_type dataset_type;
     dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
 
     dataset.add_table(0);
@@ -344,6 +343,119 @@ BOOST_AUTO_TEST_CASE(session_wr_except_cancel)
         BOOST_REQUIRE(session->empty());
         BOOST_CHECK_EQUAL(0u, session->beg_pos());
         BOOST_CHECK_EQUAL(0u, session->end_pos());
+    }
+}
+
+//==============================================================================
+//  Check for add and remove table
+//==============================================================================
+BOOST_AUTO_TEST_CASE(add_and_remove_table)
+{
+
+    const size_t tbl_count = 10;
+    const size_t rec_count = 100;
+    
+    // add and remove one table without reopening the dataset
+    dataset_type::remove(DATASET_NAME);
+    {
+        dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
+        dataset.add_table(0);
+        dataset.remove_table(0);
+    }
+    
+    // add and remove all tables without reopening the dataset
+    dataset_type::remove(DATASET_NAME);
+    {
+        dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.add_table(i);
+        }
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.remove_table(i);
+        }
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.add_table(i);
+        }
+    }
+    
+    // add and remove all tables in different order without reopening the dataset
+    dataset_type::remove(DATASET_NAME);
+    {
+        dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.add_table(i);
+        }
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.remove_table(tbl_count - i - 1);
+        }
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.add_table(tbl_count - i - 1);
+        }
+    }
+    
+    // add and remove one table with reopening the dataset
+    dataset_type::remove(DATASET_NAME);
+    {
+        dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
+        dataset.add_table(0);
+    }
+    {
+        dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
+        dataset.remove_table(0);
+    }
+    
+    // add and remove all tables with reopening the dataset
+    dataset_type::remove(DATASET_NAME);
+    {
+        dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.add_table(i);
+        }
+    }
+    {
+        dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.remove_table(i);
+        }
+    }
+    {
+        dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.add_table(i);
+        }
+    }
+    
+    // add and remove all tables in different order with reopening the dataset
+    dataset_type::remove(DATASET_NAME);
+    {
+        dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.add_table(i);
+        }
+    }
+    {
+        dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.remove_table(tbl_count - i - 1);
+        }
+    }
+    {
+        dataset_type dataset(DATASET_NAME, tbl_count, rec_count);
+        for (size_t i = 0; i < tbl_count; ++i)
+        {
+            dataset.add_table(tbl_count - i - 1);
+        }
     }
 }
 
