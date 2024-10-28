@@ -43,10 +43,10 @@ struct stub_lock {};
 struct stub_locker : public base_locker
 {
     typedef stub_lock lock_type;
-    inline stub_locker(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
+    inline stub_locker(const std::string& , count_type& scoped_count, count_type& sharable_count) :
         base_locker(scoped_count, sharable_count)
     {}
-    inline stub_locker(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
+    inline stub_locker(lock_type& , count_type& scoped_count, count_type& sharable_count) :
         base_locker(scoped_count, sharable_count)
     {}
 };
@@ -58,10 +58,10 @@ struct stub_locker : public base_locker
 struct internal_locker : public base_locker
 {
     typedef stub_lock lock_type;
-    inline internal_locker(const std::string& name, count_type& scoped_count, count_type& sharable_count) :
+    inline internal_locker(const std::string& , count_type& scoped_count, count_type& sharable_count) :
         base_locker(scoped_count, sharable_count)
     {}
-    inline internal_locker(lock_type& lock, count_type& scoped_count, count_type& sharable_count) :
+    inline internal_locker(lock_type& , count_type& scoped_count, count_type& sharable_count) :
         base_locker(scoped_count, sharable_count)
     {}
 };
@@ -146,7 +146,6 @@ inline base_locker::base_locker(count_type& scoped_count, count_type& sharable_c
     m_scoped_count(scoped_count),
     m_sharable_count(sharable_count)
 {
-    OUROBOROS_UNUSED(name);
 }
 
 /**

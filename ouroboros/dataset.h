@@ -528,7 +528,8 @@ pos_type data_set<Key, Record, Index, Interface>::add_table(const key_type key)
             {
                 skey_type& skey = it->second;
                 skey.pos = -skey.pos - 1;
-                table_type *table = new table_type(m_source, skey);
+                controlblock_type controlblock(skey, m_plock_pool->get(skey.pos));
+                table_type *table = new table_type(m_source, controlblock);
                 m_tables.insert(typename table_list::value_type(key, table));
                 table->clear();
                 table->recovery();

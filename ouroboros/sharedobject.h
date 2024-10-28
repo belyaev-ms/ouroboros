@@ -118,6 +118,7 @@ inline void shared_object<T>::destruct(pointer& ptr)
 template <typename T>
 inline void shared_object<T>::destruct_array(object_type* ptr)
 {
+    OUROBOROS_UNUSED(ptr);
 }
 
 /**
@@ -128,6 +129,7 @@ inline void shared_object<T>::destruct_array(object_type* ptr)
 template <typename T>
 inline void shared_object<T>::destruct_array(pointer& ptr)
 {
+    OUROBOROS_UNUSED(ptr);
 }
 
 /**

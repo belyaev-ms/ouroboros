@@ -243,6 +243,7 @@ inline typename local_object<T>::pointer local_object<T>::construct(const std::s
 template <typename T>
 inline typename local_object<T>::pointer local_object<T>::construct_array(const std::string& name, const size_t size)
 {
+    OUROBOROS_UNUSED(name);
     return new object_type[size];
 }
 
