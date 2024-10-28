@@ -9,10 +9,16 @@
 #include <stddef.h>
 #include <string>
 #include <vector>
+#if __cplusplus >= 201103L
+#include <unordered_map>
+#elif defined(OUROBOROS_BOOST_ENABLED)
+#include <boost/unordered_map.hpp>
+#else
+#include <map>
+#endif
 
 #include "ouroboros/global.h"
 #include "ouroboros/object.h"
-#include "ouroboros/hashmap.h"
 
 namespace ouroboros
 {
@@ -161,7 +167,13 @@ public:
     inline void free(); ///< release the cache
     inline void free_page(const pos_type index); ///< release the page from the pool
 protected:
-    typedef hash_map<pos_type, page_type *, pageCount> page_list;
+#if __cplusplus >= 201103L
+    typedef std::unordered_map<pos_type, page_type*> page_list;
+#elif defined(OUROBOROS_BOOST_ENABLED)
+    typedef boost::unordered_map<pos_type, page_type*> page_list;
+#else
+    typedef std::map<pos_type, page_type*> page_list;
+#endif
     typedef typename page_list::iterator iterator;
     inline page_type* do_page_exists(const pos_type index) const; ///< check the page exists
     inline page_type* do_get_page(const pos_type index) const; ///< get the page

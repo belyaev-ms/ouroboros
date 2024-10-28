@@ -12,8 +12,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 ################################################################################
 # Unit-tests
 ################################################################################
-add_compile_options("-fsanitize=address")
-link_libraries("-fsanitize=address")
+add_compile_options("-fsanitize=address,undefined")
+link_libraries("-fsanitize=address,undefined")
 add_definitions(-DOUROBOROS_TEST_ENABLED)
 #macros for add an unit-test
 macro(ouroboros_add_test test)
@@ -29,7 +29,6 @@ ouroboros_add_test(file_test)
 ouroboros_add_test(cachefile_test)
 ouroboros_add_test(backupfile_test)
 ouroboros_add_test(journalfile_test)
-ouroboros_add_test(hashmap_test)
 ouroboros_add_test(key_test)
 ouroboros_add_test(field_test)
 ouroboros_add_test(table_test)
