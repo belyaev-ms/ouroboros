@@ -224,8 +224,8 @@ public:
     typedef PNode pnode_type;
     typedef typename pnode_type::table_type table_type;
 
-    node_iterator(table_type& table);
-    node_iterator(const pnode_type& pnode);
+    explicit node_iterator(table_type& table);
+    explicit node_iterator(const pnode_type& pnode);
     node_iterator(const self_type& iter);
 
     self_type& operator++ ();
@@ -265,9 +265,10 @@ public:
     typedef typename iterator::pnode_type pnode_type;
     typedef typename iterator::table_type table_type;
 
-    node_reverseiterator(table_type& table);
-    node_reverseiterator(const pnode_type& pnode);
+    explicit node_reverseiterator(table_type& table);
+    explicit node_reverseiterator(const pnode_type& pnode);
     node_reverseiterator(const self_type& iter);
+    // cppcheck-suppress noExplicitConstructor
     node_reverseiterator(const iterator& iter);
 
     iterator base() const;
@@ -371,7 +372,8 @@ data_node<Key, Body, Converter>::data_node() :
     m_parent(NIL),
     m_left(NIL),
     m_right(NIL),
-    m_color(BLACK)
+    m_color(BLACK),
+    m_body()
 {
 }
 
@@ -1745,6 +1747,7 @@ template <typename PNode>
 inline typename node_iterator<PNode>::table_type&
     node_iterator<PNode>::table() const
 {
+    // cppcheck-suppress returnTempReference
     return m_iter.table();
 }
 
@@ -2053,6 +2056,7 @@ template <typename Iterator>
 inline typename node_reverseiterator<Iterator>::table_type&
     node_reverseiterator<Iterator>::table() const
 {
+    // cppcheck-suppress returnTempReference
     return m_current.table();
 }
 

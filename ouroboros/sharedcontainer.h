@@ -79,6 +79,7 @@ inline typename shared_map<Key, Field>::container_type*
 template <typename Key, typename Field>
 inline void shared_map<Key, Field>::destruct(container_type *ptr)
 {
+    OUROBOROS_UNUSED(ptr);
 }
 
 //==============================================================================

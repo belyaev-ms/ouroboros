@@ -146,6 +146,7 @@ inline base_locker::base_locker(count_type& scoped_count, count_type& sharable_c
     m_scoped_count(scoped_count),
     m_sharable_count(sharable_count)
 {
+    OUROBOROS_UNUSED(name);
 }
 
 /**
@@ -164,6 +165,7 @@ inline bool base_locker::lock()
  */
 inline bool base_locker::lock(const size_t timeout)
 {
+    OUROBOROS_UNUSED(timeout);
     return lock();
 }
 
@@ -193,6 +195,7 @@ inline bool base_locker::lock_sharable()
  */
 inline bool base_locker::lock_sharable(const size_t timeout)
 {
+    OUROBOROS_UNUSED(timeout);
     return lock_sharable();
 }
 

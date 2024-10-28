@@ -9,7 +9,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "ouroboros/error.h"
+#include "ouroboros/global.h"
 
 namespace ouroboros
 {
@@ -62,8 +62,7 @@ public:
     inline container_type& operator() ();
     inline const container_type& operator() () const;
     inline pointer operator-> ();
-    inline const pointer operator-> () const;
-    inline void update() const;
+    inline pointer operator-> () const;
 private:
     const std::string m_name; ///< the name of the container
     pointer m_pcontainer; ///< the pointer to the container
@@ -87,8 +86,7 @@ public:
     inline container_type& operator() ();
     inline const container_type& operator() () const;
     inline pointer operator-> ();
-    inline const pointer operator-> () const;
-    inline void update() const;
+    inline pointer operator-> () const;
 private:
     container_type m_container;
 };
@@ -111,8 +109,7 @@ public:
     inline container_type& operator() ();
     inline const container_type& operator() () const;
     inline pointer operator-> ();
-    inline const pointer operator-> () const;
-    inline void update() const;
+    inline pointer operator-> () const;
 private:
     container_type m_container;
 };
@@ -130,6 +127,7 @@ template <typename Key, typename Field>
 inline typename local_map<Key, Field>::container_type*
     local_map<Key, Field>::construct(const std::string& name)
 {
+    OUROBOROS_UNUSED(name);
     return new container_type();
 }
 
@@ -157,6 +155,7 @@ template <typename Key, typename Field>
 inline typename local_multimap<Key, Field>::container_type*
     local_multimap<Key, Field>::construct(const std::string& name)
 {
+    OUROBOROS_UNUSED(name);
     return new container_type();
 }
 
@@ -203,7 +202,6 @@ template <typename Key, typename Field, template <typename, typename> class Inte
 inline typename map<Key, Field, Interface>::container_type&
     map<Key, Field, Interface>::operator() ()
 {
-    assert(m_pcontainer != NULL);
     return *m_pcontainer;
 }
 
@@ -215,7 +213,6 @@ template <typename Key, typename Field, template <typename, typename> class Inte
 inline const typename map<Key, Field, Interface>::container_type&
     map<Key, Field, Interface>::operator() () const
 {
-    assert(m_pcontainer != NULL);
     return *m_pcontainer;
 }
 
@@ -227,7 +224,6 @@ template <typename Key, typename Field, template <typename, typename> class Inte
 inline typename map<Key, Field, Interface>::pointer
     map<Key, Field, Interface>::operator-> ()
 {
-    assert(m_pcontainer != NULL);
     return m_pcontainer;
 }
 
@@ -236,21 +232,10 @@ inline typename map<Key, Field, Interface>::pointer
  * @return the pointer to the container
  */
 template <typename Key, typename Field, template <typename, typename> class Interface>
-inline const typename map<Key, Field, Interface>::pointer
+inline typename map<Key, Field, Interface>::pointer
     map<Key, Field, Interface>::operator-> () const
 {
-    assert(m_pcontainer != NULL);
     return m_pcontainer;
-}
-
-/**
- * Update data of the container
- */
-template <typename Key, typename Field, template <typename, typename> class Interface>
-inline void map<Key, Field, Interface>::update() const
-{
-    assert(m_pcontainer != NULL);
-    interface_type::update(m_pcontainer);
 }
 
 //==============================================================================
@@ -303,18 +288,10 @@ inline typename map<Key, Field, local_map>::pointer
  * @return the pointer to the container
  */
 template <typename Key, typename Field>
-inline const typename map<Key, Field, local_map>::pointer
+inline typename map<Key, Field, local_map>::pointer
     map<Key, Field, local_map>::operator-> () const
 {
     return &m_container;
-}
-
-/**
- * Update data of the container
- */
-template <typename Key, typename Field>
-inline void map<Key, Field, local_map>::update() const
-{
 }
 
 //==============================================================================
@@ -367,18 +344,10 @@ inline typename map<Key, Field, local_multimap>::pointer
  * @return the pointer to the container
  */
 template <typename Key, typename Field>
-inline const typename map<Key, Field, local_multimap>::pointer
+inline typename map<Key, Field, local_multimap>::pointer
     map<Key, Field, local_multimap>::operator-> () const
 {
     return &m_container;
-}
-
-/**
- * Update data of the container
- */
-template <typename Key, typename Field>
-inline void map<Key, Field, local_multimap>::update() const
-{
 }
 
 }   //namespace ouroboros

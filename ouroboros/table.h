@@ -4,7 +4,7 @@
  */
 
 #ifndef OUROBOROS_TABLE_H
-#define	OUROBOROS_TABLE_H
+#define OUROBOROS_TABLE_H
 
 #include <stddef.h>
 #include <string.h>
@@ -130,6 +130,7 @@ public:
     inline void refresh(const offset_type offset); /// refresh data of the table
 
     static void remove(const std::string& name); ///< remove the source
+    static void copy(const std::string& source, const std::string& dest); ///< copy the source to dest
 protected:
     void resize(); ///< change the file of the source
     const file_type& file() const; ///< get the file of the source
@@ -456,7 +457,7 @@ count_type table<Source, Key>::remove_back(const count_type count)
 template <typename Source, typename Key>
 void table<Source, Key>::do_before_remove(const pos_type pos)
 {
-
+    OUROBOROS_UNUSED(pos);
 }
 
 /**
@@ -468,7 +469,8 @@ void table<Source, Key>::do_before_remove(const pos_type pos)
 template <typename Source, typename Key>
 void table<Source, Key>::do_before_move(const pos_type source, const pos_type dest)
 {
-
+    OUROBOROS_UNUSED(source);
+    OUROBOROS_UNUSED(dest);
 }
 
 /**
@@ -748,6 +750,18 @@ template <typename File>
 void source<File>::remove(const std::string& name)
 {
     file_type::remove(name);
+}
+
+/**
+ * Copy the source to dest
+ * @param source the source name
+ * @param dest the dest name
+ */
+//static
+template <typename File>
+void source<File>::copy(const std::string& source, const std::string& dest)
+{
+    file_type::copy(source, dest);
 }
 
 /**
@@ -1133,5 +1147,5 @@ inline const typename source<File>::file_type& source<File>::file() const
 
 }   //namespace ouroboros
 
-#endif	/* OUROBOROS_TABLE_H */
+#endif  /* OUROBOROS_TABLE_H */
 

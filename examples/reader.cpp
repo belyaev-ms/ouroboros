@@ -27,11 +27,14 @@ bool is_terminated()
 }
 static void termhandler(int signo)
 {
+    OUROBOROS_UNUSED(signo);
     terminated = 1;
 }
 
 int main(int argc, char *argv[])
 {
+    OUROBOROS_UNUSED(argc);
+    OUROBOROS_UNUSED(argv);
     signal(SIGINT, termhandler);
     {
         struct timeval t;

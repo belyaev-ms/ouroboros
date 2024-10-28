@@ -96,6 +96,7 @@ bool base_transaction::enabled() const
 //virtual
 void base_transaction::attach(base_transaction *transact)
 {
+    OUROBOROS_UNUSED(transact);
     OUROBOROS_THROW_BUG("method not supported");
 }
 

@@ -5,6 +5,8 @@
 
 #include "ouroboros/file.h"
 
+#include <boost/filesystem/operations.hpp>
+
 #define OUROBOROS_IO_ERROR_MAX 100
 #define OUROBOROS_IO_ERROR_DELAY 100
 
@@ -22,6 +24,20 @@ namespace ouroboros
 void base_file::remove(const std::string& name)
 {
     ::remove(name.c_str());
+}
+
+/**
+ * Copy a file
+ * @param source the source file name
+ * @param dest the dest file name
+ */
+//static
+void base_file::copy(const std::string& source, const std::string& dest)
+{
+    if (boost::filesystem::exists(source))
+    {
+        boost::filesystem::copy_file(source, dest);
+    }
 }
 
 /**
@@ -276,6 +292,8 @@ size_type base_file::size() const
 //virtual
 void base_file::do_refresh(size_type size, const pos_type pos)
 {
+    OUROBOROS_UNUSED(size);
+    OUROBOROS_UNUSED(pos);
 //    OUROBOROS_THROW_BUG("method not supported");
 }
 

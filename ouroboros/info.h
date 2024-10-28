@@ -69,7 +69,7 @@ inline std::string dump_memory(const void *buffer, const size_type size)
     const char *p = reinterpret_cast<const char*>(buffer);
     for (size_type i = 0; i < size; ++i)
     {
-        s << std::hex << std::setw(2) << ((const unsigned int)(p[i]) & 0xFF) << " ";
+        s << std::hex << std::setw(2) << (static_cast<unsigned int>(p[i]) & 0xFF) << " ";
     }
     return s.str();
 }

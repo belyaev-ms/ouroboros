@@ -13,6 +13,8 @@ typedef data_set<simple_key, record_type, index_null, local_interface> dataset_t
 
 int main(int argc, char *argv[])
 {
+    OUROBOROS_UNUSED(argc);
+    OUROBOROS_UNUSED(argv);
     const std::string name = "sample";  // the name of the data set
     const count_type tbl_count = 10;    // the count of tables in the data set
     const count_type rec_count = 1000;  // the count of records in a table

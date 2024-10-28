@@ -620,7 +620,7 @@ inline pos_type data_table<Table, Record, Controlblock>::do_read(record_list& re
 {
     const count_type count = records.size();
     OUROBOROS_RANGE_ASSERT(count > 0);
-    scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
+    scoped_buffer<void> buffer(static_cast<size_t>(unsafe_table::rec_size()) * count);
     const pos_type result = T::read(buffer.get(), pos, count);
     const void *it = buffer.get();
     ///@todo replace to iterator
@@ -671,7 +671,7 @@ inline pos_type data_table<Table, Record, Controlblock>::do_write(const record_l
 {
     const count_type count = records.size();
     OUROBOROS_RANGE_ASSERT(count > 0);
-    scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
+    scoped_buffer<void> buffer(static_cast<size_t>(unsafe_table::rec_size()) * count);
     void *it = buffer.get();
     for (count_type i = 0; i < count; ++i)
     {
@@ -704,7 +704,7 @@ inline pos_type data_table<Table, Record, Controlblock>::do_add(const record_lis
 {
     const count_type count = records.size();
     OUROBOROS_RANGE_ASSERT(count > 0);
-    scoped_buffer<void> buffer(base_class::rec_size() * count);
+    scoped_buffer<void> buffer(static_cast<size_t>(base_class::rec_size()) * count);
     void *it = buffer.get();
     for (pos_type i = 0; i < count; ++i)
     {
@@ -741,7 +741,7 @@ inline pos_type data_table<Table, Record, Controlblock>::do_read_front(record_li
 {
     const count_type count = records.size();
     OUROBOROS_RANGE_ASSERT(count > 0);
-    scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
+    scoped_buffer<void> buffer(static_cast<size_t>(unsafe_table::rec_size()) * count);
     const pos_type result = T::read_front(buffer.get(), count);
     if (result != NIL)
     {
@@ -782,7 +782,7 @@ inline pos_type data_table<Table, Record, Controlblock>::do_read_back(record_lis
 {
     const count_type count = records.size();
     OUROBOROS_RANGE_ASSERT(count > 0);
-    scoped_buffer<void> buffer(unsafe_table::rec_size() * count);
+    scoped_buffer<void> buffer(static_cast<size_t>(unsafe_table::rec_size()) * count);
     const pos_type result = T::read_back(buffer.get(), count);
     if (result != NIL)
     {

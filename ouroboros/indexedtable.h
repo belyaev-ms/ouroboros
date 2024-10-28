@@ -397,6 +397,7 @@ template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Controlblock>
 count_type indexed_table<Table, Record, Index, Controlblock>::remove_by_index(const field_type& beg, const field_type& end)
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_write lock(*this);
     const count_type limit = unsafe_table::limit();
     pos_list list;
@@ -471,6 +472,7 @@ template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Controlblock>
 pos_type indexed_table<Table, Record, Index, Controlblock>::read_front_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     do_get_pos_list(list, beg, end);
@@ -498,6 +500,7 @@ template <template <typename, typename, typename> class Table, typename Record,
         template <typename> class Index, typename Controlblock>
 pos_type indexed_table<Table, Record, Index, Controlblock>::read_back_by_index(record_type& record, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     do_get_pos_list(list, beg, end);
@@ -525,10 +528,13 @@ template <template <typename, typename, typename> class Table, typename Record,
 void indexed_table<Table, Record, Index, Controlblock>::do_get_pos_list(pos_list& dest, const field_type& beg, const field_type& end) const
 {
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
+    if (m_indexes.end() == itbeg)
+    {
+        return;
+    }
     typename index_list::const_iterator itend = m_indexes.upper_bound(end);
     const pos_type beg_pos = unsafe_table::beg_pos();
     const pos_type end_pos = unsafe_table::end_pos();
-    ///@todo doesn't work for unordered table
     if (beg_pos < end_pos)
     {
         for (typename index_list::const_iterator it = itbeg; it != itend; ++it)
@@ -561,6 +567,7 @@ template <template <typename, typename, typename> class Table, typename Record,
 count_type indexed_table<Table, Record, Index, Controlblock>::read(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     records.resize(read_index(list, beg, end, size));
@@ -587,6 +594,7 @@ count_type indexed_table<Table, Record, Index, Controlblock>::rread(record_list&
     const field_type& beg, const field_type& end, const count_type size) const
 {
     ///@todo why is size here???
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     records.resize(rread_index(list, beg, end, size));
@@ -633,6 +641,7 @@ template <template <typename, typename, typename> class Table, typename Record,
 count_type indexed_table<Table, Record, Index, Controlblock>::read_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     do_get_pos_list(dest, beg, end);
     std::sort(dest.begin(), dest.end());
@@ -658,6 +667,7 @@ template <template <typename, typename, typename> class Table, typename Record,
 count_type indexed_table<Table, Record, Index, Controlblock>::rread_index(pos_list& dest,
     const field_type& beg, const field_type& end, const count_type size) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     do_get_pos_list(dest, beg, end);
     std::sort(dest.begin(), dest.end(), std::greater<pos_type>());
@@ -683,6 +693,7 @@ template <template <typename, typename, typename> class Table, typename Record,
 count_type indexed_table<Table, Record, Index, Controlblock>::read_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
     typename index_list::const_iterator itend = m_indexes.upper_bound(end);
@@ -713,6 +724,7 @@ template <template <typename, typename, typename> class Table, typename Record,
 count_type indexed_table<Table, Record, Index, Controlblock>::rread_by_index(record_list& records,
     const field_type& beg, const field_type& end, const count_type size) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
     typename index_list::const_iterator itend = m_indexes.upper_bound(end);
@@ -745,6 +757,7 @@ template <typename Finder>
 pos_type indexed_table<Table, Record, Index, Controlblock>::
     find_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
     typename index_list::const_iterator itend = m_indexes.upper_bound(end);
@@ -773,6 +786,7 @@ template <typename Finder>
 pos_type indexed_table<Table, Record, Index, Controlblock>::
     rfind_by_index(Finder& finder, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
     typename index_list::const_iterator itend = m_indexes.upper_bound(end);
@@ -803,6 +817,7 @@ template <typename Finder>
 pos_type indexed_table<Table, Record, Index, Controlblock>::
     find_in_range(Finder& finder, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     do_get_pos_list(list, beg, end);
@@ -834,6 +849,7 @@ template <typename Finder>
 pos_type indexed_table<Table, Record, Index, Controlblock>::
     rfind_in_range(Finder& finder, const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename base_class::lock_read lock(*this);
     pos_list list;
     do_get_pos_list(list, beg, end);
@@ -863,6 +879,7 @@ template <template <typename, typename, typename> class Table, typename Record,
 count_type indexed_table<Table, Record, Index, Controlblock>::
     get_range_size(const field_type& beg, const field_type& end) const
 {
+    OUROBOROS_RANGE_ASSERT(beg <= end);
     typename index_list::const_iterator itbeg = m_indexes.lower_bound(beg);
     typename index_list::const_iterator itend = m_indexes.upper_bound(end);
     count_type count = 0;

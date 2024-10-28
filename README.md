@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/belyaev-ms/ouroboros.svg?branch=master)](https://travis-ci.com/belyaev-ms/ouroboros)
+[![build and test](https://github.com/belyaev-ms/ouroboros/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/belyaev-ms/ouroboros/actions/workflows/build_and_test.yml)
 [![codecov](https://codecov.io/gh/belyaev-ms/ouroboros/branch/master/graph/badge.svg)](https://codecov.io/gh/belyaev-ms/ouroboros)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -83,7 +83,7 @@ For example, if we need to add the new table:
 {
     typedef transaction<dataset_type> transaction_type;
     transaction_type transaction(dataset);
-    if (dataset.table_exists(0))
+    if (!dataset.table_exists(0))
     {
     	dataset.add_table(0);
     }

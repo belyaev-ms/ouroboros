@@ -3,3 +3,4 @@ missingInclude
 unusedFunction
 missingOverride
 constArgument
+uninitMemberVar

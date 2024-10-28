@@ -70,6 +70,10 @@ inline shared_lock::shared_lock() :
     m_scoped_counter(0),
     m_sharable_counter(0)
 {
+#ifdef OUROBOROS_SPINLOCK_ENABLED
+    // cppcheck-suppress useInitializationList
+    m_lock = BOOST_DETAIL_SPINLOCK_INIT;
+#endif
 }
 
 /**
