@@ -97,6 +97,7 @@ public:
     inline bool refresh(); ///< refresh the metadata of the table by the key
     inline void update(); ///< update the key by the metadata of the table
     inline void recovery(); ///< recovery the metadata of the table by the key
+    inline void release(); ///< release the metadata of the table by the key
 
     void clear(); ///< clear the table
 
@@ -1213,6 +1214,19 @@ inline void tree_data_table<Table, IndexedRecord, Key, Interface>::recovery()
 #endif
     m_tree.set_root(unsafe_table::skey().root);
     unsafe_table::recovery();
+}
+
+/**
+ * Release the metadata of the table by the key
+ */
+template <template <typename, typename, typename> class Table, typename IndexedRecord, typename Key, typename Interface>
+inline void tree_data_table<Table, IndexedRecord, Key, Interface>::release()
+{
+    typename base_class::lock_read lock(*this);
+#ifdef OUROBOROS_NODECACHE_ENABLED
+    cache_type::static_cancel();
+#endif
+    unsafe_table::release();
 }
 
 #ifdef OUROBOROS_TEST_TOOLS_ENABLED

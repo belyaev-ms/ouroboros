@@ -109,6 +109,7 @@ public:
     inline bool refresh(); ///< refresh the metadata of the table by the key
     inline void update(); ///< update the key by the metadata of the table
     inline void recovery(); ///< recovery the metadata of the table by the key
+    inline void release(); ///< release the metadata of the table by the key
 
     inline void start();  ///< start the transaction
     inline void stop();   ///< stop the transaction
@@ -637,6 +638,15 @@ template <typename Source, typename Key>
 inline void base_table<Source, Key>::recovery()
 {
     m_cast_skey = m_skey;
+}
+
+/**
+ * Release the metadata of the table by the key
+ */
+template <typename Source, typename Key>
+inline void base_table<Source, Key>::release()
+{
+
 }
 
 /**

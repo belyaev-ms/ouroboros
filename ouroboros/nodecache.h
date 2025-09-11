@@ -168,6 +168,7 @@ node_cache<Node, Table>::node_cache() :
 template <typename Node, typename Table>
 void node_cache<Node, Table>::begin(table_type& table)
 {
+    assert(NULL == m_table);
     m_cache.free();
     m_table = &table;
 }

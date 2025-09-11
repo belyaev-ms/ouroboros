@@ -159,6 +159,8 @@ protected:
     virtual void lock(); ///< lock the table
     virtual void unlock(); ///< unlock the table
     virtual bool do_start();  ///< start the transaction
+    virtual bool do_stop();   ///< stop the transation
+    virtual bool do_cancel(); ///< cancel the transation
 };
 
 /**
@@ -803,6 +805,36 @@ bool base_sharable_session<Table, GlobalLock>::do_start()
         raw_class::table().refresh();
     }
     return result;
+}
+
+/**
+ * Stop the transaction
+ * @return the result of the stopping
+ */
+//virtual
+template <typename Table, typename GlobalLock>
+bool base_sharable_session<Table, GlobalLock>::do_stop()
+{
+    if (base_class::m_lock && 1 == raw_class::table().sharable_count())
+    {
+        raw_class::table().release();
+    }
+    return base_class::do_stop();
+}
+
+/**
+ * Cancel the transaction
+ * @return the result of the canceling
+ */
+//virtual
+template <typename Table, typename GlobalLock>
+bool base_sharable_session<Table, GlobalLock>::do_cancel()
+{
+    if (base_class::m_lock && 1 == raw_class::table().sharable_count())
+    {
+        raw_class::table().release();
+    }
+    return base_class::do_cancel();
 }
 
 /**

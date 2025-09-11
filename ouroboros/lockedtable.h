@@ -160,6 +160,7 @@ public:
     inline bool refresh(); ///< refresh the metadata of the table by the key
     inline void update(); ///< update the key by the metadata of the table
     inline void recovery(); ///< recovery the metadata of the table by the key
+    inline void release(); ///< release the metadata of the table by the key
 
     inline void lock_sharable() const; ///< lock the table for reading
     inline void lock_sharable(const size_t timeout) const; ///< lock the table for reading with a timeout
@@ -1206,6 +1207,16 @@ inline void locked_table<Table, Source, Key, Interface, Locker>::recovery()
 {
     lock_read lock(*this);
     base_class::recovery();
+}
+
+/**
+ * Release the metadata of the table by the key
+ */
+template <template <typename, typename, typename> class Table, typename Source, typename Key, typename Interface, typename Locker>
+inline void locked_table<Table, Source, Key, Interface, Locker>::release()
+{
+    lock_read lock(*this);
+    base_class::release();
 }
 
 /**
